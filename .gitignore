@@ -1,0 +1,36 @@
+# dependencies
+/node_modules
+
+# build output
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
+/coverage
+/playwright-report/
+/test-results/
+
+# env files: only the placeholder template is committed
+.env*
+!.env.example
+
+# local database data and generated Prisma client
+/.data/
+/src/generated/
+
+# company source material is kept locally, never committed (optimised copies go in public/)
+/*.pdf
+/*.pptx
+/source-material/
+
+# personal Claude Code settings
+.claude/settings.local.json
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+.vercel
