@@ -1,5 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
-import { company, telHref } from "@/config/company";
+import { instagramUrl, telHref } from "@/config/company";
+import type { ContactSettings, LocationSettings } from "@/lib/site-settings";
 import { pathFor, type PageKey } from "@/config/routes";
 import { Link } from "@/i18n/navigation";
 import { Address } from "./address";
@@ -15,8 +16,18 @@ const companyLinks: [PageKey, string][] = [
   ["faq", "faq"],
   ["contact", "contact"],
 ];
+const blogLink: [PageKey, string] = ["blog", "blog"];
 
-export function SiteFooter() {
+/** `showBlog`: link the blog once a post is published. */
+export function SiteFooter({
+  contact,
+  locations,
+  showBlog = false,
+}: {
+  contact: ContactSettings;
+  locations: LocationSettings;
+  showBlog?: boolean;
+}) {
   const t = useTranslations();
   const ar = useLocale() === "ar";
   const year = new Date().getFullYear();
@@ -56,7 +67,7 @@ export function SiteFooter() {
             {t("Nav.company")}
           </h2>
           <ul className="mt-5 space-y-2 text-sm">
-            {companyLinks.map(([page, key]) => (
+            {(showBlog ? [...companyLinks, blogLink] : companyLinks).map(([page, key]) => (
               <li key={page}>
                 <Link href={pathFor(page)} className={link}>
                   {t(`Nav.${key}`)}
@@ -69,7 +80,7 @@ export function SiteFooter() {
         <div className="lg:col-span-4">
           <h2 className={heading}>{t("Footer.contact")}</h2>
           <ul className="mt-5 space-y-2 text-sm">
-            {company.phones.map((phone) => (
+            {contact.phones.map((phone) => (
               <li key={phone.e164}>
                 <a href={telHref(phone)} className={link} dir="ltr">
                   {phone.display}
@@ -77,24 +88,29 @@ export function SiteFooter() {
               </li>
             ))}
             <li>
-              <a href={`mailto:${company.email}`} className={`${link} break-all`}>
-                {company.email}
+              <a href={`mailto:${contact.email}`} className={`${link} break-all`}>
+                {contact.email}
               </a>
             </li>
             <li>
-              <a href={company.instagram.url} target="_blank" rel="noopener noreferrer" className={link}>
-                {t("Common.instagram")} <span dir="ltr">@{company.instagram.handle}</span>
+              <a
+                href={instagramUrl(contact.instagramHandle)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={link}
+              >
+                {t("Common.instagram")} <span dir="ltr">@{contact.instagramHandle}</span>
               </a>
             </li>
           </ul>
           <div className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
             <div>
               <p className="text-ivory">{t("Showroom.showroom")}</p>
-              <Address lines={ar ? company.showroom.linesAr : company.showroom.lines} />
+              <Address lines={ar ? locations.showroomAr : locations.showroomEn} />
             </div>
             <div>
               <p className="text-ivory">{t("Showroom.headOffice")}</p>
-              <Address lines={ar ? company.headOffice.linesAr : company.headOffice.lines} />
+              <Address lines={ar ? locations.headOfficeAr : locations.headOfficeEn} />
             </div>
           </div>
         </div>

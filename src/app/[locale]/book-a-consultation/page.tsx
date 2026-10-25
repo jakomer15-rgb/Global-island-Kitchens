@@ -9,6 +9,7 @@ import { pathFor } from "@/config/routes";
 import { consultationPage as c } from "@/content/pages";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { getSiteSettings } from "@/server/settings/site";
 
 export async function generateMetadata({
   params,
@@ -26,6 +27,7 @@ export async function generateMetadata({
 export default async function BookConsultationPage({ params }: PageProps<"/[locale]/book-a-consultation">) {
   const locale = (await params).locale as Locale;
   setRequestLocale(locale);
+  const { contact, locations } = await getSiteSettings();
   const t = await getTranslations({ locale, namespace: "Page" });
 
   return (
@@ -47,12 +49,18 @@ export default async function BookConsultationPage({ params }: PageProps<"/[loca
           <aside className="lg:col-span-4 lg:col-start-9">
             <h2 className="font-display text-display-md">{t("visitTitle")}</h2>
             <div className="mt-4">
-              <ContactDetails locale={locale} showHeadOffice={false} />
+              <ContactDetails
+                locale={locale}
+                contact={contact}
+                locations={locations}
+                showHeadOffice={false}
+              />
             </div>
             <h2 className="mt-10 font-display text-2xl">{c.stepsTitle[locale]}</h2>
             <div className="mt-4">
               <ContactActions
                 locale={locale}
+                contact={contact}
                 subject={c.emailSubject[locale]}
                 body={c.emailBody[locale]}
                 emailLabel={t("emailWithTemplate")}

@@ -1,8 +1,9 @@
 import { AtSign, Clock, Mail, MapPin, Phone, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
-import { company, telHref } from "@/config/company";
+import { instagramUrl, telHref } from "@/config/company";
 import type { Locale } from "@/i18n/routing";
+import type { ContactSettings, LocationSettings } from "@/lib/site-settings";
 import { Address } from "./address";
 
 /** One dt/dd pair; the icon sits inside the dt so the list stays valid (dl > div > dt + dd). */
@@ -21,9 +22,13 @@ function Row({ icon: Icon, label, children }: { icon: LucideIcon; label: string;
 /** The company's verified contact details: phones, email, Instagram, showroom (with hours) and head office. */
 export async function ContactDetails({
   locale,
+  contact,
+  locations,
   showHeadOffice = true,
 }: {
   locale: Locale;
+  contact: ContactSettings;
+  locations: LocationSettings;
   showHeadOffice?: boolean;
 }) {
   const t = await getTranslations({ locale, namespace: "Page" });
@@ -33,7 +38,7 @@ export async function ContactDetails({
     <dl>
       <Row icon={Phone} label={t("phone")}>
         <span className="flex flex-wrap gap-x-5">
-          {company.phones.map((p) => (
+          {contact.phones.map((p) => (
             <a key={p.e164} href={telHref(p)} dir="ltr" className="text-lg hover:text-walnut">
               {p.display}
             </a>
@@ -41,30 +46,30 @@ export async function ContactDetails({
         </span>
       </Row>
       <Row icon={Mail} label={t("email")}>
-        <a href={`mailto:${company.email}`} className="text-lg break-all hover:text-walnut">
-          {company.email}
+        <a href={`mailto:${contact.email}`} className="text-lg break-all hover:text-walnut">
+          {contact.email}
         </a>
       </Row>
       <Row icon={AtSign} label={t("instagram")}>
         <a
-          href={company.instagram.url}
+          href={instagramUrl(contact.instagramHandle)}
           target="_blank"
           rel="noopener noreferrer"
           dir="ltr"
           className="text-lg hover:text-walnut"
         >
-          @{company.instagram.handle}
+          @{contact.instagramHandle}
         </a>
       </Row>
       <Row icon={MapPin} label={t("showroom")}>
-        <Address lines={ar ? company.showroom.linesAr : company.showroom.lines} />
+        <Address lines={ar ? locations.showroomAr : locations.showroomEn} />
       </Row>
       <Row icon={Clock} label={t("hours")}>
-        {t("hoursValue")}
+        {ar ? locations.hoursAr : locations.hoursEn}
       </Row>
       {showHeadOffice && (
         <Row icon={MapPin} label={t("headOffice")}>
-          <Address lines={ar ? company.headOffice.linesAr : company.headOffice.lines} />
+          <Address lines={ar ? locations.headOfficeAr : locations.headOfficeEn} />
         </Row>
       )}
     </dl>

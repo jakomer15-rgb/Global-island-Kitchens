@@ -9,6 +9,7 @@ import { pathFor } from "@/config/routes";
 import { contactPage as c } from "@/content/pages";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { getSiteSettings } from "@/server/settings/site";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/contact">): Promise<Metadata> {
   const locale = (await params).locale as Locale;
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/contact"
 export default async function ContactPage({ params }: PageProps<"/[locale]/contact">) {
   const locale = (await params).locale as Locale;
   setRequestLocale(locale);
+  const { contact, locations } = await getSiteSettings();
   const [t, tf] = await Promise.all([
     getTranslations({ locale, namespace: "Page" }),
     getTranslations({ locale, namespace: "Forms.contact" }),
@@ -51,10 +53,10 @@ export default async function ContactPage({ params }: PageProps<"/[locale]/conta
               {t("contactDetails")}
             </h2>
             <div className="mt-4">
-              <ContactDetails locale={locale} />
+              <ContactDetails locale={locale} contact={contact} locations={locations} />
             </div>
             <div className="mt-8">
-              <ContactActions locale={locale} />
+              <ContactActions locale={locale} contact={contact} />
             </div>
           </aside>
         </div>

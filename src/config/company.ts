@@ -1,7 +1,8 @@
 /**
  * Company facts used by the website. Every value comes from docs/BUSINESS_FACTS.md
  * ([P] = company profile PDF page, [O] = owner's instructions). Unknown details are null and
- * are not shown. In Phase 4 these move to editable site settings in the database.
+ * are not shown. Contact details, addresses and hours are the defaults for the site settings the
+ * admin can edit (src/server/settings); public pages read those settings, not these constants.
  */
 
 export interface Phone {
@@ -30,7 +31,7 @@ export const company = {
   instagram: { handle: "global_islandkitchens", url: "https://www.instagram.com/global_islandkitchens/" }, // [P1, P8]
   /**
    * WhatsApp number: not yet confirmed which phone has WhatsApp (OPEN_QUESTIONS #8).
-   * Set NEXT_PUBLIC_WHATSAPP_NUMBER (E.164 digits, e.g. 97334597636) to show the WhatsApp button.
+   * Set it in Admin → Settings → Contact (or NEXT_PUBLIC_WHATSAPP_NUMBER before the first seed).
    */
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") || null,
   headOffice: {
@@ -53,13 +54,17 @@ export function telHref(phone: Phone) {
   return `tel:${phone.e164}`;
 }
 
-/** mailto: link to the company with a pre-filled subject and body. */
-export function mailtoHref(subject?: string, body?: string) {
+export function instagramUrl(handle: string) {
+  return `https://www.instagram.com/${handle}/`;
+}
+
+/** mailto: link with a pre-filled subject and body. */
+export function mailtoHref(email: string, subject?: string, body?: string) {
   const params = [
     subject && `subject=${encodeURIComponent(subject)}`,
     body && `body=${encodeURIComponent(body)}`,
   ].filter(Boolean);
-  return `mailto:${company.email}${params.length ? `?${params.join("&")}` : ""}`;
+  return `mailto:${email}${params.length ? `?${params.join("&")}` : ""}`;
 }
 
 export function whatsappHref(number: string, message?: string) {

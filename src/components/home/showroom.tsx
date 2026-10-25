@@ -3,12 +3,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { Address } from "@/components/site/address";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Button } from "@/components/ui/button";
-import { company, telHref } from "@/config/company";
+import { telHref } from "@/config/company";
+import type { ContactSettings, LocationSettings } from "@/lib/site-settings";
 
-export function Showroom() {
+export function Showroom({ contact, locations }: { contact: ContactSettings; locations: LocationSettings }) {
   const t = useTranslations();
   const ar = useLocale() === "ar";
-  const [main] = company.phones;
+  const [main] = contact.phones;
 
   return (
     <section aria-labelledby="showroom-title" id="showroom" className="scroll-mt-20 bg-sand py-24 md:py-32">
@@ -24,17 +25,14 @@ export function Showroom() {
         <div className="grid gap-10 sm:grid-cols-2 lg:col-span-7">
           <div className="border-t border-charcoal/20 pt-6">
             <h3 className="eyebrow text-walnut">{t("Showroom.showroom")}</h3>
-            <Address
-              lines={ar ? company.showroom.linesAr : company.showroom.lines}
-              className="mt-4 not-italic"
-            />
+            <Address lines={ar ? locations.showroomAr : locations.showroomEn} className="mt-4 not-italic" />
             <p className="mt-6 text-sm text-ink-muted">{t("Showroom.hours")}</p>
-            <p dir={ar ? "rtl" : "ltr"}>{t("Showroom.hoursValue")}</p>
+            <p dir={ar ? "rtl" : "ltr"}>{ar ? locations.hoursAr : locations.hoursEn}</p>
           </div>
           <div className="border-t border-charcoal/20 pt-6">
             <h3 className="eyebrow text-walnut">{t("Showroom.headOffice")}</h3>
             <Address
-              lines={ar ? company.headOffice.linesAr : company.headOffice.lines}
+              lines={ar ? locations.headOfficeAr : locations.headOfficeEn}
               className="mt-4 not-italic"
             />
           </div>
@@ -54,7 +52,7 @@ export function Showroom() {
                 </a>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <a href={`mailto:${company.email}`}>
+                <a href={`mailto:${contact.email}`}>
                   <Mail aria-hidden /> {t("Consultation.email")}
                 </a>
               </Button>

@@ -15,3 +15,9 @@ export class NotFoundError extends Error {
     this.name = "NotFoundError";
   }
 }
+
+/** A short, loggable description of an unknown error (connection errors often have no message). */
+export function reason(error: unknown): string {
+  if (error instanceof Error) return error.message || (error as { code?: string }).code || error.name;
+  return String(error);
+}

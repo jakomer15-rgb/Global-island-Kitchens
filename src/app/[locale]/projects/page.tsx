@@ -5,9 +5,10 @@ import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
 import { pathFor } from "@/config/routes";
 import { projectsPage as c } from "@/content/pages";
-import { projects, segmentLabels, type Segment } from "@/content/projects";
+import { segmentLabels, type Segment } from "@/content/projects";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { getPortfolio } from "@/server/content/portfolio";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/projects">): Promise<Metadata> {
   const locale = (await params).locale as Locale;
@@ -24,6 +25,7 @@ const segments: Segment[] = ["residential", "villas", "commercial"];
 export default async function ProjectsPage({ params }: PageProps<"/[locale]/projects">) {
   const locale = (await params).locale as Locale;
   setRequestLocale(locale);
+  const projects = await getPortfolio();
 
   return (
     <>

@@ -52,6 +52,18 @@ submission; the job covers retries.
 - Uploads go straight from the browser to a 15-minute signed URL; downloads use 60-second signed URLs
   issued only to staff with `file.read` (audited).
 
+## Website images and editable content
+
+- Staff upload website images (décors, project photos, blog covers) in Admin → Website images. They
+  use the same bucket and upload checks as customer files, are stored under `media/`, and are served
+  publicly only through `/media/<id>`, which redirects to a one-hour signed URL (the redirect is cached
+  for 30 minutes). Customer uploads are never served there.
+- Public pages are pre-rendered at build time from the database (settings, portfolio, blog,
+  testimonials, décors) and re-rendered when staff save a change (`revalidatePath`). If the build can't
+  reach the database it uses the verified defaults and the built-in project list, and logs a warning;
+  the first admin save after deploy refreshes the pages. Run `npm run db:deploy` and `npm run db:seed`
+  before the build so the first render has the real data.
+
 ## Client IP and rate limits
 
 Rate limits key on the client IP from `x-forwarded-for`. On Vercel that header is set by the platform.
@@ -66,7 +78,8 @@ Behind any other proxy, make sure the proxy overwrites it, or the limits can be 
 ## Launch checklist (to complete in Phase 10)
 
 - [ ] All production variables set; `STORAGE_DRIVER` unset
-- [ ] Owner account created with `admin:create`; strong password
+- [ ] Owner account created with `admin:create`; strong password; other staff created in Admin → Staff
+- [ ] Contact details, hours and the WhatsApp number confirmed in Admin → Settings
 - [ ] Cron configured and returning 200
 - [ ] Test enquiry received by email in both languages
 - [ ] Backups (point-in-time recovery) enabled and a restore rehearsed

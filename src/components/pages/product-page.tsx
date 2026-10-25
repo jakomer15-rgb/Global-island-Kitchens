@@ -4,11 +4,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CtaBand } from "@/components/site/cta-band";
 import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
+import { projectsWithScope, type Project } from "@/content/projects";
 import { Swatch, type SwatchName } from "@/components/site/swatch";
 import { pathFor } from "@/config/routes";
 import { materialsPage } from "@/content/pages";
 import { getProduct, type ProductKey } from "@/content/products";
-import { projectsWithScope } from "@/content/projects";
+
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
@@ -39,7 +40,16 @@ export function productMetadata(key: ProductKey, locale: Locale): Metadata {
   });
 }
 
-export async function ProductPage({ productKey, locale }: { productKey: ProductKey; locale: Locale }) {
+export async function ProductPage({
+  productKey,
+  locale,
+  portfolio,
+}: {
+  productKey: ProductKey;
+  locale: Locale;
+  /** The published portfolio (from the page), for related projects. */
+  portfolio: Project[];
+}) {
   setRequestLocale(locale);
   const p = getProduct(productKey);
   const [t, tm, tp] = await Promise.all([
@@ -47,7 +57,7 @@ export async function ProductPage({ productKey, locale }: { productKey: ProductK
     getTranslations({ locale, namespace: "Materials" }),
     getTranslations({ locale, namespace: "Process" }),
   ]);
-  const related = projectsWithScope(p.scope).slice(0, 6);
+  const related = projectsWithScope(p.scope, portfolio).slice(0, 6);
   const familyLabel = {
     egger: t("materialsEgger"),
     mdf: t("materialsMdf"),

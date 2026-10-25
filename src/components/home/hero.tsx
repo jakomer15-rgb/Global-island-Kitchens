@@ -17,7 +17,15 @@ const elevation: { swatch: SwatchName; className: string }[] = [
   { swatch: "paintedDark", className: "col-start-1 col-span-2 row-start-5" },
 ];
 
-export function Hero() {
+export interface HeroText {
+  eyebrow: string | null;
+  title: string | null;
+  accent: string | null;
+  intro: string | null;
+}
+
+/** 	ext holds the admin's homepage overrides for this locale; empty values use the built-in copy. */
+export function Hero({ text }: { text?: HeroText }) {
   const t = useTranslations("Hero");
   const facts = [
     { value: `${company.yearsOfExperience}+`, label: t("facts.years") },
@@ -29,11 +37,12 @@ export function Hero() {
     <section aria-labelledby="hero-title" className="relative overflow-hidden">
       <div className="container-site grid min-h-[calc(100svh-4.5rem)] items-center gap-12 py-14 lg:grid-cols-12 lg:gap-10 lg:py-20">
         <div className="lg:col-span-7">
-          <p className="eyebrow text-walnut">{t("eyebrow")}</p>
+          <p className="eyebrow text-walnut">{text?.eyebrow ?? t("eyebrow")}</p>
           <h1 id="hero-title" className="mt-8 font-display text-display-2xl text-balance">
-            {t("title")} <em className="text-walnut italic rtl:not-italic">{t("titleAccent")}</em>
+            {text?.title ?? t("title")}{" "}
+            <em className="text-walnut italic rtl:not-italic">{text?.accent ?? t("titleAccent")}</em>
           </h1>
-          <p className="mt-8 max-w-copy text-lg text-ink-muted">{t("intro")}</p>
+          <p className="mt-8 max-w-copy text-lg text-ink-muted">{text?.intro ?? t("intro")}</p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Button asChild size="lg">
               <a href="#products">

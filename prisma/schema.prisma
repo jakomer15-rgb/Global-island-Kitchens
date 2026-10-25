@@ -49,16 +49,19 @@ model User {
   createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  sessions        Session[]
-  accounts        Account[]
-  roles           UserRole[]
-  leadsAssigned   Lead[]         @relation("LeadAssignee")
-  leadActivities  LeadActivity[]
-  followUps       FollowUp[]
-  consultations   Consultation[]
-  notifications   Notification[]
-  auditLogs       AuditLog[]
-  settingsUpdated SiteSetting[]
+  sessions          Session[]
+  accounts          Account[]
+  roles             UserRole[]
+  leadsAssigned     Lead[]         @relation("LeadAssignee")
+  leadActivities    LeadActivity[]
+  followUps         FollowUp[]
+  consultations     Consultation[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  settingsUpdated   SiteSetting[]
+  filesUploaded     FileAsset[]    @relation("FileUploader")
+  materialsVerified Material[]     @relation("MaterialVerifier")
+  blogPosts         BlogPost[]     @relation("BlogAuthor")
 
   @@map("users")
 }
@@ -401,7 +404,16 @@ model QuotationRequest {
 enum FileKind {
   reference_photo
   drawing
+  material_image
+  project_photo
+  blog_image
   other
+}
+
+/// Private: customer uploads, served to staff through signed URLs. Public: website images served by /media/[id].
+enum FileVisibility {
+  private
+  public
 }
 
 enum FileStatus {
@@ -410,27 +422,190 @@ enum FileStatus {
   rejected
 }
 
-/// Private uploads. Bytes live in object storage under `storageKey`; never public.
+/// Uploaded files. Bytes live in object storage under `storageKey`. Customer uploads are private;
+/// website images uploaded by staff are public once attached to published content.
 model FileAsset {
-  id                 String     @id @default(cuid())
-  storageKey         String     @unique @map("storage_key")
-  originalName       String     @map("original_name")
-  mimeType           String     @map("mime_type")
-  sizeBytes          Int        @map("size_bytes")
-  kind               FileKind   @default(reference_photo)
-  status             FileStatus @default(pending)
+  id                 String         @id @default(cuid())
+  storageKey         String         @unique @map("storage_key")
+  originalName       String         @map("original_name")
+  mimeType           String         @map("mime_type")
+  sizeBytes          Int            @map("size_bytes")
+  kind               FileKind       @default(reference_photo)
+  visibility         FileVisibility @default(private)
+  status             FileStatus     @default(pending)
+  /// Staff member who uploaded a website image.
+  uploadedById       String?        @map("uploaded_by_id")
+  /// Credit and usage rights, required for website images (no unlicensed photography).
+  credit             String?
   /// SHA-256 of the upload ticket handed to the browser; proves the submitter started the upload.
-  ticketHash         String?    @map("ticket_hash")
-  ipHash             String?    @map("ip_hash")
-  quotationRequestId String?    @map("quotation_request_id")
-  verifiedAt         DateTime?  @map("verified_at") @db.Timestamptz(3)
-  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  ticketHash         String?        @map("ticket_hash")
+  ipHash             String?        @map("ip_hash")
+  quotationRequestId String?        @map("quotation_request_id")
+  verifiedAt         DateTime?      @map("verified_at") @db.Timestamptz(3)
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
 
   quotationRequest QuotationRequest? @relation(fields: [quotationRequestId], references: [id], onDelete: SetNull)
+  uploadedBy       User?             @relation("FileUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  materials        Material[]
+  portfolioImages  PortfolioImage[]
+  blogCovers       BlogPost[]
 
   @@index([status, createdAt])
   @@index([quotationRequestId])
+  @@index([visibility, kind])
   @@map("file_assets")
+}
+
+// ───────────────────────────── Content (Phase 5) ─────────────────────────────
+// Two locales only, so translatable text is stored as En/Ar column pairs.
+
+enum MaterialBoard {
+  egger_melamine
+  egger_laminate
+  painted_mdf
+}
+
+enum MaterialAvailability {
+  unverified
+  in_stock
+  to_order
+  discontinued
+}
+
+/// Materials library: EGGER laminate/melamine décors and painted MDF colours only (owner's rule).
+model Material {
+  id            String               @id @default(cuid())
+  board         MaterialBoard
+  /// "EGGER" for EGGER boards, null for painted MDF (CHECK in migration).
+  manufacturer  String?
+  /// EGGER décor code (e.g. "H1145 ST10") or the paint colour reference.
+  code          String
+  nameEn        String               @map("name_en")
+  nameAr        String?              @map("name_ar")
+  descriptionEn String?              @map("description_en")
+  descriptionAr String?              @map("description_ar")
+  texture       String?
+  colourFamily  String?              @map("colour_family")
+  /// Approximate swatch colour for display, e.g. "#8b6a4f".
+  swatchHex     String?              @map("swatch_hex") @db.Char(7)
+  imageFileId   String?              @map("image_file_id")
+  availability  MaterialAvailability @default(unverified)
+  sortOrder     Int                  @default(0) @map("sort_order")
+  /// Public only once checked against EGGER's current collection / the paint reference AND published.
+  verifiedAt    DateTime?            @map("verified_at") @db.Timestamptz(3)
+  verifiedById  String?              @map("verified_by_id")
+  published     Boolean              @default(false)
+  createdAt     DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  image      FileAsset? @relation(fields: [imageFileId], references: [id], onDelete: SetNull)
+  verifiedBy User?      @relation("MaterialVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  @@unique([board, code])
+  @@index([published, sortOrder])
+  @@map("materials")
+}
+
+enum PublishStatus {
+  draft
+  published
+}
+
+/// Customer testimonials. Never invented: publishing requires recorded consent (CHECK in migration).
+model Testimonial {
+  id                String        @id @default(cuid())
+  /// Name as the customer agreed to show it, e.g. "A. Customer, Riffa".
+  displayName       String        @map("display_name")
+  textEn            String?       @map("text_en")
+  textAr            String?       @map("text_ar")
+  /// Where it came from, e.g. "Email from the customer, 2026-11-02".
+  source            String
+  consentNote       String?       @map("consent_note")
+  consentRecordedAt DateTime?     @map("consent_recorded_at") @db.Timestamptz(3)
+  status            PublishStatus @default(draft)
+  sortOrder         Int           @default(0) @map("sort_order")
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, sortOrder])
+  @@map("testimonials")
+}
+
+model BlogPost {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  titleEn     String        @map("title_en")
+  titleAr     String?       @map("title_ar")
+  excerptEn   String?       @map("excerpt_en")
+  excerptAr   String?       @map("excerpt_ar")
+  /// Plain text with blank-line paragraphs and "## " headings (rendered safely, no HTML).
+  bodyEn      String        @map("body_en")
+  bodyAr      String?       @map("body_ar")
+  coverFileId String?       @map("cover_file_id")
+  status      PublishStatus @default(draft)
+  publishedAt DateTime?     @map("published_at") @db.Timestamptz(3)
+  authorId    String?       @map("author_id")
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  cover  FileAsset? @relation(fields: [coverFileId], references: [id], onDelete: SetNull)
+  author User?      @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([status, publishedAt])
+  @@map("blog_posts")
+}
+
+enum PortfolioSegment {
+  residential
+  villas
+  commercial
+}
+
+/// Website portfolio. Seeded from the company profile; client names shown only with permission.
+model PortfolioProject {
+  id                   String           @id @default(cuid())
+  slug                 String           @unique
+  segment              PortfolioSegment
+  nameEn               String           @map("name_en")
+  nameAr               String           @map("name_ar")
+  locationEn           String           @map("location_en")
+  locationAr           String           @map("location_ar")
+  sizeEn               String?          @map("size_en")
+  sizeAr               String?          @map("size_ar")
+  scopeEn              String           @map("scope_en")
+  scopeAr              String           @map("scope_ar")
+  /// kitchens, closets, bedSets, tvUnits, vanities, doors, cladding, fullJoinery, furnished, commercial
+  scopeTags            String[]         @map("scope_tags")
+  clientName           String?          @map("client_name")
+  clientNamePermission Boolean          @default(false) @map("client_name_permission")
+  featured             Boolean          @default(false)
+  published            Boolean          @default(true)
+  sortOrder            Int              @default(0) @map("sort_order")
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  images PortfolioImage[]
+
+  @@index([published, segment, sortOrder])
+  @@map("portfolio_projects")
+}
+
+/// A project photo. Shown only when the company confirms it may be used (CHECK in migration).
+model PortfolioImage {
+  id              String   @id @default(cuid())
+  projectId       String   @map("project_id")
+  fileId          String   @map("file_id")
+  altEn           String   @map("alt_en")
+  altAr           String   @map("alt_ar")
+  usagePermission Boolean  @default(false) @map("usage_permission")
+  sortOrder       Int      @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  project PortfolioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  file    FileAsset        @relation(fields: [fileId], references: [id], onDelete: Restrict)
+
+  @@index([projectId, sortOrder])
+  @@map("portfolio_images")
 }
 
 // ───────────────────────────── Platform ─────────────────────────────

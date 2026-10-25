@@ -1,17 +1,17 @@
 import { useTranslations } from "next-intl";
-import { company, whatsappHref } from "@/config/company";
+import { whatsappHref } from "@/config/company";
 
 /**
- * Floating WhatsApp button. Hidden until the WhatsApp number is confirmed and configured
- * (NEXT_PUBLIC_WHATSAPP_NUMBER), so it never opens a chat with the wrong number.
+ * Floating WhatsApp button. Hidden until the WhatsApp number is confirmed and set in the contact
+ * settings, so it never opens a chat with the wrong number.
  */
-export function WhatsAppButton() {
+export function WhatsAppButton({ number }: { number: string | null }) {
   const t = useTranslations("Common");
-  if (!company.whatsappNumber) return null;
+  if (!number) return null;
 
   return (
     <a
-      href={whatsappHref(company.whatsappNumber, t("whatsappMessage"))}
+      href={whatsappHref(number, t("whatsappMessage"))}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t("whatsappLabel")}

@@ -3,7 +3,7 @@ import type { Project } from "@/content/projects";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-/** Text-only project card (no photographs until usage permission is confirmed). */
+/** Project card; shows the first photo once one is added with usage permission. */
 export function ProjectCard({ project, locale }: { project: Project; locale: Locale }) {
   return (
     <Link
@@ -11,6 +11,15 @@ export function ProjectCard({ project, locale }: { project: Project; locale: Loc
       className="group flex h-full flex-col justify-between gap-6 border-t border-charcoal/20 py-6 transition-colors hover:border-walnut"
     >
       <div>
+        {project.images?.[0] && (
+          // eslint-disable-next-line @next/next/no-img-element -- website images are served by /media
+          <img
+            src={`/media/${project.images[0].fileId}`}
+            alt=""
+            loading="lazy"
+            className="mb-5 aspect-[3/2] w-full bg-sand object-cover"
+          />
+        )}
         <p className="text-sm text-walnut">
           {project.location[locale]}
           {project.size && <span className="text-ink-muted"> · {project.size[locale]}</span>}

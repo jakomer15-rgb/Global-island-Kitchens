@@ -92,7 +92,12 @@ export async function verifyUploads(
  */
 export async function sweepStaleUploads(db: Tx, storage: StorageDriver, now = new Date()) {
   const stale = await db.fileAsset.findMany({
-    where: { quotationRequestId: null, createdAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
+    where: {
+      quotationRequestId: null,
+      // Published website images (src/server/admin/media.ts) are kept.
+      NOT: { visibility: "public", status: "verified" },
+      createdAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+    },
     select: { id: true, storageKey: true },
     take: 200,
   });

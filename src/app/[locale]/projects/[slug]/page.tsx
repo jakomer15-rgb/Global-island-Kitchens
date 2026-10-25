@@ -7,15 +7,19 @@ import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
 import { pathFor } from "@/config/routes";
 import { projectsPage } from "@/content/pages";
-import { getProject, projects, segmentLabels } from "@/content/projects";
+import { segmentLabels } from "@/content/projects";
 import { Link } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { getPortfolio } from "@/server/content/portfolio";
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const projects = await getPortfolio();
   return routing.locales.flatMap((locale) => projects.map((p) => ({ locale, slug: p.slug })));
+}
+
+async function getProject(slug: string) {
+  return (await getPortfolio()).find((p) => p.slug === slug);
 }
 
 export async function generateMetadata({
@@ -23,7 +27,7 @@ export async function generateMetadata({
 }: PageProps<"/[locale]/projects/[slug]">): Promise<Metadata> {
   const { locale: raw, slug } = await params;
   const locale = raw as Locale;
-  const project = getProject(slug);
+  const project = await getProject(slug);
   if (!project) return {};
   const where = project.location[locale];
   return pageMetadata({
@@ -31,8 +35,8 @@ export async function generateMetadata({
     description: `${project.scopeText[locale]} · ${where}${project.size ? ` · ${project.size[locale]}` : ""} · Global Island Kitchens`,
     path: `/projects/${project.slug}`,
     locale,
-    // Text-only until photographs are approved: kept out of search results for now.
-    noindex: true,
+    // Text-only pages stay out of search results until the project has approved photos.
+    noindex: !project.images?.length,
   });
 }
 
@@ -40,16 +44,19 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
   const { locale: raw, slug } = await params;
   const locale = raw as Locale;
   setRequestLocale(locale);
-  const project = getProject(slug);
+  const project = await getProject(slug);
   if (!project) notFound();
   const t = await getTranslations({ locale, namespace: "Page" });
-  const more = projects.filter((p) => p.segment === project.segment && p.slug !== project.slug).slice(0, 3);
+  const more = (await getPortfolio())
+    .filter((p) => p.segment === project.segment && p.slug !== project.slug)
+    .slice(0, 3);
 
   const facts = [
     { label: t("segment"), value: segmentLabels[project.segment][locale] },
     { label: t("location"), value: project.location[locale] },
     ...(project.size ? [{ label: t("size"), value: project.size[locale] }] : []),
     { label: t("scope"), value: project.scopeText[locale] },
+    ...(project.clientName ? [{ label: t("client"), value: project.clientName }] : []),
   ];
 
   return (
@@ -65,6 +72,24 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
         intro={project.location[locale]}
       />
 
+      {project.images && project.images.length > 0 && (
+        <section aria-label={project.name[locale]} className="pt-12 md:pt-16">
+          <ul className="container-site grid gap-4 sm:grid-cols-2">
+            {project.images.map((img, i) => (
+              <li key={img.fileId} className={i === 0 ? "sm:col-span-2" : undefined}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- website images are served by /media */}
+                <img
+                  src={`/media/${img.fileId}`}
+                  alt={img.alt[locale]}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  className="aspect-[3/2] w-full bg-sand object-cover"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="py-20 md:py-28">
         <div className="container-site grid gap-12 lg:grid-cols-12">
           <dl className="lg:col-span-7">
@@ -76,7 +101,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
             ))}
           </dl>
           <div className="lg:col-span-4 lg:col-start-9">
-            <p className="text-sm text-ink-muted">{t("projectNote")}</p>
+            {!project.images?.length && <p className="text-sm text-ink-muted">{t("projectNote")}</p>}
             <Link
               href={pathFor("projects")}
               className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-medium underline decoration-walnut/50 underline-offset-[6px] hover:decoration-walnut"

@@ -8,6 +8,7 @@ import { pathFor } from "@/config/routes";
 import { quotePage as c } from "@/content/pages";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { getSiteSettings } from "@/server/settings/site";
 
 export async function generateMetadata({
   params,
@@ -25,6 +26,7 @@ export async function generateMetadata({
 export default async function RequestQuotePage({ params }: PageProps<"/[locale]/request-a-quote">) {
   const locale = (await params).locale as Locale;
   setRequestLocale(locale);
+  const { contact } = await getSiteSettings();
   const [t, tp] = await Promise.all([
     getTranslations({ locale, namespace: "Page" }),
     getTranslations({ locale, namespace: "Process" }),
@@ -74,6 +76,7 @@ export default async function RequestQuotePage({ params }: PageProps<"/[locale]/
               <div className="mt-5">
                 <ContactActions
                   locale={locale}
+                  contact={contact}
                   subject={c.emailSubject[locale]}
                   body={c.emailBody[locale]}
                   emailLabel={t("emailWithTemplate")}

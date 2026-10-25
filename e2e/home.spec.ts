@@ -58,8 +58,8 @@ test("language switcher keeps the page and switches language", async ({ page }) 
 test("unknown pages return 404", async ({ request }) => {
   expect((await request.get("/kitchens/does-not-exist")).status()).toBe(404);
   expect((await request.get("/ar/does-not-exist")).status()).toBe(404);
-  // The blog stays unpublished until the first article exists.
-  expect((await request.get("/blog")).status()).toBe(404);
+  // Unpublished or unknown articles don't exist (the blog index appears with the first post: e2e/admin.spec.ts).
+  expect((await request.get("/blog/does-not-exist")).status()).toBe(404);
 });
 
 test("/en redirects to the unprefixed English URL", async ({ request }) => {

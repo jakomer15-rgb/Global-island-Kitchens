@@ -21,6 +21,10 @@ export interface Project {
   scopeText: L;
   /** Shown in the profile's "Featured interiors" (P5). */
   featured?: boolean;
+  /** Added in the admin, only with the client's permission. */
+  clientName?: string;
+  /** Photos added in the admin with usage permission (served by /media). */
+  images?: { fileId: string; alt: L }[];
 }
 
 const fullJoinery: L = { en: "Complete interior joinery", ar: "أعمال نجارة داخلية متكاملة" };
@@ -242,6 +246,6 @@ export function getProject(slug: string) {
  * Projects whose stated scope includes one of the tags. "Complete joinery" and "fully furnished"
  * projects are not matched to specific products: the profile doesn't say which items they included.
  */
-export function projectsWithScope(tags: ScopeTag[]) {
-  return projects.filter((p) => p.scope.some((s) => tags.includes(s)));
+export function projectsWithScope(tags: ScopeTag[], list: Project[] = projects) {
+  return list.filter((p) => p.scope.some((s) => tags.includes(s)));
 }

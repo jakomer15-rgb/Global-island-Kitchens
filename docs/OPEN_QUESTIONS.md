@@ -65,17 +65,24 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 
 ## Testimonials
 
-36. Real customer reviews with written consent (or a Google Business Profile to link to). None will be written for the site.
+36. Real customer reviews with written consent (or a Google Business Profile to link to). None will be written for the site. Staff can now add them in Admin → Testimonials; the homepage section appears with the first published one.
 
 ## Added in Phase 3
 
 37. Arabic spelling of **Baquwa** (project location, shown in Latin script on Arabic pages until confirmed), and of the garden communities (Fahad Garden, Palace Garden, Bahama, Mesheal, Venus Garden).
 38. Location of the **Marassi Bay** flats (shown as "Bahrain").
 39. Whether the **Arabic translations** of building names (Al Faris Suite 2, Vicuna, Capri Suites, Burj Kadi) should be transliterated as written on the site, or kept in Latin script.
-40. **Blog:** who will write articles. The blog stays unpublished (not linked, 404) until the first article exists.
+40. **Blog:** who will write articles. The blog stays unpublished (not linked, 404) until the first article is published in Admin → Blog (English and Arabic required).
 
 ## Added in Phase 4
 
 41. ★ **Notification emails:** which staff addresses should receive new enquiries (`NOTIFY_EMAILS`), and the sending address/domain for customer confirmations (`EMAIL_FROM`).
 42. **Staff accounts:** names, emails and roles for the first staff (owner, general manager, sales & project manager, production supervisor, content editor).
 43. Retention period for enquiries that never become projects (the privacy policy currently says "as long as needed and as required by law").
+
+## Added in Phase 5
+
+44. **EGGER décors and painted MDF colours** to list in the materials library (codes the company stocks or orders regularly). Each must be checked against EGGER's current collection before it is published; none are entered by us.
+45. **Website photographs:** which project photos may be shown (client and photographer permission), and who owns each, for the credit line. Until then projects stay text-only and out of search results.
+46. **Opening hours wording:** the consultation form hint still says "9:00 AM – 8:00 PM" in its fixed text; if hours change in Admin → Settings, that hint needs a code change (or confirm hours won't change).
+47. Fluent Arabic review of the new public text (blog page, testimonials heading, décor library labels in `src/content/cms.ts`).

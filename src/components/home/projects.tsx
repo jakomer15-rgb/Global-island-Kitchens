@@ -3,11 +3,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { pathFor } from "@/config/routes";
-import { getProject, type Segment } from "@/content/projects";
+import type { Project, Segment } from "@/content/projects";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-/** A selection from src/content/projects.ts (no client names or photos until permitted). */
+/** A selection from the portfolio (managed in the admin; projects that are unpublished are skipped). */
 const selection: { segment: Segment; slugs: string[] }[] = [
   {
     segment: "residential",
@@ -20,7 +20,7 @@ const selection: { segment: Segment; slugs: string[] }[] = [
   },
 ];
 
-export function Projects() {
+export function Projects({ portfolio }: { portfolio: Project[] }) {
   const t = useTranslations("Projects");
   const tp = useTranslations("Page");
   const locale = useLocale() as Locale;
@@ -42,23 +42,25 @@ export function Projects() {
                 {t(`segments.${segment}`)}
               </h3>
               <ul>
-                {slugs.map(getProject).map(
-                  (p) =>
-                    p && (
-                      <li key={p.slug} className="border-b border-line">
-                        <Link href={`/projects/${p.slug}`} className="group block py-6">
-                          <span className="block font-display text-display-md group-hover:text-walnut">
-                            {p.name[locale]}
-                          </span>
-                          <span className="mt-1 block text-sm text-walnut">
-                            {p.location[locale]}
-                            {p.size && <span className="text-ink-muted"> · {p.size[locale]}</span>}
-                          </span>
-                          <span className="mt-2 block text-sm text-ink-muted">{p.scopeText[locale]}</span>
-                        </Link>
-                      </li>
-                    ),
-                )}
+                {slugs
+                  .map((slug) => portfolio.find((p) => p.slug === slug))
+                  .map(
+                    (p) =>
+                      p && (
+                        <li key={p.slug} className="border-b border-line">
+                          <Link href={`/projects/${p.slug}`} className="group block py-6">
+                            <span className="block font-display text-display-md group-hover:text-walnut">
+                              {p.name[locale]}
+                            </span>
+                            <span className="mt-1 block text-sm text-walnut">
+                              {p.location[locale]}
+                              {p.size && <span className="text-ink-muted"> · {p.size[locale]}</span>}
+                            </span>
+                            <span className="mt-2 block text-sm text-ink-muted">{p.scopeText[locale]}</span>
+                          </Link>
+                        </li>
+                      ),
+                  )}
               </ul>
             </Reveal>
           ))}

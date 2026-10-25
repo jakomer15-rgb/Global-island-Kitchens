@@ -2,12 +2,14 @@ import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CtaBand } from "@/components/site/cta-band";
+import { DecorLibrary } from "@/components/site/decor-library";
 import { PageHero } from "@/components/site/page-hero";
 import { Swatch, type SwatchName } from "@/components/site/swatch";
 import { pathFor } from "@/config/routes";
 import { materialsPage as c } from "@/content/pages";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { getMaterials } from "@/server/content/public";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/materials">): Promise<Metadata> {
   const locale = (await params).locale as Locale;
@@ -27,9 +29,10 @@ const families: { key: "egger" | "mdf"; swatches: SwatchName[] }[] = [
 export default async function MaterialsPage({ params }: PageProps<"/[locale]/materials">) {
   const locale = (await params).locale as Locale;
   setRequestLocale(locale);
-  const [tm, t] = await Promise.all([
+  const [tm, t, decors] = await Promise.all([
     getTranslations({ locale, namespace: "Materials" }),
     getTranslations({ locale, namespace: "Page" }),
+    getMaterials(),
   ]);
 
   return (
@@ -79,6 +82,8 @@ export default async function MaterialsPage({ params }: PageProps<"/[locale]/mat
           </div>
         </section>
       ))}
+
+      <DecorLibrary items={decors} locale={locale} />
 
       <section aria-labelledby="other-title" className="py-20 md:py-28">
         <div className="container-site grid gap-12 lg:grid-cols-12">

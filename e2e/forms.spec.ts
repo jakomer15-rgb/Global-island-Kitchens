@@ -26,8 +26,9 @@ async function signIn(page: Page) {
 
 async function expectInAdmin(page: Page, reference: string) {
   await signIn(page);
-  await page.goto(`/admin?ref=${reference}`);
-  await expect(page.getByText(reference, { exact: true })).toBeVisible();
+  await page.goto(`/admin/leads?q=${reference}`);
+  await page.getByRole("link", { name: reference, exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(reference);
 }
 
 test.describe("forms save to the database", () => {

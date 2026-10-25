@@ -1,5 +1,40 @@
 # Test report
 
+## Phase 5 — admin portal and CRM (2026-10-26)
+
+Environment: as in Phase 4 (production build, installed Chrome, `gik_test` database).
+
+### Automated checks
+
+| Check                           | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lint, typecheck, build          | Pass. The build also passes with the database unreachable (pages fall back to the verified defaults and the built-in project list, with a logged warning)                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Migration and seed              | `20261026090000_admin_content` applies cleanly; the seed is idempotent (second run: 0 new projects) and keeps role changes made in the admin                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `npm test` (unit)               | 64 / 64. New: permission matrix (each role sees only its admin pages; only the owner manages staff; first page after sign-in), setting permissions, image kinds per editor, setting defaults valid, invalid stored settings fall back, banner needs both languages, phone/SEO limits                                                                                                                                                                                                                                                                                               |
+| `npm run test:db` (integration) | 29 / 29 (13 new): lead pipeline (lost needs a reason, first contact moves to "contacted", assignment notifies, follow-ups, history, audit, search, dashboard), CRM denied to other roles, customer edits without duplicates and consent history, consultation transitions, staff create/roles/disable (sessions removed)/password reset, last-owner and self guards, role permission edits, settings audit, publish rules for décors, testimonials, blog, images and portfolio (service and CHECK constraint), image sweep keeps published images, fake image rejected             |
+| `npm run test:e2e` (Playwright) | 193 pass, 49 skipped by design, 0 fail. New (`e2e/admin.spec.ts`): all 16 admin pages open for the owner with no serious axe issues; a new sales manager is created, signs in, sees only the CRM and is refused staff/settings; banner saved in the admin appears on the English and Arabic site (and a refused save keeps what was typed); an EGGER décor is refused until checked, then shown on `/materials`; a draft post is 404 until published in both languages; a lead note is added; admin menu on a phone. The forms tests now find submissions through the leads search |
+
+Visual check: screenshots of the dashboard, leads, staff, settings, content and new-material screens
+(desktop) and the dashboard and leads (mobile) reviewed. Lead references wrapped onto two lines in the
+leads table (fixed). Lighthouse was not re-run: public pages render the same markup, plus the banner,
+testimonials, blog and décor sections only when staff publish them.
+
+### Security review (Phase 5 changes)
+
+| Entry point                                   | Protection                                                                                                                                                                                     |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin pages and server actions (≈35)          | `requireActor(permission)` on every page and action, and `assertCan` again in every service; ids validated; bound arguments treated as untrusted (setting keys checked with `Object.hasOwn`)   |
+| Staff management                              | Owner-only by default; no self role change or self disable; only an owner grants/removes the owner role; one active owner always kept; disabling deletes sessions; every change audited        |
+| Website images (`/media/[id]`, upload action) | Staff only, per image kind; JPEG/PNG/WebP up to 8 MB; ticket, size and file signature checked; credit required (CHECK); only public, verified, non-customer files served; customer files never |
+| Public content from the database              | Rendered as text (blog bodies parsed into paragraphs, headings, lists; no HTML); JSON-LD escaped; swatch colours validated by regex and CHECK; notification links limited to `/admin/`         |
+
+Found and fixed: the dashboard chart was focusable inside an `aria-hidden` wrapper (axe); admin tables had
+no accessible name (caption added); React's form action reset fields after a refused save (forms now keep
+input); abandoned-upload clean-up would have deleted published website images; inherited names were
+accepted as setting keys.
+
+Not covered: real devices, Safari/Firefox, fluent Arabic review of the new public copy (`src/content/cms.ts`).
+
 ## Phase 4 — database, backend, authentication, forms (2026-10-25)
 
 Environment: as before, plus local PostgreSQL 17 (embedded, port 5434); integration and E2E tests run

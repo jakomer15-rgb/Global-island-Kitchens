@@ -7,6 +7,7 @@ import { pathFor } from "@/config/routes";
 import { showroomPage as c } from "@/content/pages";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { getSiteSettings } from "@/server/settings/site";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/showroom">): Promise<Metadata> {
   const locale = (await params).locale as Locale;
@@ -22,6 +23,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/showroom
 export default async function ShowroomPage({ params }: PageProps<"/[locale]/showroom">) {
   const locale = (await params).locale as Locale;
   setRequestLocale(locale);
+  const { contact, locations } = await getSiteSettings();
   const t = await getTranslations({ locale, namespace: "Page" });
 
   return (
@@ -39,7 +41,7 @@ export default async function ShowroomPage({ params }: PageProps<"/[locale]/show
             {t("contactDetails")}
           </h2>
           <div className="lg:col-span-7 lg:col-start-6">
-            <ContactDetails locale={locale} />
+            <ContactDetails locale={locale} contact={contact} locations={locations} />
           </div>
         </div>
       </section>

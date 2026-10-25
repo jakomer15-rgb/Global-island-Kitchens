@@ -34,7 +34,8 @@
     "company": "Company",
     "privacy": "Privacy policy",
     "terms": "Terms and conditions",
-    "bespoke": "More we make"
+    "bespoke": "More we make",
+    "blog": "Blog"
   },
   "Page": {
     "home": "Home",
@@ -60,6 +61,7 @@
     "location": "Location",
     "size": "Size",
     "scope": "Scope of work",
+    "client": "Client",
     "segment": "Type",
     "backToProjects": "Back to all projects",
     "moreProjects": "More projects",

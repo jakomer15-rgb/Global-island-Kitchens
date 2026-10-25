@@ -1,14 +1,31 @@
 # Data model
 
-Status: **Phase 4 implemented** in `prisma/schema.prisma` and `prisma/migrations/20261025200000_init`:
+Status: **Phases 4–5 implemented** in `prisma/schema.prisma`; Phase 4 in `prisma/migrations/20261025200000_init`:
 identity and roles, Customer, Lead, LeadActivity, FollowUp, Consultation, ConsentRecord,
 QuotationRequest, FileAsset, Notification, OutboxEvent, AuditLog, RateLimitBucket, SiteSetting.
-Quotations/orders/projects (Phase 6), content, materials and portfolio (Phase 5), designer accounts
+Quotations/orders/projects (Phase 6), designer accounts
 (Phase 7) and AI drafts / webhooks (Phase 8) are added by their phases' migrations.
 
 Phase 4 differences from the design below: designer accounts aren't created yet; quotation requests
 store preferred board families (`egger`, `mdf`, `aluminium`, `unsure`) because the materials library
 arrives in Phase 5; one reference sequence serves all enquiries (`GIK-Q-…`, `GIK-C-…`, `GIK-M-…`).
+
+Phase 5 (`20261026090000_admin_content`) adds Material, Testimonial, BlogPost, PortfolioProject and
+PortfolioImage, and gives FileAsset a `visibility`, uploader and `credit` for website images.
+Differences from the design below:
+
+- Bilingual content uses paired `…En` / `…Ar` columns instead of `*Translation` tables: there are only
+  two languages, every editor screen shows both side by side, and publish rules ("Arabic required")
+  become simple CHECK constraints.
+- Materials are limited to `egger_laminate`, `egger_melamine` and `painted_mdf` boards. `manufacturer`
+  must be `EGGER` for EGGER boards and empty for painted MDF; a décor is public only once someone
+  checked it against the current range (`verifiedAt`) and published it, and never when discontinued.
+- Testimonials can't be published without a consent note and date; blog posts can't be published
+  without the Arabic title and text; a portfolio client name needs `clientNamePermission`; a public
+  file needs a credit, and customer uploads can never be public. All are CHECK constraints with DB tests.
+- Site settings are grouped per screen (`contact`, `locations`, `banner`, `homeHero`, `seo`), each
+  validated by a Zod schema in `src/lib/site-settings.ts`; invalid or missing values fall back to the
+  verified defaults.
 
 Conventions:
 
@@ -90,9 +107,11 @@ Conventions:
 | `AiDraft`         | kind `lead_summary \| reply \| blog \| project_description \| caption`, sourceType, sourceId, model, prompt hash, output, status `draft \| approved \| discarded`, reviewedById | AI output is never published or sent without `approved`                            |
 | `WebhookEndpoint` | name, url, secret (encrypted), events[], active                                                                                                                                 | n8n targets                                                                        |
 
-## Seed data (Phase 4)
+## Seed data (Phases 4–5)
 
-Seeded: permissions, system roles, furniture categories and page content written **only from
-[BUSINESS_FACTS.md](BUSINESS_FACTS.md)**, site settings (contact, hours, addresses), FAQs that state
-only known facts. Not seeded: testimonials, prices, pricing rules, project photos, material décors
-(staff add and verify them).
+Seeded (idempotent, never overwriting staff edits): permissions, system roles (new permissions are
+granted to existing roles only when introduced; the owner always has all), site settings from
+[BUSINESS_FACTS.md](BUSINESS_FACTS.md) (contact, hours, addresses), and the 21 portfolio projects
+from the company profile (created if missing). Page copy stays in `src/content` and `src/messages`.
+Not seeded: testimonials, blog posts, prices, pricing rules, photos, material décors (staff add and
+verify them).

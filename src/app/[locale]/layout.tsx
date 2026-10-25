@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { fontVariables } from "@/app/fonts";
+import { AnnouncementBanner } from "@/components/site/announcement-banner";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { SkipLink } from "@/components/site/skip-link";
@@ -10,6 +11,8 @@ import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { company } from "@/config/company";
 import { siteUrl } from "@/config/site";
 import { htmlLang, localeDirection, routing } from "@/i18n/routing";
+import { getBlogPosts } from "@/server/content/public";
+import { getSiteSettings } from "@/server/settings/site";
 import "../globals.css";
 
 function pick<T extends Record<string, unknown>>(obj: T, keys: (keyof T)[]) {
@@ -23,10 +26,12 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Meta" });
+  const { seo } = await getSiteSettings();
+  const ar = locale === "ar";
   return {
     metadataBase: new URL(siteUrl),
-    title: { default: t("title"), template: `%s | ${company.shortName}` },
-    description: t("description"),
+    title: { default: (ar ? seo.titleAr : seo.titleEn) ?? t("title"), template: `%s | ${company.shortName}` },
+    description: (ar ? seo.descriptionAr : seo.descriptionEn) ?? t("description"),
     applicationName: company.shortName,
     openGraph: {
       type: "website",
@@ -44,6 +49,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
+  const [{ contact, locations, banner }, posts] = await Promise.all([getSiteSettings(), getBlogPosts()]);
+  const bannerText = banner.enabled ? (locale === "ar" ? banner.textAr : banner.textEn) : null;
 
   return (
     <html lang={htmlLang[locale]} dir={localeDirection[locale]} className={fontVariables}>
@@ -51,12 +58,13 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         {/* Client components only need the Common strings; everything else renders on the server. */}
         <NextIntlClientProvider messages={pick(await getMessages(), ["Common"])}>
           <SkipLink />
-          <SiteHeader />
+          <AnnouncementBanner text={bannerText} />
+          <SiteHeader phone={contact.phones[0]} />
           <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
             {children}
           </main>
-          <SiteFooter />
-          <WhatsAppButton />
+          <SiteFooter contact={contact} locations={locations} showBlog={posts.length > 0} />
+          <WhatsAppButton number={contact.whatsappNumber} />
         </NextIntlClientProvider>
       </body>
     </html>

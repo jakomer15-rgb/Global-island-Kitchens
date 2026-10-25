@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { alternates, localizedPath } from "./seo";
+import { settingDefaults } from "@/lib/site-settings";
 import { organizationJsonLd } from "./structured-data";
 
 describe("seo", () => {
@@ -19,7 +20,7 @@ describe("seo", () => {
 
 describe("structured data", () => {
   it("uses only verified facts and no review markup", () => {
-    const json = JSON.stringify(organizationJsonLd("en"));
+    const json = JSON.stringify(organizationJsonLd("en", settingDefaults.contact));
     expect(json).toContain("Global Island Kitchens W.L.L");
     expect(json).toContain("Al-Hamalah");
     expect(json).not.toMatch(/Review|AggregateRating|openingHours|geo/);

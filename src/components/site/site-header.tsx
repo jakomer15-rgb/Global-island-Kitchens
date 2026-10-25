@@ -1,7 +1,7 @@
 import { Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { company, telHref } from "@/config/company";
+import { telHref, type Phone as PhoneNumber } from "@/config/company";
 import { pathFor } from "@/config/routes";
 import { Link } from "@/i18n/navigation";
 import { DesktopNav } from "./desktop-nav";
@@ -10,9 +10,9 @@ import { MobileNav } from "./mobile-nav";
 import { mainNavItems, productNavKeys } from "./nav-items";
 import { Wordmark } from "./wordmark";
 
-export function SiteHeader() {
+/** phone is the main number from the contact settings. */
+export function SiteHeader({ phone }: { phone: PhoneNumber }) {
   const t = useTranslations();
-  const phone = company.phones[0];
   const products = [
     ...productNavKeys.map((key) => ({ href: pathFor(key), label: t(`Products.items.${key}.name`) })),
     { href: pathFor("bespoke"), label: t("Nav.bespoke") },
