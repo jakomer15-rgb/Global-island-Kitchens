@@ -46,21 +46,29 @@ All text combinations pass WCAG 2.1 AA; axe runs on every E2E build.
 - `container-site`: max 84 rem, 20 px gutters on mobile, 40 px from 768 px.
 - Sections: `py-24 md:py-32`, alternating ivory / sand, with charcoal and walnut-deep bands for rhythm.
 - Section headings: numbered eyebrow (`01 —— What we make`), display title, optional intro (max 38 rem).
+- Sections after the first in `main` use `content-visibility: auto` (laid out only when near the
+  viewport). Accessibility scans must render them first (`e2e/axe.ts`).
 - RTL: logical utilities only (`ms-`, `pe-`, `start-`, `end-`, `border-e`); directional icons flipped
   with `rtl:` variants.
 
 ## Components
 
-| Component          | Notes                                                                                                                 |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `Button` (shadcn)  | Variants `primary`, `accent`, `outline`, `outlineLight`, `link`; sizes `md`, `lg`, `icon`; min 44 px tall             |
-| `SiteHeader`       | Sticky, translucent ivory; anchor navigation while only the homepage exists; phone link; language switch; mobile menu |
-| `MobileNav`        | Radix Dialog: full-screen, focus trap, Escape to close                                                                |
-| `LanguageSwitcher` | Full page load to the same page in the other language (canonical URLs, correct `lang`/`dir`)                          |
-| `WhatsAppButton`   | Hidden until `NEXT_PUBLIC_WHATSAPP_NUMBER` is set                                                                     |
-| `Swatch`           | CSS-gradient finish illustrations (no images or SVG filters, cheap to paint)                                          |
-| `Reveal`           | CSS scroll-driven fade-up; content is visible without it (no JS, reduced motion, unsupported browsers)                |
-| `Wordmark`         | Typographic placeholder until the logo is supplied                                                                    |
+| Component          | Notes                                                                                                                              |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Button` (shadcn)  | Variants `primary`, `accent`, `outline`, `outlineLight`, `link`; sizes `md`, `lg`, `icon`; min 44 px tall                          |
+| `SiteHeader`       | Sticky ivory bar: products menu, main links, phone (xl+), language switch, "Request a quote", mobile menu                          |
+| `DesktopNav`       | Products menu as a WAI disclosure (button + `aria-expanded`); Escape and outside click close it; `aria-current` on the active link |
+| `MobileNav`        | Native `<dialog>` with `showModal()`: focus trap, inert background, Escape to close; no library                                    |
+| `PageHero`         | Breadcrumbs (with BreadcrumbList JSON-LD), eyebrow, `h1`, intro — every inner page                                                 |
+| `ContactDetails`   | Valid `dl` of phones, email, Instagram, showroom, hours, head office                                                               |
+| `ContactActions`   | Email (optionally pre-filled) and call buttons                                                                                     |
+| `CtaBand`          | Closing call to action: quotation and consultation pages                                                                           |
+| `ProjectCard`      | Text-only project card (no photos until permitted)                                                                                 |
+| `LanguageSwitcher` | Full page load to the same page in the other language (canonical URLs, correct `lang`/`dir`)                                       |
+| `WhatsAppButton`   | Hidden until `NEXT_PUBLIC_WHATSAPP_NUMBER` is set                                                                                  |
+| `Swatch`           | CSS-gradient finish illustrations (no images or SVG filters, cheap to paint)                                                       |
+| `Reveal`           | CSS scroll-driven fade-up; content is visible without it (no JS, reduced motion, unsupported browsers)                             |
+| `Wordmark`         | Typographic placeholder until the logo is supplied                                                                                 |
 
 ## Motion
 

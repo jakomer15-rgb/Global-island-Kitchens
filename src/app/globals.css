@@ -72,6 +72,15 @@
     line-height: 1.85;
   }
 
+  /*
+   * Sections after the first are laid out only when scrolled near (content and accessibility tree
+   * are unaffected). The intrinsic size placeholder keeps the scrollbar stable.
+   */
+  main > section ~ section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 900px;
+  }
+
   ::selection {
     background: var(--color-walnut);
     color: var(--color-ivory);

@@ -1,4 +1,4 @@
-import AxeBuilder from "@axe-core/playwright";
+import { seriousViolations } from "./axe";
 import { expect, test } from "@playwright/test";
 
 const locales = [
@@ -22,9 +22,7 @@ for (const l of locales) {
       // Reveal animations finish before scanning so contrast is measured on final colours.
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.reload();
-      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
-      const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-      expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+      expect(await seriousViolations(page)).toEqual([]);
     });
 
     test("only links to pages that exist", async ({ page, request }) => {
@@ -58,8 +56,10 @@ test("language switcher keeps the page and switches language", async ({ page }) 
 });
 
 test("unknown pages return 404", async ({ request }) => {
-  expect((await request.get("/kitchens/wooden")).status()).toBe(404);
+  expect((await request.get("/kitchens/does-not-exist")).status()).toBe(404);
   expect((await request.get("/ar/does-not-exist")).status()).toBe(404);
+  // The blog stays unpublished until the first article exists.
+  expect((await request.get("/blog")).status()).toBe(404);
 });
 
 test("/en redirects to the unprefixed English URL", async ({ request }) => {
@@ -74,9 +74,10 @@ test("mobile menu opens, navigates and closes", async ({ page, isMobile }) => {
   await page.getByRole("button", { name: "Menu" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("link", { name: "Materials" }).click();
+  await dialog.getByRole("link", { name: "Wardrobes" }).click();
   await expect(dialog).toBeHidden();
-  await expect(page).toHaveURL(/#materials$/);
+  await expect(page).toHaveURL(/\/wardrobes$/);
+  await expect(page.locator("h1")).toHaveText("Wardrobes");
 });
 
 test("WhatsApp button stays hidden until a number is configured", async ({ page }) => {

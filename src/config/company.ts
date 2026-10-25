@@ -53,6 +53,15 @@ export function telHref(phone: Phone) {
   return `tel:${phone.e164}`;
 }
 
+/** mailto: link to the company with a pre-filled subject and body. */
+export function mailtoHref(subject?: string, body?: string) {
+  const params = [
+    subject && `subject=${encodeURIComponent(subject)}`,
+    body && `body=${encodeURIComponent(body)}`,
+  ].filter(Boolean);
+  return `mailto:${company.email}${params.length ? `?${params.join("&")}` : ""}`;
+}
+
 export function whatsappHref(number: string, message?: string) {
   const text = message ? `?text=${encodeURIComponent(message)}` : "";
   return `https://wa.me/${number}${text}`;

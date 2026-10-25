@@ -23,9 +23,60 @@
     "products": "What we make",
     "projects": "Projects",
     "materials": "Materials",
-    "process": "Process",
+    "designers": "For designers",
+    "about": "About",
     "showroom": "Showroom",
-    "contact": "Contact"
+    "contact": "Contact",
+    "faq": "FAQs",
+    "quote": "Request a quote",
+    "consultation": "Book a consultation",
+    "allMaterials": "Materials & finishes",
+    "company": "Company",
+    "privacy": "Privacy policy",
+    "terms": "Terms and conditions",
+    "bespoke": "More we make"
+  },
+  "Page": {
+    "home": "Home",
+    "breadcrumb": "Breadcrumb",
+    "makes": "What we make",
+    "materials": "Materials",
+    "materialsEgger": "EGGER laminate & melamine",
+    "materialsMdf": "Painted MDF",
+    "materialsAluminium": "Aluminium",
+    "materialsLink": "About our materials",
+    "process": "How a project runs",
+    "related": "From our projects",
+    "relatedIntro": "Projects whose scope included this work.",
+    "allProjects": "All projects",
+    "viewProject": "View project",
+    "ctaTitle": "Planning something similar?",
+    "ctaBody": "Send us your dimensions, photos or drawings for a quotation, or book a consultation at our showroom.",
+    "requestQuote": "Request a quotation",
+    "bookConsultation": "Book a consultation",
+    "emailUs": "Email us",
+    "emailWithTemplate": "Email us your request",
+    "callUs": "Call",
+    "location": "Location",
+    "size": "Size",
+    "scope": "Scope of work",
+    "segment": "Type",
+    "backToProjects": "Back to all projects",
+    "moreProjects": "More projects",
+    "projectNote": "Photographs and client details are added once the client gives permission.",
+    "contactDetails": "Contact details",
+    "phone": "Telephone",
+    "email": "Email",
+    "instagram": "Instagram",
+    "showroom": "Showroom",
+    "headOffice": "Head office & factory",
+    "hours": "Showroom hours",
+    "hoursValue": "9:00 AM – 8:00 PM",
+    "visitTitle": "Visit the showroom",
+    "moreTitle": "More we make",
+    "faqTitle": "Questions",
+    "faqLink": "Read all FAQs",
+    "swatchNote": "Swatches are illustrations of finish families, not product photographs."
   },
   "Hero": {
     "eyebrow": "Manufacturing · Supply · Installation",
@@ -33,7 +84,7 @@
     "titleAccent": "made in Bahrain.",
     "intro": "For over 11 years, Global Island Kitchens has designed, manufactured and installed cabinetry for homes, developers and commercial spaces across the Kingdom.",
     "primary": "See what we make",
-    "secondary": "Contact us",
+    "secondary": "Request a quotation",
     "factsLabel": "Company at a glance",
     "facts": {
       "years": "Years of experience",
@@ -47,25 +98,37 @@
     "intro": "Custom sizes, shapes and finishes for homes, offices and commercial spaces.",
     "items": {
       "woodenKitchens": {
-        "name": "Kitchens",
+        "name": "Wooden kitchens",
         "body": "Modern fitted kitchens in EGGER boards or painted MDF."
       },
-      "aluminiumKitchens": { "name": "Aluminium kitchens", "body": "Aluminium kitchens, made to order." },
+      "aluminiumKitchens": {
+        "name": "Aluminium kitchens",
+        "body": "Aluminium kitchens, made to order."
+      },
       "wardrobes": {
         "name": "Wardrobes",
         "body": "Hinged-door and sliding-door wardrobes, and glass-door closets."
       },
-      "walkInClosets": { "name": "Walk-in closets", "body": "Walk-in closets, made to measure." },
+      "walkInClosets": {
+        "name": "Walk-in closets",
+        "body": "Walk-in closets, made to measure."
+      },
       "bedroomFurniture": {
         "name": "Bedroom furniture",
         "body": "Bed sets with headboard panels, bedside units and dressing tables."
       },
-      "tvUnits": { "name": "TV units", "body": "Feature walls with integrated lighting." },
+      "tvUnits": {
+        "name": "TV units",
+        "body": "Feature walls with integrated lighting."
+      },
       "wallCladding": {
         "name": "Wall cladding",
         "body": "Slatted and panel cladding, and panelled living spaces with LED accents."
       },
-      "bathroomVanities": { "name": "Bathroom vanities", "body": "Floating and tall-unit vanities." }
+      "bathroomVanities": {
+        "name": "Bathroom vanities",
+        "body": "Floating and tall-unit vanities."
+      }
     },
     "more": "We also make laundry rooms, laminate doors with concealed hinges, Murphy beds and custom cabinets."
   },
@@ -117,17 +180,38 @@
     "eyebrow": "How a project runs",
     "title": "From first conversation to final fitting.",
     "steps": {
-      "inquiry": { "title": "Enquiry", "body": "Tell us about the space and what you have in mind." },
+      "inquiry": {
+        "title": "Enquiry",
+        "body": "Tell us about the space and what you have in mind."
+      },
       "measurement": {
         "title": "Measurement",
         "body": "The space is measured so everything is made to fit."
       },
-      "design": { "title": "Design", "body": "Your design is prepared and agreed with you." },
-      "quotation": { "title": "Quotation", "body": "A quotation for the agreed design." },
-      "approval": { "title": "Approval", "body": "Production starts after your approval." },
-      "production": { "title": "Production", "body": "Made in our factory in Hamad Town." },
-      "installation": { "title": "Installation", "body": "Installed in your space." },
-      "completion": { "title": "Completion", "body": "Your space, finished and handed over." }
+      "design": {
+        "title": "Design",
+        "body": "Your design is prepared and agreed with you."
+      },
+      "quotation": {
+        "title": "Quotation",
+        "body": "A quotation for the agreed design."
+      },
+      "approval": {
+        "title": "Approval",
+        "body": "Production starts after your approval."
+      },
+      "production": {
+        "title": "Production",
+        "body": "Made in our factory in Hamad Town."
+      },
+      "installation": {
+        "title": "Installation",
+        "body": "Installed in your space."
+      },
+      "completion": {
+        "title": "Completion",
+        "body": "Your space, finished and handed over."
+      }
     }
   },
   "Projects": {
@@ -138,43 +222,13 @@
       "residential": "Residential buildings",
       "villas": "Villas",
       "commercial": "Commercial & hospitality"
-    },
-    "items": {
-      "alFaris": { "name": "Al Faris Suite 2", "place": "Juffair", "scope": "Fully furnished" },
-      "marassi": {
-        "name": "Marassi Bay",
-        "place": "10 flats",
-        "scope": "Fully furnished: 5 one-bedroom flats and 5 studios"
-      },
-      "vista": { "name": "Vista", "place": "Juffair · 10 storeys", "scope": "Kitchens" },
-      "capri": {
-        "name": "Capri Suites",
-        "place": "Janabiya · 5 storeys",
-        "scope": "Kitchens, closets, vanities and wall cladding"
-      },
-      "villaHidd": {
-        "name": "Six villas",
-        "place": "Hidd · two storeys each",
-        "scope": "Kitchens, closets and vanities"
-      },
-      "alNaseem": {
-        "name": "Al Naseem Phase 2",
-        "place": "Diyar Al Muharraq",
-        "scope": "Three bedroom sets, kitchens and a closet"
-      },
-      "selvis": { "name": "Cafe interiors", "place": "Hamad Town", "scope": "Cafe interior joinery" },
-      "trolly": {
-        "name": "Retail interiors",
-        "place": "Diyar Al Muharraq",
-        "scope": "Retail interior joinery"
-      }
     }
   },
   "Designers": {
     "eyebrow": "For designers, architects and developers",
     "title": "A manufacturing partner for your projects.",
     "body": "We work alongside interior designers, architects, developers and contractors, from single rooms to complete residential buildings.",
-    "cta": "Talk to our team"
+    "cta": "Working with us"
   },
   "Showroom": {
     "eyebrow": "Visit us",

@@ -14,6 +14,7 @@ export type PageKey =
   | "tvUnits"
   | "wallCladding"
   | "bathroomVanities"
+  | "bespoke"
   | "materials"
   | "projects"
   | "designers"
@@ -28,27 +29,34 @@ export type PageKey =
 
 export const pages: Record<PageKey, { path: string; ready: boolean }> = {
   home: { path: "/", ready: true },
-  about: { path: "/about", ready: false },
-  woodenKitchens: { path: "/kitchens/wooden", ready: false },
-  aluminiumKitchens: { path: "/kitchens/aluminium", ready: false },
-  wardrobes: { path: "/wardrobes", ready: false },
-  walkInClosets: { path: "/walk-in-closets", ready: false },
-  bedroomFurniture: { path: "/bedroom-furniture", ready: false },
-  tvUnits: { path: "/tv-units", ready: false },
-  wallCladding: { path: "/wall-cladding", ready: false },
-  bathroomVanities: { path: "/bathroom-vanities", ready: false },
-  materials: { path: "/materials", ready: false },
-  projects: { path: "/projects", ready: false },
-  designers: { path: "/designers", ready: false },
-  requestQuote: { path: "/request-a-quote", ready: false },
-  bookConsultation: { path: "/book-a-consultation", ready: false },
-  showroom: { path: "/showroom", ready: false },
+  about: { path: "/about", ready: true },
+  woodenKitchens: { path: "/kitchens/wooden", ready: true },
+  aluminiumKitchens: { path: "/kitchens/aluminium", ready: true },
+  wardrobes: { path: "/wardrobes", ready: true },
+  walkInClosets: { path: "/walk-in-closets", ready: true },
+  bedroomFurniture: { path: "/bedroom-furniture", ready: true },
+  tvUnits: { path: "/tv-units", ready: true },
+  wallCladding: { path: "/wall-cladding", ready: true },
+  bathroomVanities: { path: "/bathroom-vanities", ready: true },
+  // "More we make": profile products without their own page (approved 2026-10-25, ARCHITECTURE.md §9).
+  bespoke: { path: "/bespoke", ready: true },
+  materials: { path: "/materials", ready: true },
+  projects: { path: "/projects", ready: true },
+  designers: { path: "/designers", ready: true },
+  requestQuote: { path: "/request-a-quote", ready: true },
+  bookConsultation: { path: "/book-a-consultation", ready: true },
+  showroom: { path: "/showroom", ready: true },
+  // No articles exist yet; the blog is built on the database in Phase 4 and stays hidden until the first post.
   blog: { path: "/blog", ready: false },
-  faq: { path: "/faq", ready: false },
-  contact: { path: "/contact", ready: false },
-  privacy: { path: "/privacy-policy", ready: false },
-  terms: { path: "/terms", ready: false },
+  faq: { path: "/faq", ready: true },
+  contact: { path: "/contact", ready: true },
+  privacy: { path: "/privacy-policy", ready: true },
+  terms: { path: "/terms", ready: true },
 };
+
+export function pathFor(key: PageKey): string {
+  return pages[key].path;
+}
 
 /** The page's path if it is built, otherwise null (render plain text instead of a link). */
 export function hrefFor(key: PageKey): string | null {

@@ -2,7 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
-import { hrefFor, type PageKey } from "@/config/routes";
+import { hrefFor, pathFor, type PageKey } from "@/config/routes";
 import { Link } from "@/i18n/navigation";
 
 const productKeys = [
@@ -18,6 +18,7 @@ const productKeys = [
 
 export function Products() {
   const t = useTranslations("Products");
+  const tn = useTranslations("Nav");
 
   return (
     <section aria-labelledby="products-title" id="products" className="scroll-mt-20 py-24 md:py-32">
@@ -67,7 +68,15 @@ export function Products() {
             );
           })}
         </ul>
-        <p className="mt-10 max-w-copy text-ink-muted">{t("more")}</p>
+        <p className="mt-10 max-w-copy text-ink-muted">
+          {t("more")}{" "}
+          <Link
+            href={pathFor("bespoke")}
+            className="text-charcoal underline decoration-walnut/50 underline-offset-[6px] hover:decoration-walnut"
+          >
+            {tn("bespoke")}
+          </Link>
+        </p>
       </div>
     </section>
   );

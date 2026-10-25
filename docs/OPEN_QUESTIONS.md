@@ -60,9 +60,16 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 
 ## Legal and accounts
 
-34. ★ Privacy policy and terms: the company's details for the data controller section; any existing legal texts.
+34. ★ Privacy policy and terms: drafts are live at `/privacy-policy` and `/terms`, describing only what the site does today (no forms, cookies or analytics; Bahrain PDPL rights). They need review by the company's legal adviser, and an update when forms (Phase 4) and analytics (Phase 9) arrive.
 35. Domain name, and accounts for hosting, email, storage, analytics, Search Console, n8n, WhatsApp Business.
 
 ## Testimonials
 
 36. Real customer reviews with written consent (or a Google Business Profile to link to). None will be written for the site.
+
+## Added in Phase 3
+
+37. Arabic spelling of **Baquwa** (project location, shown in Latin script on Arabic pages until confirmed), and of the garden communities (Fahad Garden, Palace Garden, Bahama, Mesheal, Venus Garden).
+38. Location of the **Marassi Bay** flats (shown as "Bahrain").
+39. Whether the **Arabic translations** of building names (Al Faris Suite 2, Vicuna, Capri Suites, Burj Kadi) should be transliterated as written on the site, or kept in Latin script.
+40. **Blog:** who will write articles. The blog stays unpublished (not linked, 404) until the first article exists.

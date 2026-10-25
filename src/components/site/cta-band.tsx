@@ -1,0 +1,33 @@
+import { ArrowRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { Button } from "@/components/ui/button";
+import { pathFor } from "@/config/routes";
+import { Link } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
+
+/** Closing call to action: request a quotation or book a consultation. */
+export async function CtaBand({ locale, title, body }: { locale: Locale; title?: string; body?: string }) {
+  const t = await getTranslations({ locale, namespace: "Page" });
+  return (
+    <section aria-labelledby="cta-title" className="bg-charcoal py-20 text-ivory md:py-24">
+      <div className="container-site grid items-end gap-10 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <h2 id="cta-title" className="font-display text-display-lg text-balance">
+            {title ?? t("ctaTitle")}
+          </h2>
+          <p className="mt-5 max-w-copy text-ivory/75">{body ?? t("ctaBody")}</p>
+        </div>
+        <div className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">
+          <Button asChild size="lg" variant="accent">
+            <Link href={pathFor("requestQuote")}>
+              {t("requestQuote")} <ArrowRight aria-hidden className="rtl:rotate-180" />
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outlineLight">
+            <Link href={pathFor("bookConsultation")}>{t("bookConsultation")}</Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}

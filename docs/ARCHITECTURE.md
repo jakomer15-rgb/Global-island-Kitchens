@@ -105,7 +105,7 @@ product lines in the company profile:
 | 22  | Terms and conditions            | `/terms`                | —                                                     |
 
 Profile products without a page of their own in the brief (laundry rooms, laminate doors, ceiling
-umbrellas, custom cabinets, bespoke furniture) go on a **"More we make"** page (`/bespoke`) if the owner
+umbrellas, custom cabinets, bespoke furniture) go on a **"More we make"** page (`/bespoke`, built in Phase 3) if the owner
 agrees **(approve)**.
 
 Portals:

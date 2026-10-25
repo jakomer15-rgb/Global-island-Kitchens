@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Swatch, type SwatchName } from "@/components/site/swatch";
 import { company } from "@/config/company";
+import { pathFor } from "@/config/routes";
+import { Link } from "@/i18n/navigation";
 
 /** Cabinet-front composition for the hero: an illustration of the two board families, not a photo. */
 /** Panels tile a 3 × 5 grid exactly, like a run of cabinet doors. */
@@ -39,7 +41,7 @@ export function Hero() {
               </a>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <a href="#showroom">{t("secondary")}</a>
+              <Link href={pathFor("requestQuote")}>{t("secondary")}</Link>
             </Button>
           </div>
         </div>

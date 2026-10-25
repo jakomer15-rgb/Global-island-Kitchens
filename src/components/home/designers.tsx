@@ -1,7 +1,8 @@
-import { Mail } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { company } from "@/config/company";
+import { pathFor } from "@/config/routes";
+import { Link } from "@/i18n/navigation";
 
 export function Designers() {
   const t = useTranslations("Designers");
@@ -18,9 +19,9 @@ export function Designers() {
         </div>
         <div className="lg:col-span-4 lg:justify-self-end">
           <Button asChild variant="outlineLight" size="lg">
-            <a href={`mailto:${company.email}`}>
-              <Mail aria-hidden /> {t("cta")}
-            </a>
+            <Link href={pathFor("designers")}>
+              {t("cta")} <ArrowRight aria-hidden className="rtl:rotate-180" />
+            </Link>
           </Button>
         </div>
       </div>

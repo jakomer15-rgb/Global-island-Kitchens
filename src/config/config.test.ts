@@ -27,7 +27,9 @@ describe("company facts", () => {
 describe("routes", () => {
   it("links only to pages that are built", () => {
     expect(hrefFor("home")).toBe("/");
-    expect(hrefFor("woodenKitchens")).toBeNull();
+    expect(hrefFor("woodenKitchens")).toBe("/kitchens/wooden");
+    // No articles yet: the blog is not linked anywhere.
+    expect(hrefFor("blog")).toBeNull();
   });
 
   it("has unique paths", () => {

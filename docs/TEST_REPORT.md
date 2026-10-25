@@ -1,5 +1,60 @@
 # Test report
 
+## Phase 3 — public pages (2026-10-25)
+
+Same environment as Phase 2.
+
+### Automated checks
+
+| Check                           | Result                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lint, typecheck, format         | Pass                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `npm test` (Vitest)             | 21 / 21. New: every content entry has English and Arabic (matching list lengths); materials rule over all copy; no EGGER partnership wording; no client/developer/contractor names from the profile; meta title/description lengths; projects linked to products only by stated scope                                                                                                                                                        |
+| `npm run build`                 | Pass; 89 static pages (22 page types × 2 languages + 21 project pages × 2)                                                                                                                                                                                                                                                                                                                                                                   |
+| `npm run test:e2e` (Playwright) | 174 pass, 40 skipped by design (desktop-only/mobile-only tests; mobile axe runs on a sample). Every page in both languages: status 200, one `h1`, branded title, canonical, `dir`; titles unique; crawl of every internal link returns 200; axe WCAG 2.1 AA on every page (desktop) and a sample (mobile); products menu by keyboard; mobile menu; FAQ; pre-filled quotation email; project pages `noindex`; unknown project and `/blog` 404 |
+
+### Lighthouse (localhost production build, final run)
+
+| Page                              | Mobile perf | Mobile a11y | Mobile SEO | Desktop (all four) | Mobile LCP |
+| --------------------------------- | ----------- | ----------- | ---------- | ------------------ | ---------- |
+| `/`                               | 84          | 96\*        | 100        | 100                | 2.9 s      |
+| `/ar`                             | 74          | 96\*        | 100        | 100                | 4.0 s      |
+| `/wardrobes`                      | 93          | 96\*        | 100        | 100                | 2.1 s      |
+| `/ar/kitchens/wooden`             | 70          | 100         | 100        | 100                | 3.9 s      |
+| `/projects`                       | 89          | 100         | 100        | 100                | 2.9 s      |
+| `/projects/capri-suites-janabiya` | 87          | 100         | 66†        | 100 (SEO 66†)      | 1.9 s      |
+| `/contact`                        | 87          | 100         | 100        | 100                | 2.9 s      |
+| `/faq`                            | 94          | 100         | 100        | 100                | 1.9 s      |
+| `/about`                          | 93          | 100         | 100        | 100                | 1.9 s      |
+| `/request-a-quote`                | 95          | 100         | 100        | 100                | 1.8 s      |
+
+Best practices: 100 everywhere.
+
+\* **Measurement artifact, not a contrast problem.** Off-screen sections use `content-visibility: auto`;
+Lighthouse's axe measures them before the browser renders them and reads the wrong background (for
+example, the walnut "Selected work" eyebrow reported on charcoal, the colour of the section above it;
+on the page it sits on ivory at 8:1). Our E2E axe sweep renders every section first and reports no
+issues. `content-visibility` is kept because it raised mobile performance (homepage median of 3: 79 → 88).
+
+† Intentional: project pages are `noindex` until photographs are approved.
+
+Mobile performance is still below 90 on Arabic pages (Amiri font) and on the homepage; carried into Phase 9.
+
+### Issues found and fixed during the phase
+
+| Found by       | Issue                                                                                                       | Fix                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| axe (E2E)      | Contact details list (`dl`) had icons and wrappers between `dt`/`dd` pairs (screen readers can't pair them) | Icon moved inside `dt`; `dl > div > dt + dd`                                  |
+| Lighthouse     | Radix NavigationMenu and Dialog added JS to every page (mobile TBT 350 → 630 ms)                            | Products menu as a WAI disclosure; mobile menu on native `<dialog>`           |
+| Lighthouse     | Style/layout of the whole long page on load                                                                 | `content-visibility: auto` on sections after the first                        |
+| Content review | Projects with "complete joinery" were being shown as examples on every product page                         | Projects link to products only by explicitly stated scope; none for aluminium |
+| Content review | A few product bullets went beyond the profile                                                               | Removed                                                                       |
+| Lighthouse     | Missing approved page: "More we make" (`/bespoke`, ARCHITECTURE §9 decision 5)                              | Built and linked from the products menu, footer and homepage                  |
+
+### Not covered yet
+
+Real devices; Safari and Firefox; fluent Arabic review; legal review of the privacy policy and terms.
+
 ## Phase 2 — design system and homepage (2026-10-25)
 
 Environment: Windows 10, Node 24.22.1, production build (`next build` + `next start`), Google Chrome

@@ -7,6 +7,29 @@ export function localizedPath(path: string, locale: Locale) {
   return path === "/" ? "/ar" : `/ar${path}`;
 }
 
+/** Title, description, canonical and hreflang for an inner page. The layout adds "| Global Island Kitchens". */
+export function pageMetadata({
+  title,
+  description,
+  path,
+  locale,
+  noindex = false,
+}: {
+  title: string;
+  description: string;
+  path: string;
+  locale: Locale;
+  noindex?: boolean;
+}): Metadata {
+  return {
+    title,
+    description,
+    alternates: alternates(path, locale),
+    openGraph: { title, description, url: localizedPath(path, locale) },
+    ...(noindex ? { robots: { index: false, follow: true } } : {}),
+  };
+}
+
 /** Canonical URL plus hreflang alternates for a page that exists in both languages. */
 export function alternates(path: string, locale: Locale): Metadata["alternates"] {
   return {
