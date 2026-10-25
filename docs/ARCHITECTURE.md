@@ -1,7 +1,7 @@
 # Technical architecture
 
-Status: **Phase 1 proposal, awaiting owner approval.** Decisions marked **(approve)** need a yes before
-Phase 2 builds on them.
+Status: **Approved by the owner on 2026-10-25** (all six decisions in §9). Items marked **(approve)**
+below were part of that approval.
 
 ## 1. Goals and constraints
 
@@ -17,23 +17,23 @@ Phase 2 builds on them.
 Exact versions are pinned when the project is scaffolded in Phase 2 (current stable releases at that
 date, checked against each project's release notes).
 
-| Concern | Choice | Notes |
-|---|---|---|
-| Framework | Next.js (App Router), React, TypeScript `strict` | Server Components by default; Server Actions for forms |
-| Styling | Tailwind CSS, shadcn/ui (Radix primitives) | Components copied into the repo and restyled to the brand |
-| Motion | Motion (formerly Framer Motion) | Respects `prefers-reduced-motion` |
-| Forms | React Hook Form + Zod | One Zod schema per form, shared by client and server |
-| Database | PostgreSQL, Prisma ORM | Migrations committed; DB constraints back business rules |
-| Auth **(approve)** | Better Auth | Auth.js is now maintained by the Better Auth team, which recommends Better Auth for new projects. Email + password for staff and designers, optional TOTP 2FA for staff, database sessions |
-| Files | S3-compatible storage (Cloudflare R2 recommended) | Private bucket, presigned uploads, server-checked type and size |
-| Email | Transactional provider (Resend recommended) via an outbox table | Sends only when configured |
-| Charts | Recharts | Admin dashboard only |
-| i18n | next-intl | `/` English, `/ar` Arabic; `dir="rtl"` and Arabic typography |
-| AI **(approve)** | Anthropic Claude API, server-side only | Optional; off until a key is set; every output is a draft needing human approval |
-| Automation | n8n via signed webhooks | Outbound events + inbound authenticated endpoints |
-| Testing | Vitest (unit + DB integration), Playwright (E2E), axe (accessibility), Lighthouse CI | |
-| Monitoring | Sentry (errors, performance) | Enabled by DSN; PII scrubbed |
-| Hosting **(approve)** | Vercel + managed Postgres (Neon) | Region close to Bahrain where available; see DEPLOYMENT in Phase 10 |
+| Concern               | Choice                                                                               | Notes                                                                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Framework             | Next.js (App Router), React, TypeScript `strict`                                     | Server Components by default; Server Actions for forms                                                                                                                                     |
+| Styling               | Tailwind CSS, shadcn/ui (Radix primitives)                                           | Components copied into the repo and restyled to the brand                                                                                                                                  |
+| Motion                | Motion (formerly Framer Motion)                                                      | Respects `prefers-reduced-motion`. Public-page reveals are CSS scroll-driven (no JS); the library is installed when an interactive feature needs it (Phase 4 wizard)                       |
+| Forms                 | React Hook Form + Zod                                                                | One Zod schema per form, shared by client and server                                                                                                                                       |
+| Database              | PostgreSQL, Prisma ORM                                                               | Migrations committed; DB constraints back business rules                                                                                                                                   |
+| Auth **(approve)**    | Better Auth                                                                          | Auth.js is now maintained by the Better Auth team, which recommends Better Auth for new projects. Email + password for staff and designers, optional TOTP 2FA for staff, database sessions |
+| Files                 | S3-compatible storage (Cloudflare R2 recommended)                                    | Private bucket, presigned uploads, server-checked type and size                                                                                                                            |
+| Email                 | Transactional provider (Resend recommended) via an outbox table                      | Sends only when configured                                                                                                                                                                 |
+| Charts                | Recharts                                                                             | Admin dashboard only                                                                                                                                                                       |
+| i18n                  | next-intl                                                                            | `/` English, `/ar` Arabic; `dir="rtl"` and Arabic typography                                                                                                                               |
+| AI **(approve)**      | Anthropic Claude API, server-side only                                               | Optional; off until a key is set; every output is a draft needing human approval                                                                                                           |
+| Automation            | n8n via signed webhooks                                                              | Outbound events + inbound authenticated endpoints                                                                                                                                          |
+| Testing               | Vitest (unit + DB integration), Playwright (E2E), axe (accessibility), Lighthouse CI |                                                                                                                                                                                            |
+| Monitoring            | Sentry (errors, performance)                                                         | Enabled by DSN; PII scrubbed                                                                                                                                                               |
+| Hosting **(approve)** | Vercel + managed Postgres (Neon)                                                     | Region close to Bahrain where available; see DEPLOYMENT in Phase 10                                                                                                                        |
 
 ## 3. Application structure
 
@@ -79,30 +79,30 @@ Layer rules (enforced by ESLint import rules in Phase 2):
 Public pages, each in English and Arabic (`/ar/...`). The brief's 22 required pages, mapped to the
 product lines in the company profile:
 
-| # | Page | URL | Profile products it covers |
-|---|---|---|---|
-| 1 | Home | `/` | — |
-| 2 | About us | `/about` | Company story, team structure, factory and machinery |
-| 3 | Customised wooden kitchens | `/kitchens/wooden` | Modern kitchens (EGGER boards and painted MDF) |
-| 4 | Aluminium kitchens | `/kitchens/aluminium` | Aluminum kitchens |
-| 5 | Wardrobes | `/wardrobes` | Hinged and sliding door wardrobes, glass-door closets |
-| 6 | Walk-in closets | `/walk-in-closets` | Walk-in closets |
-| 7 | Bedroom furniture | `/bedroom-furniture` | Bed sets, dressing tables, Murphy beds |
-| 8 | TV units | `/tv-units` | TV units / feature walls |
-| 9 | Wall cladding | `/wall-cladding` | Wall cladding, living area cladding |
-| 10 | Bathroom vanities | `/bathroom-vanities` | Vanities |
-| 11 | Materials and finishes | `/materials` | EGGER laminate/melamine and painted MDF gallery |
-| 12 | Our projects | `/projects` | Portfolio from the profile (once approved) |
-| 13 | Project detail | `/projects/[slug]` | — |
-| 14 | Interior designer collaboration | `/designers` | Trade/designer programme + portal entry |
-| 15 | Request a quotation | `/request-a-quote` | Six-step wizard |
-| 16 | Book a consultation | `/book-a-consultation` | Showroom, site or online consultation |
-| 17 | Our showroom | `/showroom` | Al-Hamalah showroom |
-| 18 | Blog | `/blog`, `/blog/[slug]` | Hidden until a post is published |
-| 19 | FAQs | `/faq` | — |
-| 20 | Contact us | `/contact` | — |
-| 21 | Privacy policy | `/privacy-policy` | — |
-| 22 | Terms and conditions | `/terms` | — |
+| #   | Page                            | URL                     | Profile products it covers                            |
+| --- | ------------------------------- | ----------------------- | ----------------------------------------------------- |
+| 1   | Home                            | `/`                     | —                                                     |
+| 2   | About us                        | `/about`                | Company story, team structure, factory and machinery  |
+| 3   | Customised wooden kitchens      | `/kitchens/wooden`      | Modern kitchens (EGGER boards and painted MDF)        |
+| 4   | Aluminium kitchens              | `/kitchens/aluminium`   | Aluminum kitchens                                     |
+| 5   | Wardrobes                       | `/wardrobes`            | Hinged and sliding door wardrobes, glass-door closets |
+| 6   | Walk-in closets                 | `/walk-in-closets`      | Walk-in closets                                       |
+| 7   | Bedroom furniture               | `/bedroom-furniture`    | Bed sets, dressing tables, Murphy beds                |
+| 8   | TV units                        | `/tv-units`             | TV units / feature walls                              |
+| 9   | Wall cladding                   | `/wall-cladding`        | Wall cladding, living area cladding                   |
+| 10  | Bathroom vanities               | `/bathroom-vanities`    | Vanities                                              |
+| 11  | Materials and finishes          | `/materials`            | EGGER laminate/melamine and painted MDF gallery       |
+| 12  | Our projects                    | `/projects`             | Portfolio from the profile (once approved)            |
+| 13  | Project detail                  | `/projects/[slug]`      | —                                                     |
+| 14  | Interior designer collaboration | `/designers`            | Trade/designer programme + portal entry               |
+| 15  | Request a quotation             | `/request-a-quote`      | Six-step wizard                                       |
+| 16  | Book a consultation             | `/book-a-consultation`  | Showroom, site or online consultation                 |
+| 17  | Our showroom                    | `/showroom`             | Al-Hamalah showroom                                   |
+| 18  | Blog                            | `/blog`, `/blog/[slug]` | Hidden until a post is published                      |
+| 19  | FAQs                            | `/faq`                  | —                                                     |
+| 20  | Contact us                      | `/contact`              | —                                                     |
+| 21  | Privacy policy                  | `/privacy-policy`       | —                                                     |
+| 22  | Terms and conditions            | `/terms`                | —                                                     |
 
 Profile products without a page of their own in the brief (laundry rooms, laminate doors, ceiling
 umbrellas, custom cabinets, bespoke furniture) go on a **"More we make"** page (`/bespoke`) if the owner
@@ -178,7 +178,7 @@ installation → completion`, each change audited with who and when.
   from the outbox; n8n workflows handle notifications, follow-ups, reminders and reporting. WhatsApp
   messaging only through the official WhatsApp Business Platform, only to contacts who opted in.
 
-## 9. Decisions needing approval
+## 9. Decisions (approved 2026-10-25)
 
 1. Better Auth for authentication (section 2).
 2. Vercel + Neon hosting, Cloudflare R2 storage, Resend email.

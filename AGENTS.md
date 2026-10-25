@@ -22,18 +22,18 @@ before starting any task.
 
 ## Agents
 
-| Agent | Owns | Main skills |
-|---|---|---|
-| `project-architect` | Requirements, architecture, folder structure, decisions | — |
-| `luxury-ui-designer` | Visual design, layouts, typography, motion, RTL | `ui-ux-design`, `frontend-design` |
-| `frontend-developer` | Next.js pages and components, forms, i18n | `frontend-design`, `performance-optimization` |
-| `backend-developer` | Services, actions, route handlers, auth, uploads, outbox | `backend-architecture`, `api-development` |
-| `database-architect` | Prisma schema, migrations, constraints, seeds | `database-management` |
-| `admin-dashboard` | `/admin` portal: dashboard, CRM, quotations, projects, CMS | `frontend-design`, `backend-architecture` |
-| `seo-specialist` | Metadata, structured data, sitemap, local SEO, analytics consent | `seo-optimization` |
-| `security-qa` | Security review, tests, accessibility (reports, doesn't ship features) | `security-auditing`, `automated-testing`, `gik-code-review` |
-| `devops` | CI/CD, environments, hosting, monitoring, backups | `deployment`, `documentation` |
-| `ai-automation` | AI assistants (drafts only), n8n, email, WhatsApp, consent | `api-development`, `security-auditing` |
+| Agent                | Owns                                                                   | Main skills                                                 |
+| -------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `project-architect`  | Requirements, architecture, folder structure, decisions                | —                                                           |
+| `luxury-ui-designer` | Visual design, layouts, typography, motion, RTL                        | `ui-ux-design`, `frontend-design`                           |
+| `frontend-developer` | Next.js pages and components, forms, i18n                              | `frontend-design`, `performance-optimization`               |
+| `backend-developer`  | Services, actions, route handlers, auth, uploads, outbox               | `backend-architecture`, `api-development`                   |
+| `database-architect` | Prisma schema, migrations, constraints, seeds                          | `database-management`                                       |
+| `admin-dashboard`    | `/admin` portal: dashboard, CRM, quotations, projects, CMS             | `frontend-design`, `backend-architecture`                   |
+| `seo-specialist`     | Metadata, structured data, sitemap, local SEO, analytics consent       | `seo-optimization`                                          |
+| `security-qa`        | Security review, tests, accessibility (reports, doesn't ship features) | `security-auditing`, `automated-testing`, `gik-code-review` |
+| `devops`             | CI/CD, environments, hosting, monitoring, backups                      | `deployment`, `documentation`                               |
+| `ai-automation`      | AI assistants (drafts only), n8n, email, WhatsApp, consent             | `api-development`, `security-auditing`                      |
 
 Every agent also uses `gik-content-rules` for anything customer-facing, and `documentation` at the
 end of its work.
@@ -59,5 +59,14 @@ end of its work.
 
 ## Commands
 
-Defined in Phase 2 when the app is scaffolded (`npm run dev`, `lint`, `typecheck`, `test`,
-`test:db`, `test:e2e`, `build`).
+| Command                                       | What it does                                                        |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| `npm run dev`                                 | Development server on http://localhost:3000                         |
+| `npm run lint` / `typecheck` / `format:check` | Static checks (CI runs all three)                                   |
+| `npm test`                                    | Vitest unit tests                                                   |
+| `npm run build` then `npm run test:e2e`       | Playwright E2E + axe against the production build (port 3100)       |
+| `npm run audit:lighthouse -- <baseUrl> / /ar` | Lighthouse, mobile and desktop, against a running production server |
+| `npm run check`                               | lint + typecheck + unit tests + build                               |
+
+Locally, Playwright and Lighthouse use the installed Google Chrome; CI installs Playwright's Chromium.
+Design tokens and component rules: `docs/DESIGN_SYSTEM.md`. Latest results: `docs/TEST_REPORT.md`.

@@ -4,10 +4,23 @@ Bilingual (English / Arabic) website and business platform for Global Island Kit
 manufacturer and installer of kitchens, wardrobes and interior joinery in the Kingdom of Bahrain
 (head office: Hamad Town · showroom: Al-Hamalah).
 
-**Status:** Phase 1 (planning) complete, awaiting owner approval. No application code yet.
+**Status:** Phase 2 complete: design system, layout shell and homepage in English and Arabic. Other
+pages arrive in Phase 3 (see [docs/ROADMAP.md](docs/ROADMAP.md)).
 
 This is a fresh start on the `fresh-start` branch. The earlier project is preserved on the `main`
 branch.
+
+## Getting started
+
+Requires Node 24.
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Commands and workflow: [AGENTS.md](AGENTS.md#commands).
 
 ## Read first
 
@@ -17,6 +30,8 @@ branch.
 - [docs/DATA_MODEL.md](docs/DATA_MODEL.md) — database design
 - [docs/ROADMAP.md](docs/ROADMAP.md) — ten phases and their gates
 - [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) — missing business details
+- [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) — colours, typography, components
+- [docs/TEST_REPORT.md](docs/TEST_REPORT.md) — latest test and Lighthouse results
 
 ## Source material
 

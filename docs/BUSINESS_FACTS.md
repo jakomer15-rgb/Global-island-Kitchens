@@ -14,28 +14,28 @@ is published until the owner decides.
 
 ## Company
 
-| Fact | Value | Source |
-|---|---|---|
-| Legal name | Global Island Kitchens W.L.L | P1 |
-| Country | Kingdom of Bahrain | P1 |
-| Activities | Manufacturing, supplying, distribution, installation | P1 |
-| Focus | Kitchens, wardrobes and interior joinery | P1 |
-| Experience | Over 11 years | P2 |
-| Positioning | Manufacturing, supplying and distribution of cabinetry, appliances and accessories, locally made and imported; residential and commercial; finished and pre-assembled products; supplies markets at home and abroad | P2 |
-| Speciality | Bulk kitchen and wardrobe production and fixing | P2 |
-| Headline numbers | 11+ years of experience · 20+ projects showcased · 9 core product lines · 2 sites (head office and showroom) | P2 |
-| Tagline | "Your Vision – Our Craft": custom sizes, shapes and finishes for homes, offices and commercial spaces | P4 |
+| Fact             | Value                                                                                                                                                                                                               | Source |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Legal name       | Global Island Kitchens W.L.L                                                                                                                                                                                        | P1     |
+| Country          | Kingdom of Bahrain                                                                                                                                                                                                  | P1     |
+| Activities       | Manufacturing, supplying, distribution, installation                                                                                                                                                                | P1     |
+| Focus            | Kitchens, wardrobes and interior joinery                                                                                                                                                                            | P1     |
+| Experience       | Over 11 years                                                                                                                                                                                                       | P2     |
+| Positioning      | Manufacturing, supplying and distribution of cabinetry, appliances and accessories, locally made and imported; residential and commercial; finished and pre-assembled products; supplies markets at home and abroad | P2     |
+| Speciality       | Bulk kitchen and wardrobe production and fixing                                                                                                                                                                     | P2     |
+| Headline numbers | 11+ years of experience · 20+ projects showcased · 9 core product lines · 2 sites (head office and showroom)                                                                                                        | P2     |
+| Tagline          | "Your Vision – Our Craft": custom sizes, shapes and finishes for homes, offices and commercial spaces                                                                                                               | P4     |
 
 ## Contact and locations
 
-| Fact | Value | Source |
-|---|---|---|
-| Telephone | 34597636 / 77901988 | P1, P8 |
-| Email | globalkitchen.bh@gmail.com | P1, P8 |
-| Instagram | @global_islandkitchens | P1, P8 |
+| Fact                      | Value                                                           | Source                   |
+| ------------------------- | --------------------------------------------------------------- | ------------------------ |
+| Telephone                 | 34597636 / 77901988                                             | P1, P8                   |
+| Email                     | globalkitchen.bh@gmail.com                                      | P1, P8                   |
+| Instagram                 | @global_islandkitchens                                          | P1, P8                   |
 | Head office (and factory) | Bldg 3301, Road 360, Block 1203, Hamad Town, Kingdom of Bahrain | P8 (factory location: O) |
-| Showroom | Building 2253B, Road 90, Block 1014, Al-Hamalah | P8 |
-| Showroom hours | 9:00 AM – 8:00 PM (days not stated) | O |
+| Showroom                  | Building 2253B, Road 90, Block 1014, Al-Hamalah                 | P8                       |
+| Showroom hours            | 9:00 AM – 8:00 PM (days not stated)                             | O                        |
 
 ## Team structure (roles only, no names)
 
@@ -49,18 +49,18 @@ From "What We Do" (P2): Modern Kitchens · Aluminum Kitchens · Wardrobes (hinge
 
 From "Our Products" (P3–P4):
 
-| Product | Description in the profile | Page |
-|---|---|---|
-| Kitchens | Modern fitted kitchens | P3 |
-| Closets & Wardrobes | Walk-in and glass-door closets | P3 |
-| TV Units | Feature walls with integrated lighting | P3 |
-| Vanities | Floating and tall-unit bathroom vanities | P3 |
-| Wall Cladding | Timber slat and panel cladding (see conflicts) | P3 |
-| Living Area Cladding | Panelled living spaces with LED accents | P3 |
-| Bed Sets | Headboard panels, bedside units and dressing tables | P4 |
-| Laminate Doors | Laminate doors with concealed hinges and matching handles | P4 |
-| Laundry Rooms | Fitted laundry cabinets with smart storage | P4 |
-| Ceiling Umbrellas | Custom-made, made-to-measure, powder-coated finish | P4 |
+| Product              | Description in the profile                                | Page |
+| -------------------- | --------------------------------------------------------- | ---- |
+| Kitchens             | Modern fitted kitchens                                    | P3   |
+| Closets & Wardrobes  | Walk-in and glass-door closets                            | P3   |
+| TV Units             | Feature walls with integrated lighting                    | P3   |
+| Vanities             | Floating and tall-unit bathroom vanities                  | P3   |
+| Wall Cladding        | Timber slat and panel cladding (see conflicts)            | P3   |
+| Living Area Cladding | Panelled living spaces with LED accents                   | P3   |
+| Bed Sets             | Headboard panels, bedside units and dressing tables       | P4   |
+| Laminate Doors       | Laminate doors with concealed hinges and matching handles | P4   |
+| Laundry Rooms        | Fitted laundry cabinets with smart storage                | P4   |
+| Ceiling Umbrellas    | Custom-made, made-to-measure, powder-coated finish        | P4   |
 
 The owner's brief [O] also lists: customised wooden kitchens, aluminium kitchens, modern wardrobes,
 walk-in closets, customised bedsets, TV units, wooden wall cladding, dressing tables, bathroom
@@ -83,39 +83,39 @@ page with photos, the owner confirms the client agrees to being named (see open 
 
 ### Residential buildings and apartments
 
-| Project and location | Client / developer | Scope |
-|---|---|---|
-| Al Faris Suite 2, Juffair | 11 Pearls Developers | Fully furnished |
-| Marassi Bay: 10 flats (5 one-bedroom, 5 studio) | — | Fully furnished |
-| Burj Kadi, Juffair: 5 flats | — | All wooden interior work |
-| Vicuna, Hajiyath: 3 storeys | 11 Pearls | Kitchen, closet, bed set, TV unit, vanity, doors and cladding |
-| Vista, Juffair: 10 storeys | Kooheji Contracting | Kitchens |
-| Capri Suites, Janabiya: 5 storeys | Dadabai | Kitchen, closet, vanity and wall cladding |
-| 11 Pearls, Sanad: 6 storeys | 11 Pearls | All wood interior work |
-| 11 Pearls, Adliya: 7 storeys | 11 Pearls | All wood interior work |
-| Nuwaidrat, Sanad | Black Sand Contracting | All wood interior work |
+| Project and location                            | Client / developer     | Scope                                                         |
+| ----------------------------------------------- | ---------------------- | ------------------------------------------------------------- |
+| Al Faris Suite 2, Juffair                       | 11 Pearls Developers   | Fully furnished                                               |
+| Marassi Bay: 10 flats (5 one-bedroom, 5 studio) | —                      | Fully furnished                                               |
+| Burj Kadi, Juffair: 5 flats                     | —                      | All wooden interior work                                      |
+| Vicuna, Hajiyath: 3 storeys                     | 11 Pearls              | Kitchen, closet, bed set, TV unit, vanity, doors and cladding |
+| Vista, Juffair: 10 storeys                      | Kooheji Contracting    | Kitchens                                                      |
+| Capri Suites, Janabiya: 5 storeys               | Dadabai                | Kitchen, closet, vanity and wall cladding                     |
+| 11 Pearls, Sanad: 6 storeys                     | 11 Pearls              | All wood interior work                                        |
+| 11 Pearls, Adliya: 7 storeys                    | 11 Pearls              | All wood interior work                                        |
+| Nuwaidrat, Sanad                                | Black Sand Contracting | All wood interior work                                        |
 
 ### Villas
 
-| Project and location | Client / developer | Scope |
-|---|---|---|
-| Pineapple Boutique, Baquwa: 3-storey villa | — | Kitchen, closet, TV unit, vanity and cladding |
-| Muharraq: 6-storey villa | Nexum Real Estate & Construction | Kitchen, closet and vanity |
-| Janabiya: 5-storey villa | Al Rashdan Contracting | Kitchen, closet, bed set, TV unit, vanity, doors and cladding |
-| Hidd: 6 two-storey villas | Kadi Construction | Kitchen, closet and vanity |
-| 4-villa project, Aali | 11 Pearls | Villa interior works |
-| 414 Villa, Riffa: 2 storeys | — | All wood interior work |
-| North Riffa: 2 villas | 11 Pearls | All wood interior work |
-| Al Naseem Phase 2, Villa 9313, Diyar Al Muharraq | — | 3 bedroom sets, kitchens and closet |
-| Fahad Garden (Jasra), Palace Garden (Saar), Bahama, Mesheal and Venus Garden | Almoayyed Contracting | Kitchens and closets |
+| Project and location                                                         | Client / developer               | Scope                                                         |
+| ---------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------- |
+| Pineapple Boutique, Baquwa: 3-storey villa                                   | —                                | Kitchen, closet, TV unit, vanity and cladding                 |
+| Muharraq: 6-storey villa                                                     | Nexum Real Estate & Construction | Kitchen, closet and vanity                                    |
+| Janabiya: 5-storey villa                                                     | Al Rashdan Contracting           | Kitchen, closet, bed set, TV unit, vanity, doors and cladding |
+| Hidd: 6 two-storey villas                                                    | Kadi Construction                | Kitchen, closet and vanity                                    |
+| 4-villa project, Aali                                                        | 11 Pearls                        | Villa interior works                                          |
+| 414 Villa, Riffa: 2 storeys                                                  | —                                | All wood interior work                                        |
+| North Riffa: 2 villas                                                        | 11 Pearls                        | All wood interior work                                        |
+| Al Naseem Phase 2, Villa 9313, Diyar Al Muharraq                             | —                                | 3 bedroom sets, kitchens and closet                           |
+| Fahad Garden (Jasra), Palace Garden (Saar), Bahama, Mesheal and Venus Garden | Almoayyed Contracting            | Kitchens and closets                                          |
 
 ### Commercial and hospitality
 
-| Project and location | Scope |
-|---|---|
-| Derby Cafe, Applied Science University, Sitra | Cafe booth |
-| Selvis Cafe, Hamad Town | Cafe interiors |
-| Trolly Market, Diyar Al Muharraq | Retail interiors |
+| Project and location                          | Scope            |
+| --------------------------------------------- | ---------------- |
+| Derby Cafe, Applied Science University, Sitra | Cafe booth       |
+| Selvis Cafe, Hamad Town                       | Cafe interiors   |
+| Trolly Market, Diyar Al Muharraq              | Retail interiors |
 
 Featured interiors with photos in the profile (P5): Al Faris Suite 2 (Juffair, developer 11 Pearls,
 fully furnished) and Marassi Bay (10 fully furnished flats). The profile's project gallery (P6) also

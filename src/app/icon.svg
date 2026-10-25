@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Interim icon (cabinet-door motif) until the company's logo files are supplied. -->
+  <rect width="64" height="64" rx="10" fill="#4a2e1b"/>
+  <rect x="14" y="12" width="17" height="40" fill="none" stroke="#f1e9dd" stroke-width="2.5"/>
+  <rect x="33" y="12" width="17" height="40" fill="none" stroke="#f1e9dd" stroke-width="2.5"/>
+  <path d="M27 28v8M37 28v8" stroke="#c9a27e" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

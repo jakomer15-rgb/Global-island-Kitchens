@@ -1,0 +1,207 @@
+{
+  "Meta": {
+    "title": "Custom Kitchens, Wardrobes & Joinery in Bahrain",
+    "description": "Global Island Kitchens W.L.L manufactures, supplies and installs kitchens, wardrobes and interior joinery in Bahrain. Showroom in Al-Hamalah, head office in Hamad Town."
+  },
+  "Common": {
+    "skipToContent": "Skip to content",
+    "homeLink": "Global Island Kitchens, home",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "mainNav": "Main navigation",
+    "language": "العربية",
+    "languageLabel": "Switch to Arabic",
+    "call": "Call",
+    "callNumber": "Call {number}",
+    "email": "Email",
+    "instagram": "Instagram",
+    "whatsapp": "WhatsApp",
+    "whatsappLabel": "Chat with us on WhatsApp",
+    "whatsappMessage": "Hello Global Island Kitchens, I would like to ask about a project."
+  },
+  "Nav": {
+    "products": "What we make",
+    "projects": "Projects",
+    "materials": "Materials",
+    "process": "Process",
+    "showroom": "Showroom",
+    "contact": "Contact"
+  },
+  "Hero": {
+    "eyebrow": "Manufacturing · Supply · Installation",
+    "title": "Kitchens, wardrobes and interior joinery,",
+    "titleAccent": "made in Bahrain.",
+    "intro": "For over 11 years, Global Island Kitchens has designed, manufactured and installed cabinetry for homes, developers and commercial spaces across the Kingdom.",
+    "primary": "See what we make",
+    "secondary": "Contact us",
+    "factsLabel": "Company at a glance",
+    "facts": {
+      "years": "Years of experience",
+      "projects": "Projects showcased",
+      "lines": "Core product lines"
+    }
+  },
+  "Products": {
+    "eyebrow": "What we make",
+    "title": "Residential and commercial cabinetry, finished to order.",
+    "intro": "Custom sizes, shapes and finishes for homes, offices and commercial spaces.",
+    "items": {
+      "woodenKitchens": {
+        "name": "Kitchens",
+        "body": "Modern fitted kitchens in EGGER boards or painted MDF."
+      },
+      "aluminiumKitchens": { "name": "Aluminium kitchens", "body": "Aluminium kitchens, made to order." },
+      "wardrobes": {
+        "name": "Wardrobes",
+        "body": "Hinged-door and sliding-door wardrobes, and glass-door closets."
+      },
+      "walkInClosets": { "name": "Walk-in closets", "body": "Walk-in closets, made to measure." },
+      "bedroomFurniture": {
+        "name": "Bedroom furniture",
+        "body": "Bed sets with headboard panels, bedside units and dressing tables."
+      },
+      "tvUnits": { "name": "TV units", "body": "Feature walls with integrated lighting." },
+      "wallCladding": {
+        "name": "Wall cladding",
+        "body": "Slatted and panel cladding, and panelled living spaces with LED accents."
+      },
+      "bathroomVanities": { "name": "Bathroom vanities", "body": "Floating and tall-unit vanities." }
+    },
+    "more": "We also make laundry rooms, laminate doors with concealed hinges, Murphy beds and custom cabinets."
+  },
+  "Materials": {
+    "eyebrow": "Materials",
+    "title": "Two board families, chosen for how they look and last.",
+    "intro": "We build with EGGER laminate and melamine-faced boards, and with MDF painted in the colour you choose.",
+    "egger": {
+      "title": "EGGER laminate & melamine",
+      "body": "Decorative boards from EGGER, the European panel manufacturer, in wood-grain, solid-colour and stone-look décors."
+    },
+    "mdf": {
+      "title": "Painted MDF",
+      "body": "Smooth MDF fronts and panels painted in the colour you choose, for a seamless, colour-matched finish."
+    },
+    "swatchNote": "Swatches are illustrations of finish families, not product photographs. See the real boards at our showroom.",
+    "swatches": {
+      "oak": "Oak-effect décor",
+      "walnut": "Walnut-effect décor",
+      "stone": "Stone-look décor",
+      "solid": "Solid-colour décor",
+      "paintedLight": "Painted MDF, light",
+      "paintedDark": "Painted MDF, dark"
+    }
+  },
+  "Why": {
+    "eyebrow": "Why Global Island Kitchens",
+    "title": "Designed, made and installed by one company.",
+    "items": {
+      "experience": {
+        "title": "Over 11 years",
+        "body": "Manufacturing, supplying and installing cabinetry for homes and businesses in Bahrain."
+      },
+      "factory": {
+        "title": "In-house production",
+        "body": "Our Hamad Town factory has a sliding panel saw, an edge-banding machine, a triple-axis boring station and a miter station."
+      },
+      "scale": {
+        "title": "One villa or a whole building",
+        "body": "Specialists in bulk kitchen and wardrobe production and fixing for developers and contractors."
+      },
+      "custom": {
+        "title": "Made to measure",
+        "body": "Custom sizes, shapes and finishes for homes, offices and commercial spaces."
+      }
+    }
+  },
+  "Process": {
+    "eyebrow": "How a project runs",
+    "title": "From first conversation to final fitting.",
+    "steps": {
+      "inquiry": { "title": "Enquiry", "body": "Tell us about the space and what you have in mind." },
+      "measurement": {
+        "title": "Measurement",
+        "body": "The space is measured so everything is made to fit."
+      },
+      "design": { "title": "Design", "body": "Your design is prepared and agreed with you." },
+      "quotation": { "title": "Quotation", "body": "A quotation for the agreed design." },
+      "approval": { "title": "Approval", "body": "Production starts after your approval." },
+      "production": { "title": "Production", "body": "Made in our factory in Hamad Town." },
+      "installation": { "title": "Installation", "body": "Installed in your space." },
+      "completion": { "title": "Completion", "body": "Your space, finished and handed over." }
+    }
+  },
+  "Projects": {
+    "eyebrow": "Selected work",
+    "title": "Apartments, villas and commercial spaces across Bahrain.",
+    "intro": "A selection from more than 20 projects, from fully furnished flats to cafe interiors.",
+    "segments": {
+      "residential": "Residential buildings",
+      "villas": "Villas",
+      "commercial": "Commercial & hospitality"
+    },
+    "items": {
+      "alFaris": { "name": "Al Faris Suite 2", "place": "Juffair", "scope": "Fully furnished" },
+      "marassi": {
+        "name": "Marassi Bay",
+        "place": "10 flats",
+        "scope": "Fully furnished: 5 one-bedroom flats and 5 studios"
+      },
+      "vista": { "name": "Vista", "place": "Juffair · 10 storeys", "scope": "Kitchens" },
+      "capri": {
+        "name": "Capri Suites",
+        "place": "Janabiya · 5 storeys",
+        "scope": "Kitchens, closets, vanities and wall cladding"
+      },
+      "villaHidd": {
+        "name": "Six villas",
+        "place": "Hidd · two storeys each",
+        "scope": "Kitchens, closets and vanities"
+      },
+      "alNaseem": {
+        "name": "Al Naseem Phase 2",
+        "place": "Diyar Al Muharraq",
+        "scope": "Three bedroom sets, kitchens and a closet"
+      },
+      "selvis": { "name": "Cafe interiors", "place": "Hamad Town", "scope": "Cafe interior joinery" },
+      "trolly": {
+        "name": "Retail interiors",
+        "place": "Diyar Al Muharraq",
+        "scope": "Retail interior joinery"
+      }
+    }
+  },
+  "Designers": {
+    "eyebrow": "For designers, architects and developers",
+    "title": "A manufacturing partner for your projects.",
+    "body": "We work alongside interior designers, architects, developers and contractors, from single rooms to complete residential buildings.",
+    "cta": "Talk to our team"
+  },
+  "Showroom": {
+    "eyebrow": "Visit us",
+    "title": "See the boards, finishes and craft in person.",
+    "showroom": "Showroom",
+    "headOffice": "Head office & factory",
+    "hours": "Showroom hours",
+    "hoursValue": "9:00 AM – 8:00 PM",
+    "contact": "Contact"
+  },
+  "Consultation": {
+    "title": "Planning a kitchen, wardrobe or a whole project?",
+    "body": "Call or email us to arrange a consultation, or visit the showroom in Al-Hamalah.",
+    "call": "Call",
+    "email": "Email us"
+  },
+  "NotFound": {
+    "title": "This page isn't here.",
+    "body": "The page may have moved, or it hasn't been built yet.",
+    "home": "Back to the homepage"
+  },
+  "Footer": {
+    "tagline": "Manufacturing · Supplying · Distribution · Installation of kitchens, wardrobes and interior joinery.",
+    "contact": "Contact",
+    "visit": "Visit",
+    "follow": "Follow",
+    "rights": "© {year} Global Island Kitchens W.L.L. All rights reserved.",
+    "materialsNote": "EGGER is a trademark of its owner. Naming the brand does not imply a partnership."
+  }
+}

@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/*
+ * Global Island Kitchens design tokens (docs/DESIGN_SYSTEM.md).
+ * Warm ivory and beige grounds, walnut accent, charcoal type.
+ */
+@theme {
+  --color-ivory: #faf7f2;
+  --color-sand: #f1e9dd;
+  --color-sand-deep: #e6d9c6;
+  --color-walnut: #6b4429;
+  --color-walnut-deep: #4a2e1b;
+  /* Accent for small text on dark grounds: ≥ 6.5:1 on charcoal, ≥ 5:1 on walnut-deep. */
+  --color-walnut-soft: #c9a27e;
+  --color-charcoal: #23201d;
+  --color-ink-muted: #5c544c;
+  --color-line: rgb(35 32 29 / 0.14);
+  --color-focus: #8a5a36;
+
+  /* Arabic pages swap these tokens (see html[lang^="ar"] below), so `font-display`/`font-sans` just work. */
+  --font-display: var(--font-cormorant), "Times New Roman", serif;
+  --font-sans: var(--font-jost), system-ui, sans-serif;
+
+  --text-display-2xl: clamp(3rem, 2rem + 4.5vw, 6.25rem);
+  --text-display-2xl--line-height: 0.98;
+  --text-display-xl: clamp(2.5rem, 1.8rem + 3vw, 4.5rem);
+  --text-display-xl--line-height: 1.02;
+  --text-display-lg: clamp(2rem, 1.5rem + 2vw, 3.25rem);
+  --text-display-lg--line-height: 1.08;
+  --text-display-md: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  --text-display-md--line-height: 1.15;
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1.4;
+
+  --container-copy: 38rem;
+  --container-site: 84rem;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-ivory);
+    color: var(--color-charcoal);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+  }
+
+  html[lang^="ar"] {
+    --font-display: var(--font-amiri), "Times New Roman", serif;
+    --font-sans: var(--font-plex-arabic), "Segoe UI", Tahoma, sans-serif;
+  }
+
+  /* Latin display type is set slightly tight; Arabic is never letter-spaced and needs room for its marks. */
+  html:not([lang^="ar"]) .font-display {
+    letter-spacing: -0.01em;
+  }
+
+  html[lang^="ar"] .font-display {
+    line-height: 1.45;
+  }
+
+  body {
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
+
+  html[lang^="ar"] body {
+    line-height: 1.85;
+  }
+
+  ::selection {
+    background: var(--color-walnut);
+    color: var(--color-ivory);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility eyebrow {
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 500;
+
+  :lang(ar) & {
+    letter-spacing: 0;
+    font-size: 0.875rem;
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* Scroll-driven reveal: progressive enhancement only, content is visible everywhere else. */
+@utility reveal {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+
+@utility container-site {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-site);
+  padding-inline: 1.25rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+}

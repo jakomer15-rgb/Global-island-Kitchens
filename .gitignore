@@ -12,6 +12,7 @@ next-env.d.ts
 /coverage
 /playwright-report/
 /test-results/
+/lighthouse-reports/
 
 # env files: only the placeholder template is committed
 .env*
