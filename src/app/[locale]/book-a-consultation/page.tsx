@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ConsultationForm } from "@/components/forms/consultation-form";
+import { FormMessages } from "@/components/forms/form-messages";
 import { ContactActions } from "@/components/site/contact-actions";
 import { ContactDetails } from "@/components/site/contact-details";
 import { PageHero } from "@/components/site/page-hero";
@@ -35,23 +37,20 @@ export default async function BookConsultationPage({ params }: PageProps<"/[loca
         title={c.title[locale]}
         intro={c.intro[locale]}
       />
-      <section aria-labelledby="steps-title" className="py-20 md:py-28">
+      <section aria-label={c.eyebrow[locale]} className="py-16 md:py-24">
         <div className="container-site grid gap-14 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <h2 id="steps-title" className="font-display text-display-lg">
-              {c.stepsTitle[locale]}
-            </h2>
-            <ol className="mt-8">
-              {c.steps[locale].map((step, i) => (
-                <li key={step} className="flex gap-5 border-t border-line py-5">
-                  <span className="pt-1 eyebrow text-walnut tabular-nums" dir="ltr">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  {step}
-                </li>
-              ))}
-            </ol>
-            <div className="mt-10">
+          <div className="lg:col-span-7">
+            <FormMessages>
+              <ConsultationForm />
+            </FormMessages>
+          </div>
+          <aside className="lg:col-span-4 lg:col-start-9">
+            <h2 className="font-display text-display-md">{t("visitTitle")}</h2>
+            <div className="mt-4">
+              <ContactDetails locale={locale} showHeadOffice={false} />
+            </div>
+            <h2 className="mt-10 font-display text-2xl">{c.stepsTitle[locale]}</h2>
+            <div className="mt-4">
               <ContactActions
                 locale={locale}
                 subject={c.emailSubject[locale]}
@@ -59,13 +58,7 @@ export default async function BookConsultationPage({ params }: PageProps<"/[loca
                 emailLabel={t("emailWithTemplate")}
               />
             </div>
-          </div>
-          <div className="lg:col-span-5 lg:col-start-8">
-            <h2 className="font-display text-display-md">{t("visitTitle")}</h2>
-            <div className="mt-4">
-              <ContactDetails locale={locale} showHeadOffice={false} />
-            </div>
-          </div>
+          </aside>
         </div>
       </section>
     </>

@@ -1,9 +1,10 @@
 import type { L } from "./types";
 
 /**
- * Privacy policy and website terms. They describe only what the website does today (no forms,
- * no cookies, no analytics) and must be updated when forms (Phase 4) and analytics (Phase 9) are
- * added. Pending review by the company's legal adviser (docs/OPEN_QUESTIONS.md #34).
+ * Privacy policy and website terms, describing what the website does today: enquiry forms with
+ * optional uploads and marketing consent, a staff-only sign-in cookie, no analytics or advertising.
+ * Update when analytics (Phase 9) or the designer portal (Phase 7) arrive. Pending review by the
+ * company's legal adviser (docs/OPEN_QUESTIONS.md #34).
  */
 
 export interface LegalSection {
@@ -43,21 +44,37 @@ export const privacy: LegalDoc = {
       heading: { en: "What this website collects", ar: "ما يجمعه هذا الموقع" },
       body: [
         {
-          en: "This website does not use forms, accounts, analytics or advertising, and it does not set cookies.",
-          ar: "لا يستخدم هذا الموقع نماذج أو حسابات أو أدوات تحليل أو إعلانات، ولا يضع ملفات تعريف الارتباط (الكوكيز).",
+          en: "When you use our quotation, consultation or contact forms, we collect what you enter: your name, phone number, email address (optional), area, the details of your project, measurements, preferred materials, and any photos or drawings you upload.",
+          ar: "عند استخدامكم نماذج طلب عرض السعر أو الاستشارة أو التواصل، نجمع ما تدخلونه: الاسم ورقم الهاتف والبريد الإلكتروني (اختياري) والمنطقة وتفاصيل مشروعكم والمقاسات والخامات المفضلة وأي صور أو رسومات ترفعونها.",
         },
         {
-          en: "Like any website, the server that delivers it records technical information such as your IP address, browser type and the pages requested, for security and to keep the site running.",
-          ar: "وكأي موقع إلكتروني، يسجّل الخادم الذي يقدّم الموقع معلومات تقنية مثل عنوان IP ونوع المتصفح والصفحات المطلوبة، لأغراض الأمان ولضمان عمل الموقع.",
+          en: "The website does not use analytics or advertising. Public pages set no cookies; the only cookie is a sign-in cookie for our staff when they use the staff area.",
+          ar: "لا يستخدم الموقع أدوات تحليل أو إعلانات. ولا تضع الصفحات العامة أي ملفات تعريف ارتباط (كوكيز)؛ والملف الوحيد هو ملف تسجيل الدخول لموظفينا عند استخدامهم منطقة الموظفين.",
+        },
+        {
+          en: "For security and to prevent abuse, we keep a coded (hashed) form of your IP address with submissions; we do not store the address itself. The server that delivers the site also keeps standard technical logs.",
+          ar: "لأغراض الأمان ومنع إساءة الاستخدام، نحتفظ بصيغة مشفّرة (مُجزّأة) من عنوان IP مع الطلبات، ولا نخزّن العنوان نفسه. ويحتفظ الخادم الذي يقدّم الموقع أيضًا بسجلات تقنية اعتيادية.",
         },
       ],
     },
     {
-      heading: { en: "When you contact us", ar: "عند تواصلكم معنا" },
+      heading: { en: "How we use it", ar: "كيف نستخدمها" },
       body: [
         {
-          en: "If you call, email or message us, we use the details you give us (such as your name, phone number, email address, project information, photos and drawings) to respond, prepare quotations and carry out your project. We do not sell your information.",
-          ar: "عند اتصالكم بنا أو مراسلتنا، نستخدم البيانات التي تقدمونها (مثل الاسم ورقم الهاتف والبريد الإلكتروني ومعلومات المشروع والصور والرسومات) للرد عليكم وإعداد عروض الأسعار وتنفيذ مشروعكم. ولا نبيع معلوماتكم.",
+          en: "We use your details to respond to your enquiry, arrange consultations, prepare quotations and carry out your project. We send you a confirmation email if you give an email address. We do not sell your information.",
+          ar: "نستخدم بياناتكم للرد على استفساركم وترتيب الاستشارات وإعداد عروض الأسعار وتنفيذ مشروعكم. ونرسل لكم رسالة تأكيد إذا أدخلتم بريدًا إلكترونيًا. ولا نبيع معلوماتكم.",
+        },
+        {
+          en: "We send news and offers only if you tick the box for that channel (email or WhatsApp). You can withdraw at any time by contacting us, and every marketing message will include a way to unsubscribe.",
+          ar: "لا نرسل الأخبار والعروض إلا إذا اخترتم ذلك للقناة المعنية (البريد الإلكتروني أو واتساب). ويمكنكم الانسحاب في أي وقت بالتواصل معنا، وستتضمن كل رسالة تسويقية طريقة لإلغاء الاشتراك.",
+        },
+        {
+          en: "Your information is stored securely with our hosting, database, file-storage and email providers, who process it on our behalf. Uploaded files are private and only our authorised staff can open them.",
+          ar: "تُخزَّن معلوماتكم بأمان لدى مزوّدي الاستضافة وقاعدة البيانات وتخزين الملفات والبريد الإلكتروني الذين يعالجونها نيابةً عنا. الملفات المرفوعة خاصة ولا يفتحها إلا موظفونا المخوّلون.",
+        },
+        {
+          en: "We keep enquiry records for as long as needed to handle your enquiry and any project that follows, and as required by law.",
+          ar: "نحتفظ بسجلات الطلبات للمدة اللازمة لمعالجة طلبكم وأي مشروع يليه، ووفق ما يقتضيه القانون.",
         },
       ],
     },
@@ -83,8 +100,8 @@ export const privacy: LegalDoc = {
       heading: { en: "Changes", ar: "التعديلات" },
       body: [
         {
-          en: "We will update this policy when the website changes, for example when online forms are added.",
-          ar: "سنحدّث هذه السياسة عند تغيّر الموقع، مثل إضافة نماذج إلكترونية.",
+          en: "We will update this policy when the website changes, for example if we add analytics or a portal for designers.",
+          ar: "سنحدّث هذه السياسة عند تغيّر الموقع، مثل إضافة أدوات تحليل أو بوابة للمصممين.",
         },
       ],
     },

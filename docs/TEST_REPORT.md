@@ -1,5 +1,60 @@
 # Test report
 
+## Phase 4 — database, backend, authentication, forms (2026-10-25)
+
+Environment: as before, plus local PostgreSQL 17 (embedded, port 5434); integration and E2E tests run
+against `gik_test` only.
+
+### Automated checks
+
+| Check                           | Result                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lint, typecheck, format, build  | Pass (the build needs no database)                                                                                                                                                                                                                                                                                                                                                                                                |
+| Migration                       | Applies cleanly to an empty database; no drift between schema and database                                                                                                                                                                                                                                                                                                                                                        |
+| `npm test` (unit)               | 56 / 56: phone normalisation (incl. Arabic digits), quotation/consultation/contact schemas (every problem reported at once), spam traps, file signatures, upload policy, storage tokens, storage choice, role permissions, outbox delivery (not configured; partial failure kept so retries don't resend), EN/AR placeholder parity                                                                                               |
+| `npm run test:db` (integration) | 16 / 16: customer/lead/file/consent constraints, append-only audit log, unique references, full quotation submission in one transaction (customer, lead, request, verified file, consent, outbox, audit), upload rejection (wrong ticket, not uploaded, wrong type, reused), customer reuse without overwriting, consultations, contact, outbox retry/backoff, rate limits, upload clean-up, staff accounts and permission denial |
+| `npm run test:e2e` (Playwright) | E2E_RESULT                                                                                                                                                                                                                                                                                                                                                                                                                        |
+
+### Lighthouse on the form pages (localhost production build)
+
+| Page                      | Mobile perf | Mobile CLS | Desktop (all four) | Accessibility / best practices / SEO |
+| ------------------------- | ----------- | ---------- | ------------------ | ------------------------------------ |
+| `/request-a-quote`        | 82          | 0          | 100                | 100 / 100 / 100                      |
+| `/ar/request-a-quote`     | 70–83       | 0.017      | 100                | 100 / 100 / 100                      |
+| `/contact`                | 84          | 0          | 100                | 100 / 100 / 100                      |
+| `/ar/contact`             | 88          | 0.001      | 100                | 100 / 100 / 100                      |
+| `/ar/book-a-consultation` | 72          | 0          | 100                | 100 / 100 / 100                      |
+
+Found and fixed: the quotation wizard was rendered inside a Suspense boundary (to read `?category=`),
+so the static page shipped without the form and it popped in on load (mobile CLS 0.246). The category
+is now read after mount and the form renders statically (CLS 0). One Lighthouse run reported a 0.665
+shift on the Arabic desktop page that didn't reproduce: a re-run measured 0.001, and Chrome's own
+layout-shift entries at the same size total 0.001.
+
+### Security review (Phase 4 changes)
+
+Each entry point was checked for authentication, authorisation, ownership, validation, rate limits,
+CSRF and data exposure.
+
+| Entry point                        | Protection                                                                                                                                                       |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Form server actions (3)            | Same Zod schema as the browser; per-IP limit 5/hour per form; honeypot + timing trap; Next.js origin check; one transaction                                      |
+| `POST /api/uploads`                | Same-origin check; per-IP limit 30/hour; type allow-list and 15 MB limit; returns a one-time ticket (stored hashed)                                              |
+| `/api/files/local` (dev/test only) | Disabled in production unless explicitly overridden for E2E; HMAC-signed, expiring, single-key tokens; exclusive writes; downloads as attachments with `nosniff` |
+| Attaching uploads                  | Ticket, age (2 h), size and file signature verified server-side; atomic attach; rejected files deleted                                                           |
+| Staff sign-in                      | Generic error for wrong password and unknown email; per-IP limit (all attempts) and per-email limit (failed attempts only); audited                              |
+| `/admin`, `/admin/files/[id]`      | Session + permission checked on the server for every request (proxy check is convenience only); downloads audited, 60-second signed URLs                         |
+| `/api/cron/outbox`                 | Bearer secret compared in constant time                                                                                                                          |
+
+Findings fixed during the phase: whole-form rules ran only after other fields were valid (UX); a
+successful sign-in counted towards the per-email lockout; rich-text placeholders rendered empty (privacy
+link and reference number missing); abandoned uploads were never cleaned up; outbox retries could resend
+emails already delivered; the privacy policy still said the site had no forms (rewritten).
+
+Known limits: rate limits trust `x-forwarded-for`, which is safe on Vercel (set by the platform) but
+must be overwritten by any other proxy (docs/DEPLOYMENT.md). Content-Security-Policy is planned for
+Phase 9. Emails are not sent until the owner provides notification addresses and an email account.
+
 ## Phase 3 — public pages (2026-10-25)
 
 Same environment as Phase 2.

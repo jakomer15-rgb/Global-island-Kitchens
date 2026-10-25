@@ -5,8 +5,18 @@ import { pathFor } from "@/config/routes";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-/** Closing call to action: request a quotation or book a consultation. */
-export async function CtaBand({ locale, title, body }: { locale: Locale; title?: string; body?: string }) {
+/** Closing call to action: request a quotation (`category` pre-selects the product) or book a consultation. */
+export async function CtaBand({
+  locale,
+  title,
+  body,
+  category,
+}: {
+  locale: Locale;
+  title?: string;
+  body?: string;
+  category?: string;
+}) {
   const t = await getTranslations({ locale, namespace: "Page" });
   return (
     <section aria-labelledby="cta-title" className="bg-charcoal py-20 text-ivory md:py-24">
@@ -19,7 +29,7 @@ export async function CtaBand({ locale, title, body }: { locale: Locale; title?:
         </div>
         <div className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">
           <Button asChild size="lg" variant="accent">
-            <Link href={pathFor("requestQuote")}>
+            <Link href={{ pathname: pathFor("requestQuote"), query: category ? { category } : undefined }}>
               {t("requestQuote")} <ArrowRight aria-hidden className="rtl:rotate-180" />
             </Link>
           </Button>

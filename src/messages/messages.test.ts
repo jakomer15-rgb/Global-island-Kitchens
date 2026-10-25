@@ -18,6 +18,15 @@ describe("messages", () => {
     expect(keys(ar).sort()).toEqual(keys(en).sort());
   });
 
+  it("uses the same placeholders and rich-text tags in both languages", () => {
+    const tokens = (s: string) => (s.match(/\{\w+\}|<\/?\w+>/g) ?? []).sort().join(" ");
+    const enKeys = keys(en);
+    const get = (obj: object, path: string) =>
+      path.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], obj) as string;
+    const mismatched = enKeys.filter((k) => tokens(get(en, k)) !== tokens(get(ar, k)));
+    expect(mismatched).toEqual([]);
+  });
+
   it("has no empty strings", () => {
     expect([...leaves(en), ...leaves(ar)].filter((s) => s.trim() === "")).toEqual([]);
   });

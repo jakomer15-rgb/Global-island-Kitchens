@@ -1,0 +1,517 @@
+// Global Island Kitchens: database schema (PostgreSQL 17, Prisma 7). Design: docs/DATA_MODEL.md.
+//
+// Conventions (database-management skill):
+// - snake_case tables and columns via @@map/@map; PascalCase models.
+// - Timestamps are timestamptz in UTC; displayed in Asia/Bahrain.
+// - Must-hold rules are also database constraints (added by hand in the migration SQL).
+// - Business records are archived (`archivedAt`), logs are append-only.
+// - Emails are stored lower-cased and phones as E.164 by the service layer.
+//
+// Phase 4 covers identity, roles, the CRM core, enquiries with uploads, and platform tables.
+// Quotations, projects, content, materials and designers arrive in their own phases' migrations.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Locale {
+  en
+  ar
+}
+
+// ───────────────────────────── Identity and access ─────────────────────────────
+// User, Session, Account and Verification follow Better Auth's core schema.
+
+enum UserKind {
+  staff
+  designer
+}
+
+enum UserStatus {
+  active
+  disabled
+}
+
+model User {
+  id            String     @id
+  name          String
+  email         String     @unique
+  emailVerified Boolean    @default(false) @map("email_verified")
+  image         String?
+  kind          UserKind   @default(staff)
+  status        UserStatus @default(active)
+  lastLoginAt   DateTime?  @map("last_login_at") @db.Timestamptz(3)
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  sessions        Session[]
+  accounts        Account[]
+  roles           UserRole[]
+  leadsAssigned   Lead[]         @relation("LeadAssignee")
+  leadActivities  LeadActivity[]
+  followUps       FollowUp[]
+  consultations   Consultation[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  settingsUpdated SiteSetting[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  /// Password hash (credential provider). Never selected outside the auth module.
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+/// Roles are sets of permissions; system roles can't be deleted. Seeded from src/server/auth/permissions.ts.
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  system      Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  key         String @id
+  description String
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId        String @map("role_id")
+  permissionKey String @map("permission_key")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+
+  @@id([roleId, permissionKey])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// ───────────────────────────── CRM ─────────────────────────────
+
+enum CustomerType {
+  homeowner
+  interior_designer
+  architect
+  developer
+  contractor
+  business
+  other
+}
+
+model Customer {
+  id                String       @id @default(cuid())
+  name              String
+  /// E.164, e.g. +97334597636. Unique when present (partial index in migration).
+  phone             String?
+  /// Lower-cased. Unique when present (partial index in migration).
+  email             String?
+  type              CustomerType @default(homeowner)
+  company           String?
+  preferredLanguage Locale       @default(en) @map("preferred_language")
+  notes             String?
+  archivedAt        DateTime?    @map("archived_at") @db.Timestamptz(3)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  leads             Lead[]
+  consultations     Consultation[]
+  quotationRequests QuotationRequest[]
+  consents          ConsentRecord[]
+
+  @@index([name])
+  @@map("customers")
+}
+
+enum LeadSource {
+  website_quote
+  website_consultation
+  website_contact
+  designer_portal
+  whatsapp
+  phone
+  walk_in
+  referral
+  instagram
+  other
+}
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  quoted
+  won
+  lost
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  /// Shown to the customer, e.g. GIK-Q-2026-00042 (sequence in migration).
+  reference    String     @unique
+  customerId   String     @map("customer_id")
+  source       LeadSource
+  /// Product page key from src/config/routes.ts, when known.
+  category     String?
+  status       LeadStatus @default(new)
+  lostReason   String?    @map("lost_reason")
+  assignedToId String?    @map("assigned_to_id")
+  summary      String
+  locale       Locale     @default(en)
+  archivedAt   DateTime?  @map("archived_at") @db.Timestamptz(3)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  customer         Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  assignedTo       User?             @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  activities       LeadActivity[]
+  followUps        FollowUp[]
+  consultation     Consultation?
+  quotationRequest QuotationRequest?
+
+  @@index([status, createdAt])
+  @@index([assignedToId])
+  @@map("leads")
+}
+
+enum ActivityKind {
+  note
+  message
+  call
+  email
+  whatsapp
+  meeting
+  status_change
+  assignment
+}
+
+/// Communication history and internal notes. Append-only (trigger in migration).
+model LeadActivity {
+  id        String       @id @default(cuid())
+  leadId    String       @map("lead_id")
+  kind      ActivityKind
+  body      String
+  internal  Boolean      @default(true)
+  authorId  String?      @map("author_id")
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  lead   Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([leadId, createdAt])
+  @@map("lead_activities")
+}
+
+model FollowUp {
+  id           String    @id @default(cuid())
+  leadId       String    @map("lead_id")
+  dueAt        DateTime  @map("due_at") @db.Timestamptz(3)
+  assignedToId String?   @map("assigned_to_id")
+  note         String?
+  doneAt       DateTime? @map("done_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  lead       Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedTo User? @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([dueAt, doneAt])
+  @@map("follow_ups")
+}
+
+enum ConsultationType {
+  showroom
+  site_visit
+  online
+}
+
+enum TimeSlot {
+  morning
+  afternoon
+  evening
+}
+
+enum ConsultationStatus {
+  requested
+  confirmed
+  completed
+  cancelled
+  no_show
+}
+
+model Consultation {
+  id            String             @id @default(cuid())
+  leadId        String             @unique @map("lead_id")
+  customerId    String             @map("customer_id")
+  type          ConsultationType
+  preferredDate DateTime           @map("preferred_date") @db.Date
+  preferredSlot TimeSlot           @map("preferred_slot")
+  /// Site visits only.
+  area          String?
+  notes         String?
+  status        ConsultationStatus @default(requested)
+  confirmedAt   DateTime?          @map("confirmed_at") @db.Timestamptz(3)
+  assignedToId  String?            @map("assigned_to_id")
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  assignedTo User?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([preferredDate, status])
+  @@map("consultations")
+}
+
+enum ConsentChannel {
+  email
+  whatsapp
+}
+
+/// Marketing consent history. The latest record per customer and channel wins. Append-only.
+model ConsentRecord {
+  id         String         @id @default(cuid())
+  customerId String         @map("customer_id")
+  channel    ConsentChannel
+  granted    Boolean
+  /// Where it was given or withdrawn, e.g. "website_quote", "unsubscribe_link".
+  source     String
+  ipHash     String?        @map("ip_hash")
+  recordedAt DateTime       @default(now()) @map("recorded_at") @db.Timestamptz(3)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, channel, recordedAt])
+  @@map("consent_records")
+}
+
+// ───────────────────────────── Enquiries ─────────────────────────────
+
+enum MeasureUnit {
+  mm
+  cm
+  m
+}
+
+enum RequestStatus {
+  received
+  reviewing
+  quoted
+  closed
+}
+
+model QuotationRequest {
+  id              String        @id @default(cuid())
+  reference       String        @unique
+  leadId          String        @unique @map("lead_id")
+  customerId      String        @map("customer_id")
+  category        String
+  /// [{ label, width, height?, depth? }] validated by src/lib/forms/quote.ts.
+  measurements    Json
+  unit            MeasureUnit
+  /// "egger" | "mdf" | "aluminium" | "unsure"
+  preferredBoards String[]      @map("preferred_boards")
+  finishNotes     String?       @map("finish_notes")
+  message         String?
+  area            String?
+  status          RequestStatus @default(received)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  lead     Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  files    FileAsset[]
+
+  @@index([status, createdAt])
+  @@map("quotation_requests")
+}
+
+enum FileKind {
+  reference_photo
+  drawing
+  other
+}
+
+enum FileStatus {
+  pending
+  verified
+  rejected
+}
+
+/// Private uploads. Bytes live in object storage under `storageKey`; never public.
+model FileAsset {
+  id                 String     @id @default(cuid())
+  storageKey         String     @unique @map("storage_key")
+  originalName       String     @map("original_name")
+  mimeType           String     @map("mime_type")
+  sizeBytes          Int        @map("size_bytes")
+  kind               FileKind   @default(reference_photo)
+  status             FileStatus @default(pending)
+  /// SHA-256 of the upload ticket handed to the browser; proves the submitter started the upload.
+  ticketHash         String?    @map("ticket_hash")
+  ipHash             String?    @map("ip_hash")
+  quotationRequestId String?    @map("quotation_request_id")
+  verifiedAt         DateTime?  @map("verified_at") @db.Timestamptz(3)
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  quotationRequest QuotationRequest? @relation(fields: [quotationRequestId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([quotationRequestId])
+  @@map("file_assets")
+}
+
+// ───────────────────────────── Platform ─────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  title     String
+  body      String?
+  link      String?
+  readAt    DateTime? @map("read_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+enum OutboxStatus {
+  pending
+  processing
+  done
+  failed
+}
+
+/// Side effects (emails, n8n webhooks) written in the same transaction as the business change.
+model OutboxEvent {
+  id            String       @id @default(cuid())
+  type          String
+  payload       Json
+  status        OutboxStatus @default(pending)
+  attempts      Int          @default(0)
+  nextAttemptAt DateTime     @default(now()) @map("next_attempt_at") @db.Timestamptz(3)
+  lockedAt      DateTime?    @map("locked_at") @db.Timestamptz(3)
+  lastError     String?      @map("last_error")
+  /// What each delivery channel did, e.g. { "staffEmail": "sent", "n8n": "not_configured" }.
+  result        Json?
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  processedAt   DateTime?    @map("processed_at") @db.Timestamptz(3)
+
+  @@index([status, nextAttemptAt])
+  @@map("outbox_events")
+}
+
+/// Append-only (trigger in migration). IPs are stored only as keyed hashes.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?  @map("actor_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  changes    Json?
+  ipHash     String?  @map("ip_hash")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model RateLimitBucket {
+  key         String
+  windowStart DateTime @map("window_start") @db.Timestamptz(3)
+  count       Int      @default(0)
+
+  @@id([key, windowStart])
+  @@index([windowStart])
+  @@map("rate_limit_buckets")
+}
+
+/// Editable settings (contact details, hours, VAT, SEO defaults, feature flags). Value validated per key.
+model SiteSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @map("updated_by_id")
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("site_settings")
+}

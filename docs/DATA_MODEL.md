@@ -1,6 +1,14 @@
 # Data model
 
-Status: **Phase 1 design.** It becomes `prisma/schema.prisma` and the first migrations in Phase 4.
+Status: **Phase 4 implemented** in `prisma/schema.prisma` and `prisma/migrations/20261025200000_init`:
+identity and roles, Customer, Lead, LeadActivity, FollowUp, Consultation, ConsentRecord,
+QuotationRequest, FileAsset, Notification, OutboxEvent, AuditLog, RateLimitBucket, SiteSetting.
+Quotations/orders/projects (Phase 6), content, materials and portfolio (Phase 5), designer accounts
+(Phase 7) and AI drafts / webhooks (Phase 8) are added by their phases' migrations.
+
+Phase 4 differences from the design below: designer accounts aren't created yet; quotation requests
+store preferred board families (`egger`, `mdf`, `aluminium`, `unsure`) because the materials library
+arrives in Phase 5; one reference sequence serves all enquiries (`GIK-Q-…`, `GIK-C-…`, `GIK-M-…`).
 
 Conventions:
 

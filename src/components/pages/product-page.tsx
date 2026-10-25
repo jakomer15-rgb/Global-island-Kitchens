@@ -159,7 +159,7 @@ export async function ProductPage({ productKey, locale }: { productKey: ProductK
         </section>
       )}
 
-      <CtaBand locale={locale} />
+      <CtaBand locale={locale} category={productKey} />
     </>
   );
 }

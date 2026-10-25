@@ -59,14 +59,21 @@ end of its work.
 
 ## Commands
 
-| Command                                       | What it does                                                        |
-| --------------------------------------------- | ------------------------------------------------------------------- |
-| `npm run dev`                                 | Development server on http://localhost:3000                         |
-| `npm run lint` / `typecheck` / `format:check` | Static checks (CI runs all three)                                   |
-| `npm test`                                    | Vitest unit tests                                                   |
-| `npm run build` then `npm run test:e2e`       | Playwright E2E + axe against the production build (port 3100)       |
-| `npm run audit:lighthouse -- <baseUrl> / /ar` | Lighthouse, mobile and desktop, against a running production server |
-| `npm run check`                               | lint + typecheck + unit tests + build                               |
+| Command                                       | What it does                                                                 |
+| --------------------------------------------- | ---------------------------------------------------------------------------- |
+| `npm run db:start`                            | Local Postgres 17 on port 5434 (keep it running in its own terminal)         |
+| `npm run db:deploy` / `db:seed`               | Apply migrations / seed permissions, roles and settings                      |
+| `npm run admin:create -- --email … --name …`  | Create a staff account (prompts for the password)                            |
+| `npm run outbox:run`                          | Deliver pending emails/webhooks once (production uses the cron route)        |
+| `npm run dev`                                 | Development server on http://localhost:3000                                  |
+| `npm run lint` / `typecheck` / `format:check` | Static checks (CI runs all three)                                            |
+| `npm test`                                    | Vitest unit tests                                                            |
+| `npm run test:db`                             | Integration tests against `gik_test` (refuses other databases)               |
+| `npm run build` then `npm run test:e2e`       | Playwright E2E + axe against the production build (port 3100, test database) |
+| `npm run audit:lighthouse -- <baseUrl> / /ar` | Lighthouse, mobile and desktop, against a running production server          |
+| `npm run check`                               | lint + typecheck + unit tests + build                                        |
 
 Locally, Playwright and Lighthouse use the installed Google Chrome; CI installs Playwright's Chromium.
+Run `npm run typecheck` before `npm run build`: `next typegen` resets the `.next` folder.
+Setup, environment variables and the scheduled job: `docs/DEPLOYMENT.md`.
 Design tokens and component rules: `docs/DESIGN_SYSTEM.md`. Latest results: `docs/TEST_REPORT.md`.

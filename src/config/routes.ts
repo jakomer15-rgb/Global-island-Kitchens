@@ -46,7 +46,7 @@ export const pages: Record<PageKey, { path: string; ready: boolean }> = {
   requestQuote: { path: "/request-a-quote", ready: true },
   bookConsultation: { path: "/book-a-consultation", ready: true },
   showroom: { path: "/showroom", ready: true },
-  // No articles exist yet; the blog is built on the database in Phase 4 and stays hidden until the first post.
+  // No articles exist yet; the blog arrives with content management (Phase 5) and stays hidden until the first post.
   blog: { path: "/blog", ready: false },
   faq: { path: "/faq", ready: true },
   contact: { path: "/contact", ready: true },

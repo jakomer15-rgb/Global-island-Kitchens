@@ -73,3 +73,9 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 38. Location of the **Marassi Bay** flats (shown as "Bahrain").
 39. Whether the **Arabic translations** of building names (Al Faris Suite 2, Vicuna, Capri Suites, Burj Kadi) should be transliterated as written on the site, or kept in Latin script.
 40. **Blog:** who will write articles. The blog stays unpublished (not linked, 404) until the first article exists.
+
+## Added in Phase 4
+
+41. ★ **Notification emails:** which staff addresses should receive new enquiries (`NOTIFY_EMAILS`), and the sending address/domain for customer confirmations (`EMAIL_FROM`).
+42. **Staff accounts:** names, emails and roles for the first staff (owner, general manager, sales & project manager, production supervisor, content editor).
+43. Retention period for enquiries that never become projects (the privacy policy currently says "as long as needed and as required by law").

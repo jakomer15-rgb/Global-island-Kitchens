@@ -4,8 +4,9 @@ Bilingual (English / Arabic) website and business platform for Global Island Kit
 manufacturer and installer of kitchens, wardrobes and interior joinery in the Kingdom of Bahrain
 (head office: Hamad Town · showroom: Al-Hamalah).
 
-**Status:** Phase 3 complete: every public page in English and Arabic (the blog appears with its first
-article). Forms, database and admin arrive from Phase 4 (see [docs/ROADMAP.md](docs/ROADMAP.md)).
+**Status:** Phase 4 complete: PostgreSQL database, staff sign-in with roles, and the quotation (six
+steps with uploads), consultation and contact forms saving to the database, with email/n8n delivery
+through an outbox. The full admin CRM arrives in Phase 5 (see [docs/ROADMAP.md](docs/ROADMAP.md)).
 
 Company content lives in `src/content/` (English and Arabic side by side), written only from
 [docs/BUSINESS_FACTS.md](docs/BUSINESS_FACTS.md).
@@ -19,11 +20,14 @@ Requires Node 24.
 
 ```bash
 npm install
-cp .env.example .env.local
+npm run db:start            # in its own terminal; creates .env.local on first run
+npm run db:deploy && npm run db:seed
+npm run admin:create -- --email you@example.com --name "Your Name"
 npm run dev
 ```
 
-Commands and workflow: [AGENTS.md](AGENTS.md#commands).
+Commands and workflow: [AGENTS.md](AGENTS.md#commands). Environment variables, storage and the
+scheduled job: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Read first
 
@@ -35,6 +39,10 @@ Commands and workflow: [AGENTS.md](AGENTS.md#commands).
 - [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) — missing business details
 - [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) — colours, typography, components
 - [docs/TEST_REPORT.md](docs/TEST_REPORT.md) — latest test and Lighthouse results
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — local setup, environment, storage, cron, migrations
+
+The earlier project on `main` used its own `.env.local`; it was kept as `.env.main-backup.local`
+(copy it back to `.env.local` before working on `main`).
 
 ## Source material
 
