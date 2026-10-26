@@ -55,6 +55,14 @@ export function s3Driver(e: Env): StorageDriver {
       const query = `?response-content-disposition=${encodeURIComponent(disposition)}&response-content-type=${encodeURIComponent(contentType)}`;
       return presign("GET", key, ttlSeconds, {}, query);
     },
+    async put(key, bytes, contentType) {
+      const res = await client.fetch(objectUrl(key), {
+        method: "PUT",
+        headers: { "content-type": contentType, "if-none-match": "*" },
+        body: bytes as Uint8Array<ArrayBuffer>,
+      });
+      if (!res.ok) throw new Error(`Storage PUT failed: ${res.status}`);
+    },
     async delete(key) {
       const res = await client.fetch(objectUrl(key), { method: "DELETE" });
       if (!res.ok && res.status !== 404) throw new Error(`Storage DELETE failed: ${res.status}`);

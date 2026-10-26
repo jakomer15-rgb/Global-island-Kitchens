@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ActionForm } from "@/components/admin/action-form";
-import { AdminInput, AdminTextarea } from "@/components/admin/fields";
+import { AdminCheckbox, AdminInput, AdminTextarea } from "@/components/admin/fields";
 import { PageHeader, Panel } from "@/components/admin/ui";
 import { requireActor } from "@/server/auth/session";
 import { db } from "@/server/db";
@@ -11,9 +11,10 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const actor = await requireActor("settings.manage");
-  const [contact, locations] = await Promise.all([
+  const [contact, locations, quotation] = await Promise.all([
     readSetting(db, actor, "contact"),
     readSetting(db, actor, "locations"),
+    readSetting(db, actor, "quotation"),
   ]);
 
   return (
@@ -112,6 +113,62 @@ export default async function SettingsPage() {
                 dir="rtl"
                 lang="ar"
                 required
+              />
+            </div>
+          </ActionForm>
+        </Panel>
+        <Panel title="Quotations" className="xl:col-span-2">
+          <ActionForm
+            action={saveSettingAction.bind(null, "quotation")}
+            submitLabel="Save quotation settings"
+          >
+            <p className="text-sm text-ink-muted">
+              Printed on every quotation. VAT is added only when it is turned on here with the company&apos;s
+              VAT registration number. Terms are copied into each new quotation, where they can be adjusted.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <AdminCheckbox name="vatEnabled" defaultChecked={quotation.vatEnabled} label="Charge VAT" />
+              <AdminInput
+                label="VAT rate (%)"
+                name="vatRate"
+                defaultValue={String(quotation.vatRateBasisPoints / 100)}
+                inputMode="decimal"
+                dir="ltr"
+              />
+              <AdminInput
+                label="VAT registration number"
+                name="vatNumber"
+                defaultValue={quotation.vatNumber ?? ""}
+                maxLength={30}
+                dir="ltr"
+              />
+              <AdminInput
+                label="Valid for (days)"
+                name="validityDays"
+                type="number"
+                min={1}
+                max={365}
+                defaultValue={quotation.validityDays ?? ""}
+                hint="Leave empty to choose a date on each quotation."
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <AdminTextarea
+                label="Terms and conditions (English)"
+                name="termsEn"
+                defaultValue={quotation.termsEn ?? ""}
+                maxLength={4000}
+                rows={8}
+                hint="Only the company's actual terms (payment, delivery, warranty). Leave empty until confirmed."
+              />
+              <AdminTextarea
+                label="Terms and conditions (Arabic)"
+                name="termsAr"
+                defaultValue={quotation.termsAr ?? ""}
+                maxLength={4000}
+                rows={8}
+                dir="rtl"
+                lang="ar"
               />
             </div>
           </ActionForm>

@@ -47,6 +47,9 @@ export function localDriver(root: string, secret: string): StorageDriver {
       );
       return `/api/files/local?token=${encodeURIComponent(token)}`;
     },
+    async put(key, bytes) {
+      await writeLocal(root, key, bytes);
+    },
     async delete(key) {
       await rm(safeLocalPath(root, key), { force: true });
     },

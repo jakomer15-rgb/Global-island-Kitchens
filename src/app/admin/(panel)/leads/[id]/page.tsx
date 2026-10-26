@@ -22,6 +22,8 @@ import { getLead, leadStatuses, loggableKinds } from "@/server/crm/leads";
 import { assignableStaff } from "@/server/crm/shared";
 import { db } from "@/server/db";
 import { NotFoundError } from "@/server/errors";
+import { createProjectAction } from "../../projects/actions";
+import { createQuotationAction } from "../../quotations/actions";
 import {
   assignAction,
   changeStatusAction,
@@ -49,6 +51,24 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
   const canUpdate = can(actor, "lead.update");
   const canAssign = can(actor, "lead.assign");
   const canFiles = can(actor, "file.read");
+  const canQuote = can(actor, "quotation.manage");
+  const canProject = can(actor, "project.manage");
+  const [quotations, projects] = await Promise.all([
+    can(actor, "quotation.read")
+      ? db.quotation.findMany({
+          where: { leadId: lead.id },
+          select: { id: true, number: true, status: true },
+          orderBy: { createdAt: "desc" },
+        })
+      : [],
+    can(actor, "project.read")
+      ? db.project.findMany({
+          where: { leadId: lead.id },
+          select: { id: true, reference: true, stage: true, orderId: true },
+          orderBy: { createdAt: "desc" },
+        })
+      : [],
+  ]);
   const qr = lead.quotationRequest;
   const messages = lead.activities.filter((a) => a.kind === "message");
   const history = lead.activities.filter((a) => a.kind !== "message");
@@ -215,6 +235,45 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
         </div>
 
         <div className="space-y-6">
+          {(canQuote || canProject || quotations.length > 0 || projects.length > 0) && (
+            <Panel title="Quotations and projects">
+              {quotations.length + projects.length > 0 && (
+                <ul className="mb-4 space-y-1 text-sm">
+                  {quotations.map((q) => (
+                    <li key={q.id}>
+                      <Link href={`/admin/quotations/${q.id}`} className="font-mono text-xs underline">
+                        {q.number}
+                      </Link>{" "}
+                      {label(q.status)}
+                    </li>
+                  ))}
+                  {projects.map((p) => (
+                    <li key={p.id}>
+                      <Link href={`/admin/projects/${p.id}`} className="font-mono text-xs underline">
+                        {p.reference}
+                      </Link>{" "}
+                      {label(p.stage)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex flex-wrap gap-3">
+                {canQuote && (
+                  <ActionForm
+                    action={createQuotationAction.bind(null, lead.id)}
+                    submitLabel="Create quotation"
+                  />
+                )}
+                {canProject && !projects.some((p) => !p.orderId) && (
+                  <ActionForm
+                    action={createProjectAction.bind(null, lead.id)}
+                    submitLabel="Start project"
+                    variant="outline"
+                  />
+                )}
+              </div>
+            </Panel>
+          )}
           <Panel title="Customer">
             <p className="font-medium">
               {can(actor, "customer.read") ? (

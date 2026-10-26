@@ -25,18 +25,33 @@ npm run dev
 
 All are listed with comments in `.env.example` and validated at startup by `src/server/env.ts`.
 
-| Variable                                                               | Needed                  | Purpose                                               |
-| ---------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------- |
-| `DATABASE_URL`                                                         | Always                  | Postgres connection                                   |
-| `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`                                | Always                  | Session signing; site origin                          |
-| `IP_HASH_SECRET`                                                       | Always                  | Keyed hashing of IPs (raw IPs never stored)           |
-| `NEXT_PUBLIC_SITE_URL`                                                 | Production              | Canonical URLs, sitemap, links in emails              |
-| `CRON_SECRET`                                                          | Production              | Protects `/api/cron/outbox`                           |
-| `RESEND_API_KEY`, `EMAIL_FROM`, `NOTIFY_EMAILS`                        | For email               | Staff notifications and customer confirmations        |
-| `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`                                | Optional                | Signed events to n8n                                  |
-| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | Production uploads      | Private bucket (Cloudflare R2)                        |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER`                                          | Optional                | Shows the WhatsApp button                             |
-| `STORAGE_DRIVER`                                                       | **Never in production** | Test-only override for E2E against a production build |
+| Variable                                                               | Needed                   | Purpose                                                     |
+| ---------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------- |
+| `DATABASE_URL`                                                         | Always                   | Postgres connection                                         |
+| `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`                                | Always                   | Session signing; site origin                                |
+| `IP_HASH_SECRET`                                                       | Always                   | Keyed hashing of IPs (raw IPs never stored)                 |
+| `NEXT_PUBLIC_SITE_URL`                                                 | Production               | Canonical URLs, sitemap, links in emails                    |
+| `CRON_SECRET`                                                          | Production               | Protects `/api/cron/outbox`                                 |
+| `RESEND_API_KEY`, `EMAIL_FROM`, `NOTIFY_EMAILS`                        | For email                | Staff notifications and customer confirmations              |
+| `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`                                | Optional                 | Signed events to n8n                                        |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | Production uploads       | Private bucket (Cloudflare R2)                              |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER`                                          | Optional                 | Shows the WhatsApp button                                   |
+| `CHROME_PATH`                                                          | PDF quotations           | Chrome/Chromium used to render PDFs (auto-detected locally) |
+| `BROWSER_WS_ENDPOINT`                                                  | Alternative to the above | Remote Chrome (`ws://` / `wss://`) for hosts without Chrome |
+| `STORAGE_DRIVER`                                                       | **Never in production**  | Test-only override for E2E against a production build       |
+
+## Quotation PDFs
+
+Quotation PDFs are printed by headless Chrome (`puppeteer-core`) from the page
+`/documents/quotations/<id>`. That page is not public: it needs a 2-minute signed token that the server
+creates for the render, so Chrome never receives a staff cookie. The PDF is stored when a quotation is
+marked as sent (private bucket in production) and served to staff through a 60-second signed URL.
+
+- Local: Chrome is found automatically, or set `CHROME_PATH`.
+- A server with Chrome installed (VPS, container): set `CHROME_PATH`.
+- Serverless hosting has no Chrome. Set `BROWSER_WS_ENDPOINT` to a Chrome the owner controls (the app
+  disconnects rather than closing it). The choice is made in Phase 10 (OPEN_QUESTIONS 52).
+- Without either, sending still locks the revision; the PDF is stored later with "Store PDF".
 
 ## Scheduled job
 

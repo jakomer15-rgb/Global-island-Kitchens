@@ -47,6 +47,19 @@ describe("permission matrix", () => {
     expect(editor.some((h) => h.startsWith("/admin/leads") || h === "/admin")).toBe(false);
   });
 
+  it("opens quotations and projects to sales and production, not to content editors", () => {
+    const sales = hrefs(role("sales_manager"));
+    expect(sales).toEqual(expect.arrayContaining(["/admin/quotations", "/admin/orders", "/admin/projects"]));
+    expect(role("sales_manager").has("quotation.approve")).toBe(true);
+    const production = role("production_supervisor");
+    expect(hrefs(production)).toEqual(expect.arrayContaining(["/admin/quotations", "/admin/projects"]));
+    expect(production.has("quotation.manage")).toBe(false);
+    expect(production.has("project.manage")).toBe(true);
+    const editor = hrefs(role("content_editor"));
+    expect(editor.some((h) => ["/admin/quotations", "/admin/orders", "/admin/projects"].includes(h))).toBe(
+      false,
+    );
+  });
   it("sends staff to the first page they may open", () => {
     expect(firstAdminPage(role("sales_manager"))).toBe("/admin");
     expect(firstAdminPage(role("content_editor"))).toBe("/admin/content");

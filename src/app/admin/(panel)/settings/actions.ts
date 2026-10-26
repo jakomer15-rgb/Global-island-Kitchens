@@ -39,6 +39,19 @@ const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
   banner: (f) => ({ enabled: f.get("enabled") === "on", textEn: str(f, "textEn"), textAr: str(f, "textAr") }),
   homeHero: (f) => Object.fromEntries(Object.keys(settingSchemas.homeHero.shape).map((k) => [k, str(f, k)])),
   seo: (f) => Object.fromEntries(Object.keys(settingSchemas.seo.shape).map((k) => [k, str(f, k)])),
+  quotation: (f) => {
+    const rate = Number(str(f, "vatRate").replace("%", ""));
+    const days = str(f, "validityDays");
+    return {
+      vatEnabled: f.get("vatEnabled") === "on",
+      // "10" or "10.5" (%) → basis points
+      vatRateBasisPoints: Number.isFinite(rate) ? Math.round(rate * 100) : -1,
+      vatNumber: str(f, "vatNumber"),
+      termsEn: str(f, "termsEn"),
+      termsAr: str(f, "termsAr"),
+      validityDays: days ? Number(days) : null,
+    };
+  },
 };
 
 function fieldErrors(error: ZodError): ActionState {
@@ -69,6 +82,6 @@ export async function saveSettingAction(
   );
   // Contact details, banner and SEO appear on every public page.
   if (result.ok) revalidatePath("/[locale]", "layout");
-  revalidatePath(key === "contact" || key === "locations" ? "/admin/settings" : "/admin/content");
+  revalidatePath(settingPermission[key] === "settings.manage" ? "/admin/settings" : "/admin/content");
   return result;
 }

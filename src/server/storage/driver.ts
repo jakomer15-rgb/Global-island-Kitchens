@@ -25,6 +25,8 @@ export interface StorageDriver {
   /** The first `length` bytes (for type checks). */
   readStart(key: string, length: number): Promise<Uint8Array>;
   downloadUrl(key: string, fileName: string, contentType: string, ttlSeconds: number): Promise<string>;
+  /** Server-side write (documents the app generates, e.g. quotation PDFs). Never overwrites. */
+  put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
   delete(key: string): Promise<void>;
 }
 

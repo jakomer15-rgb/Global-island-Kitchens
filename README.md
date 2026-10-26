@@ -4,10 +4,10 @@ Bilingual (English / Arabic) website and business platform for Global Island Kit
 manufacturer and installer of kitchens, wardrobes and interior joinery in the Kingdom of Bahrain
 (head office: Hamad Town · showroom: Al-Hamalah).
 
-**Status:** Phase 5 complete: the public site and its quotation, consultation and contact forms, plus
+**Status:** Phase 6 complete: the public site and its quotation, consultation and contact forms, plus
 the staff portal at `/admin` (dashboard, leads, customers, consultations, follow-ups, website content,
 materials library, portfolio, testimonials, blog, website images, settings, staff and roles, audit
-log). Quotations and projects arrive in Phase 6 (see [docs/ROADMAP.md](docs/ROADMAP.md)).
+log), and quotations (revisions, locked when sent, English or Arabic PDF), recorded customer approval,\norders and project stage tracking. The designer portal arrives in Phase 7 (see [docs/ROADMAP.md](docs/ROADMAP.md)).
 
 Company content lives in `src/content/` (English and Arabic side by side), written only from
 [docs/BUSINESS_FACTS.md](docs/BUSINESS_FACTS.md).

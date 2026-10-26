@@ -64,6 +64,22 @@ export const settingSchemas = {
     accentAr: optionalText(80),
     introAr: optionalText(400),
   }),
+  /** Quotation documents. VAT stays off until the owner confirms registration (OPEN_QUESTIONS #48). */
+  quotation: z
+    .object({
+      vatEnabled: z.boolean(),
+      /** 1000 = 10% (Bahrain's standard rate). */
+      vatRateBasisPoints: z.number().int().min(0).max(10_000),
+      vatNumber: optionalText(30),
+      termsEn: optionalText(4000),
+      termsAr: optionalText(4000),
+      /** Days a quotation stays valid by default; null means staff choose a date each time. */
+      validityDays: z.number().int().min(1).max(365).nullable(),
+    })
+    .refine((q) => !q.vatEnabled || (q.vatNumber && q.vatRateBasisPoints > 0), {
+      message: "Enter the VAT registration number and rate before turning VAT on.",
+      path: ["vatEnabled"],
+    }),
   seo: z.object({
     titleEn: optionalText(60),
     descriptionEn: optionalText(160),
@@ -105,6 +121,14 @@ export const settingDefaults: Settings = {
     introAr: null,
   },
   seo: { titleEn: null, descriptionEn: null, titleAr: null, descriptionAr: null },
+  quotation: {
+    vatEnabled: false,
+    vatRateBasisPoints: 1000,
+    vatNumber: null,
+    termsEn: null,
+    termsAr: null,
+    validityDays: null,
+  },
 };
 
 /** Validates a stored value, falling back to the default if it's missing or invalid. */

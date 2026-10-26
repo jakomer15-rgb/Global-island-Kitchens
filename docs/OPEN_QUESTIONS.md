@@ -86,3 +86,12 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 45. **Website photographs:** which project photos may be shown (client and photographer permission), and who owns each, for the credit line. Until then projects stay text-only and out of search results.
 46. **Opening hours wording:** the consultation form hint still says "9:00 AM – 8:00 PM" in its fixed text; if hours change in Admin → Settings, that hint needs a code change (or confirm hours won't change).
 47. Fluent Arabic review of the new public text (blog page, testimonials heading, décor library labels in `src/content/cms.ts`).
+
+## Added in Phase 6
+
+48. **VAT:** is Global Island Kitchens VAT-registered in Bahrain? If so, the VAT number and rate, then turn it on in Admin → Settings → Quotations. VAT is off until then and quotations carry no VAT line.
+49. **Quotation terms and conditions** (English and Arabic): payment, deposit, delivery and installation timing, warranty. Admin → Settings → Quotations is empty until the owner provides the wording; none was invented.
+50. **Quotation validity:** how many days a quotation stays valid by default (the setting exists; the owner confirms the number).
+51. **Pricing:** rates per linear metre, square metre or unit if staff want automatic estimates. Until then every price is entered by hand.
+52. **PDF hosting:** where production runs decides how PDFs are printed (a server with Chrome, or a remote Chrome via `BROWSER_WS_ENDPOINT`). Decided in Phase 10 with the hosting choice.
+53. **Quotation layout and wording** in Arabic and English (`src/content/quotation.ts`) need a fluent Arabic review and the owner's letterhead details (logo file, stamp or signature policy).

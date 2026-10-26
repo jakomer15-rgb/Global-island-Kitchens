@@ -16,11 +16,18 @@ Each phase ends with the same gate:
 | **3. Public pages** ✅                     | The 22 pages in the site map, responsive, bilingual, with static content from `BUSINESS_FACTS.md` (moved to the database in Phase 4)                                                                                                               | Every page reachable, no broken links, no invented content                                         |
 | **4. Database, backend, auth** ✅          | Prisma schema and migrations, seed, Better Auth, roles and permissions, services layer, storage, outbox, rate limiting, audit log; forms (quote wizard, consultation, contact) saving to the database                                              | DB tests for every constraint; forms work end to end                                               |
 | **5. Admin portal and CRM** ✅             | `/admin` dashboard with real metrics, leads, customers, follow-ups, communication history, consultations, content management, materials library, media, settings, staff and roles                                                                  | Permission matrix tests; E2E admin journey                                                         |
-| **6. Quotations and projects**             | Quotation builder, revisions, VAT, BHD totals, branded PDF (English/Arabic), approval, conversion to order and project, project stage tracking, optional pricing rules                                                                             | Money tests, PDF snapshot tests, E2E quote-to-project journey                                      |
+| **6. Quotations and projects** ✅          | Quotation builder, revisions, VAT, BHD totals, branded PDF (English/Arabic), approval, conversion to order and project, project stage tracking, optional pricing rules                                                                             | Money tests, PDF snapshot tests, E2E quote-to-project journey                                      |
 | **7. Designer portal**                     | Registration, staff approval, project submission, drawing uploads, material selection, quotation requests, status tracking, messages                                                                                                               | Access tests: a designer can never see another designer's data                                     |
 | **8. AI and automation**                   | Furniture, lead and content assistants (drafts only), n8n events and example workflows, consent and unsubscribe, WhatsApp Business integration points                                                                                              | AI off by default; approval required; signed webhooks tested                                       |
 | **9. Security, testing, SEO, performance** | Security review, full E2E suite, accessibility audit, structured data, sitemap, robots, canonical URLs, analytics consent, image optimisation, Lighthouse 90+ targets measured                                                                     | Report with measured scores and fixed findings                                                     |
 | **10. Deployment and handover**            | Production hosting, environments, Sentry, backups and a tested restore, CI/CD, technical docs, admin user guide                                                                                                                                    | Production verified against a launch checklist                                                     |
+
+Phase 6: quotations (draft, sent and locked, approved, declined, converted) with revisions, line items
+priced by hand, BHD totals in integer fils, optional VAT (off until the owner enters a registration
+number and rate), English or Arabic PDF rendered by Chrome and stored, approval recorded by phone or
+WhatsApp with a note, conversion to an order and a project, project stages with history, and sales
+figures on the dashboard. Not built: automatic price estimates (no rates are known, so none are
+invented) and uploading a WhatsApp screenshot as proof of approval (the note is the record).
 
 Phase 5: the admin portal at `/admin`: dashboard (real counts and a 12-week chart), leads (filters,
 status, assignment, communication history, follow-ups), customers (edit, consent history),
@@ -46,6 +53,6 @@ Arabic 70–76) is below target and carried into Phase 9.
 
 - Before Phase 2: approvals in ARCHITECTURE §9; logo files; permission to use the profile's photographs.
 - Before Phase 3: answers to the content questions in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
-- Before Phase 6: VAT registration status and rate, quotation terms and conditions, quotation numbering.
+- Before Phase 6 (answered in part: VAT off, approval by phone or WhatsApp; the rest is in OPEN_QUESTIONS 48-52): VAT registration, quotation terms.
 - Before Phase 8: n8n instance, WhatsApp Business account, email provider account.
 - Before Phase 10: domain name, hosting accounts, who receives alerts.

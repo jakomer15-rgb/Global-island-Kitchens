@@ -15,6 +15,8 @@ import { requireActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
 import { dashboard, recentActivity } from "@/server/crm/dashboard";
 import { db } from "@/server/db";
+import { formatBhd } from "@/lib/money";
+import { salesFigures } from "@/server/quotations/dashboard";
 import { firstAdminPage } from "./nav";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -22,13 +24,17 @@ export const metadata: Metadata = { title: "Dashboard" };
 export default async function DashboardPage() {
   const actor = await requireActor();
   if (!can(actor, "lead.read")) redirect(firstAdminPage(actor.permissions));
-  const [d, activity] = await Promise.all([dashboard(db, actor), recentActivity(db, actor)]);
+  const [d, activity, sales] = await Promise.all([
+    dashboard(db, actor),
+    recentActivity(db, actor),
+    salesFigures(db, actor),
+  ]);
 
   return (
     <>
       <PageHeader
         title="Dashboard"
-        description="Live figures from website enquiries and the CRM. Quotation and project figures appear once quotations and projects are managed here (next phase)."
+        description="Live figures from website enquiries, the CRM, quotations and projects."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -73,6 +79,22 @@ export default async function DashboardPage() {
           hint="Due within 24 hours"
           href="/admin/follow-ups"
         />
+        {sales.awaiting !== null && (
+          <StatCard
+            label="Quotations awaiting an answer"
+            value={sales.awaiting.count}
+            hint={`Worth ${formatBhd(sales.awaiting.totalFils)}`}
+            href="/admin/quotations?status=sent"
+          />
+        )}
+        {sales.activeProjects !== null && (
+          <StatCard
+            label="Active projects"
+            value={sales.activeProjects}
+            hint="Not yet completed"
+            href="/admin/projects"
+          />
+        )}
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-3">

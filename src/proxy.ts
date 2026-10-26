@@ -29,6 +29,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except API routes, website images (/media), Next internals and files with an extension.
-  matcher: ["/((?!api|media/|_next|_vercel|.*\\..*).*)"],
+  // Everything except API routes, website images (/media), printable documents, Next internals and files with an extension.
+  matcher: ["/((?!api|media/|documents/|_next|_vercel|.*\\..*).*)"],
 };

@@ -1,5 +1,31 @@
 # Test report
 
+## Phase 6 — quotations and projects (2026-10-26)
+
+Environment: as in Phase 5, plus headless Chrome (installed) for PDFs.
+
+| Check                  | Result                                                                                                                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lint, typecheck, build | Pass                                                                                                                                                                         |
+| `npm test` (unit)      | 72 / 72. New: money (fils parsing, rounding, VAT on subtotal minus discount), document tokens (expiry, tampering, wrong quotation), permission matrix                        |
+| `npm run test:db`      | 34 / 34 (5 new): full quotation flow; VAT on/off and revisions; bad drafts and roles refused; database arithmetic and locked revisions/lines immutable; projects and orders  |
+| `npm run test:e2e`     | 194 pass, 50 skipped by design, 0 fail. New: draft to sent with stored Arabic PDF, approval by WhatsApp, conversion to order and project, stage change, axe on all new pages |
+
+Visual check: the Arabic and English PDFs and the quotation editor were reviewed (phone/email direction and total-row border fixed).
+One earlier E2E sign-in failure was traced to the local database not running, not to rate limiting.
+
+### Security review (Phase 6 changes)
+
+| Entry point                  | Protection                                                                                                             |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Quotation pages and actions  | `requireActor(permission)` plus `assertCan` in each service; approval needs `quotation.approve`; every change audited  |
+| `/documents/quotations/<id>` | 404 without a valid 2-minute HMAC token bound to the quotation and revision; no staff cookie is ever given to Chrome   |
+| Staff PDF route              | Staff only; stored PDF served through a 60-second signed URL; draft preview rendered on demand; each access audited    |
+| Locked data                  | Database triggers block edits to sent revisions and lines and to stage history, so the rules hold even outside the app |
+| Storage                      | PDFs are private files; the abandoned-upload sweep keeps them                                                          |
+
+Not covered: serverless PDF hosting (needs the owner's Chrome, Phase 10), fluent Arabic review of the document wording.
+
 ## Phase 5 — admin portal and CRM (2026-10-26)
 
 Environment: as in Phase 4 (production build, installed Chrome, `gik_test` database).

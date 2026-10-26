@@ -1,9 +1,9 @@
 # Data model
 
-Status: **Phases 4–5 implemented** in `prisma/schema.prisma`; Phase 4 in `prisma/migrations/20261025200000_init`:
+Status: **Phases 4–6 implemented** in `prisma/schema.prisma`; Phase 4 in `prisma/migrations/20261025200000_init`:
 identity and roles, Customer, Lead, LeadActivity, FollowUp, Consultation, ConsentRecord,
 QuotationRequest, FileAsset, Notification, OutboxEvent, AuditLog, RateLimitBucket, SiteSetting.
-Quotations/orders/projects (Phase 6), designer accounts
+Designer accounts
 (Phase 7) and AI drafts / webhooks (Phase 8) are added by their phases' migrations.
 
 Phase 4 differences from the design below: designer accounts aren't created yet; quotation requests
@@ -26,6 +26,22 @@ Differences from the design below:
 - Site settings are grouped per screen (`contact`, `locations`, `banner`, `homeHero`, `seo`), each
   validated by a Zod schema in `src/lib/site-settings.ts`; invalid or missing values fall back to the
   verified defaults.
+
+Phase 6 (`20261026120000_quotations_projects`) adds Quotation, QuotationRevision, QuotationLineItem,
+Order, Project and ProjectStageChange. Differences from the design below:
+
+- Statuses are `draft | sent | approved | rejected | converted` (no automatic `expired`; validity is
+  shown on the document). Approval is by `whatsapp` or `phone` with a required note, recorded by
+  staff who hold `quotation.approve`.
+- Numbers come from database sequences (`GIK-QT-`, `GIK-OR-`, `GIK-PR-` + year + 5 digits).
+- Quantities are stored in thousandths and VAT in basis points; line total = round half up of
+  quantity x price. VAT applies to subtotal minus discount. CHECK constraints enforce the totals and that
+  approval fields are complete.
+- Triggers make a sent (locked) revision and its lines immutable, apart from the approval fields and the
+  PDF link, and make `project_stage_changes` append-only. A sent quotation is changed only by a new
+  revision.
+- `PricingRule`, `ProjectMaterial` and `ProjectMessage` are not built: no rates are known, and
+  project messages belong to the Phase 7 designer portal.
 
 Conventions:
 

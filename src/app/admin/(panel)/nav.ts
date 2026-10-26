@@ -22,6 +22,14 @@ const groups: {
     ],
   },
   {
+    label: "Sales and projects",
+    items: [
+      { href: "/admin/quotations", label: "Quotations", permission: "quotation.read" },
+      { href: "/admin/orders", label: "Orders", permission: "quotation.read" },
+      { href: "/admin/projects", label: "Projects", permission: "project.read" },
+    ],
+  },
+  {
     label: "Website",
     items: [
       { href: "/admin/content", label: "Homepage and banner", permission: "content.manage" },

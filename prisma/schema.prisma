@@ -49,19 +49,25 @@ model User {
   createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  sessions          Session[]
-  accounts          Account[]
-  roles             UserRole[]
-  leadsAssigned     Lead[]         @relation("LeadAssignee")
-  leadActivities    LeadActivity[]
-  followUps         FollowUp[]
-  consultations     Consultation[]
-  notifications     Notification[]
-  auditLogs         AuditLog[]
-  settingsUpdated   SiteSetting[]
-  filesUploaded     FileAsset[]    @relation("FileUploader")
-  materialsVerified Material[]     @relation("MaterialVerifier")
-  blogPosts         BlogPost[]     @relation("BlogAuthor")
+  sessions           Session[]
+  accounts           Account[]
+  roles              UserRole[]
+  leadsAssigned      Lead[]               @relation("LeadAssignee")
+  leadActivities     LeadActivity[]
+  followUps          FollowUp[]
+  consultations      Consultation[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+  settingsUpdated    SiteSetting[]
+  filesUploaded      FileAsset[]          @relation("FileUploader")
+  materialsVerified  Material[]           @relation("MaterialVerifier")
+  blogPosts          BlogPost[]           @relation("BlogAuthor")
+  quotationsCreated  Quotation[]          @relation("QuotationCreator")
+  quotationsAssigned Quotation[]          @relation("QuotationAssignee")
+  revisionsSent      QuotationRevision[]  @relation("RevisionSender")
+  approvalsRecorded  QuotationRevision[]  @relation("ApprovalRecorder")
+  projectsAssigned   Project[]            @relation("ProjectAssignee")
+  stageChanges       ProjectStageChange[]
 
   @@map("users")
 }
@@ -194,6 +200,9 @@ model Customer {
   consultations     Consultation[]
   quotationRequests QuotationRequest[]
   consents          ConsentRecord[]
+  quotations        Quotation[]
+  orders            Order[]
+  projects          Project[]
 
   @@index([name])
   @@map("customers")
@@ -244,6 +253,8 @@ model Lead {
   followUps        FollowUp[]
   consultation     Consultation?
   quotationRequest QuotationRequest?
+  quotations       Quotation[]
+  projects         Project[]
 
   @@index([status, createdAt])
   @@index([assignedToId])
@@ -393,9 +404,10 @@ model QuotationRequest {
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  lead     Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  files    FileAsset[]
+  lead       Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  files      FileAsset[]
+  quotations Quotation[]
 
   @@index([status, createdAt])
   @@map("quotation_requests")
@@ -407,6 +419,7 @@ enum FileKind {
   material_image
   project_photo
   blog_image
+  quotation_pdf
   other
 }
 
@@ -444,11 +457,12 @@ model FileAsset {
   verifiedAt         DateTime?      @map("verified_at") @db.Timestamptz(3)
   createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  quotationRequest QuotationRequest? @relation(fields: [quotationRequestId], references: [id], onDelete: SetNull)
-  uploadedBy       User?             @relation("FileUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  quotationRequest QuotationRequest?   @relation(fields: [quotationRequestId], references: [id], onDelete: SetNull)
+  uploadedBy       User?               @relation("FileUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
   materials        Material[]
   portfolioImages  PortfolioImage[]
   blogCovers       BlogPost[]
+  quotationPdfs    QuotationRevision[]
 
   @@index([status, createdAt])
   @@index([quotationRequestId])
@@ -498,8 +512,9 @@ model Material {
   createdAt     DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  image      FileAsset? @relation(fields: [imageFileId], references: [id], onDelete: SetNull)
-  verifiedBy User?      @relation("MaterialVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  image          FileAsset?          @relation(fields: [imageFileId], references: [id], onDelete: SetNull)
+  verifiedBy     User?               @relation("MaterialVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  quotationLines QuotationLineItem[]
 
   @@unique([board, code])
   @@index([published, sortOrder])
@@ -689,4 +704,210 @@ model SiteSetting {
   updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@map("site_settings")
+}
+
+// ─── Phase 6: quotations, orders, projects ──────────────────────────────────
+// Money is integer fils (1 BHD = 1000 fils). Totals are checked by the database.
+
+enum QuotationStatus {
+  draft
+  sent
+  approved
+  rejected
+  converted
+}
+
+enum LineItemKind {
+  product
+  material
+  hardware
+  labour
+  installation
+  other
+}
+
+enum LineUnit {
+  unit
+  set
+  linear_metre
+  square_metre
+}
+
+enum ApprovalMethod {
+  whatsapp
+  phone
+}
+
+model Quotation {
+  id             String          @id @default(cuid())
+  /// GIK-QT-2026-00001 (sequence in migration).
+  number         String          @unique
+  customerId     String          @map("customer_id")
+  leadId         String?         @map("lead_id")
+  requestId      String?         @map("request_id")
+  title          String
+  /// Language of the quotation document.
+  locale         Locale          @default(en)
+  status         QuotationStatus @default(draft)
+  rejectedReason String?         @map("rejected_reason")
+  createdById    String?         @map("created_by_id")
+  assignedToId   String?         @map("assigned_to_id")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  customer   Customer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  lead       Lead?               @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  request    QuotationRequest?   @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  createdBy  User?               @relation("QuotationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  assignedTo User?               @relation("QuotationAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  revisions  QuotationRevision[]
+
+  @@index([status, updatedAt])
+  @@index([customerId])
+  @@map("quotations")
+}
+
+model QuotationRevision {
+  id                   String          @id @default(cuid())
+  quotationId          String          @map("quotation_id")
+  revision             Int
+  subtotalFils         BigInt          @default(0) @map("subtotal_fils")
+  discountFils         BigInt          @default(0) @map("discount_fils")
+  /// 1000 = 10%. 0 when the company doesn't charge VAT.
+  vatRateBasisPoints   Int             @default(0) @map("vat_rate_basis_points")
+  vatFils              BigInt          @default(0) @map("vat_fils")
+  totalFils            BigInt          @default(0) @map("total_fils")
+  /// VAT registration number printed on the document (copied from settings when sent).
+  vatNumber            String?         @map("vat_number")
+  validUntil           DateTime?       @map("valid_until") @db.Date
+  notes                String?
+  terms                String?
+  sentAt               DateTime?       @map("sent_at") @db.Timestamptz(3)
+  sentById             String?         @map("sent_by_id")
+  /// Sent revisions are locked: line items and totals can't change (trigger in migration).
+  lockedAt             DateTime?       @map("locked_at") @db.Timestamptz(3)
+  pdfFileId            String?         @map("pdf_file_id")
+  approvedAt           DateTime?       @map("approved_at") @db.Timestamptz(3)
+  approvalMethod       ApprovalMethod? @map("approval_method")
+  /// Who approved for the customer and any detail, e.g. "Mrs A. by WhatsApp, message kept".
+  approvalNote         String?         @map("approval_note")
+  approvalRecordedById String?         @map("approval_recorded_by_id")
+  createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  quotation          Quotation           @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  sentBy             User?               @relation("RevisionSender", fields: [sentById], references: [id], onDelete: SetNull)
+  approvalRecordedBy User?               @relation("ApprovalRecorder", fields: [approvalRecordedById], references: [id], onDelete: SetNull)
+  pdf                FileAsset?          @relation(fields: [pdfFileId], references: [id], onDelete: SetNull)
+  lines              QuotationLineItem[]
+  order              Order?
+
+  @@unique([quotationId, revision])
+  @@map("quotation_revisions")
+}
+
+model QuotationLineItem {
+  id            String       @id @default(cuid())
+  revisionId    String       @map("revision_id")
+  sortOrder     Int          @default(0) @map("sort_order")
+  kind          LineItemKind @default(product)
+  description   String
+  materialId    String?      @map("material_id")
+  widthMm       Int?         @map("width_mm")
+  heightMm      Int?         @map("height_mm")
+  depthMm       Int?         @map("depth_mm")
+  unit          LineUnit     @default(unit)
+  /// Quantity × 1000 (3 decimal places), e.g. 2.5 m = 2500.
+  quantityMilli Int          @map("quantity_milli")
+  unitPriceFils BigInt       @map("unit_price_fils")
+  lineTotalFils BigInt       @map("line_total_fils")
+
+  revision QuotationRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  material Material?         @relation(fields: [materialId], references: [id], onDelete: SetNull)
+
+  @@index([revisionId, sortOrder])
+  @@map("quotation_line_items")
+}
+
+enum OrderStatus {
+  confirmed
+  in_production
+  installed
+  completed
+  cancelled
+}
+
+model Order {
+  id                  String      @id @default(cuid())
+  /// GIK-OR-2026-00001 (sequence in migration).
+  number              String      @unique
+  quotationRevisionId String      @unique @map("quotation_revision_id")
+  customerId          String      @map("customer_id")
+  totalFils           BigInt      @map("total_fils")
+  /// Agreed deposit, entered by staff (no default: terms aren't known).
+  depositFils         BigInt?     @map("deposit_fils")
+  depositReceivedAt   DateTime?   @map("deposit_received_at") @db.Timestamptz(3)
+  status              OrderStatus @default(confirmed)
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  revision QuotationRevision @relation(fields: [quotationRevisionId], references: [id], onDelete: Restrict)
+  customer Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  project  Project?
+
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+enum ProjectStage {
+  inquiry
+  measurement
+  design
+  quotation
+  approval
+  production
+  installation
+  completion
+}
+
+model Project {
+  id           String       @id @default(cuid())
+  /// GIK-PR-2026-00001 (sequence in migration).
+  reference    String       @unique
+  customerId   String       @map("customer_id")
+  leadId       String?      @map("lead_id")
+  orderId      String?      @unique @map("order_id")
+  title        String
+  siteAddress  String?      @map("site_address")
+  stage        ProjectStage @default(inquiry)
+  assignedToId String?      @map("assigned_to_id")
+  targetDate   DateTime?    @map("target_date") @db.Date
+  notes        String?
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  customer     Customer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  lead         Lead?                @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  order        Order?               @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  assignedTo   User?                @relation("ProjectAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  stageChanges ProjectStageChange[]
+
+  @@index([stage, updatedAt])
+  @@map("projects")
+}
+
+model ProjectStageChange {
+  id          String        @id @default(cuid())
+  projectId   String        @map("project_id")
+  fromStage   ProjectStage? @map("from_stage")
+  toStage     ProjectStage  @map("to_stage")
+  changedById String?       @map("changed_by_id")
+  note        String?
+  changedAt   DateTime      @default(now()) @map("changed_at") @db.Timestamptz(3)
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  changedBy User?   @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, changedAt])
+  @@map("project_stage_changes")
 }

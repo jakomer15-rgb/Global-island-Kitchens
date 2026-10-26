@@ -34,6 +34,9 @@ const schema = z.object({
    * deployment leaves it unset and configures S3 (docs/DEPLOYMENT.md, launch checklist).
    */
   STORAGE_DRIVER: z.enum(["s3", "local"]).optional(),
+  /** Quotation PDFs: a Chrome executable, or the WebSocket endpoint of a running Chrome. */
+  CHROME_PATH: z.preprocess((v) => v || undefined, z.string().optional()),
+  BROWSER_WS_ENDPOINT: z.preprocess((v) => v || undefined, z.string().url().optional()),
 });
 
 export type Env = z.infer<typeof schema>;

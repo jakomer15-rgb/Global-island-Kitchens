@@ -40,7 +40,8 @@ test.describe("admin portal", () => {
   test.skip(({ isMobile }) => isMobile, "admin journeys run once, on desktop");
 
   test("every page opens for the owner without accessibility problems", async ({ page }) => {
-    test.setTimeout(120_000);
+    // axe on 16 pages; slow when the whole suite runs in parallel
+    test.setTimeout(300_000);
     await signIn(page);
     for (const [path, heading] of pages) {
       await page.goto(path);
