@@ -14,7 +14,7 @@ async function signIn(page: Page, email = E2E_STAFF.email, password = E2E_STAFF.
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).not.toHaveURL(/sign-in/);
+  await expect(page).not.toHaveURL(/sign-in/, { timeout: 20_000 });
 }
 
 const pages = [
@@ -62,7 +62,7 @@ test.describe("admin portal", () => {
     await form.getByLabel("Temporary password").fill("a sales password that is long");
     await form.getByLabel(/Sales & Project Manager/).check();
     await form.getByRole("button", { name: "Create account" }).click();
-    await expect(page.getByText(/Account created/)).toBeVisible();
+    await expect(page.getByText(/Account created/)).toBeVisible({ timeout: 30_000 });
     await expect(form.getByLabel("Email")).toHaveValue("");
 
     const other = await browser.newContext({

@@ -1,5 +1,42 @@
 # Test report
 
+## Phase 10 — deployment and handover (2026-10-26)
+
+**Status: prepared, not deployed.** No domain, hosting, database, storage or email accounts exist yet, so
+nothing below was run against a production environment.
+
+| Check                              | Result                                                                                        |
+| ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| `npm run lint`, `typecheck`        | Clean                                                                                         |
+| `npm run build`                    | OK (includes `/api/health`)                                                                   |
+| Unit tests (`npm test`)            | 87 / 87                                                                                       |
+| DB tests (`npm run test:db`)       | 50 / 50                                                                                       |
+| E2E (full suite, 13.3 min)         | 205 passed, 58 skipped (phone/opt-in projects), 1 failed                                      |
+| The 1 E2E failure                  | Sales-manager test timed out at 5 s per step; the test database had grown slow (see below)    |
+| After the fix                      | That test passes (44 s); `admin.spec.ts` alone: 4 passed. The full suite was not re-run after |
+| `npm audit --omit=dev`             | 0 vulnerabilities (now also a CI step)                                                        |
+| `npm run restore:verify` (test DB) | Passes (12 tables, migrations, 8 triggers, 4 sequences, owner)                                |
+| `npm run launch:check` (dev env)   | Correctly reports 6 failures and 6 warnings (local URLs, no cron secret, no S3, no owner)     |
+
+New E2E checks (`e2e/ops.spec.ts`): `/api/health` returns 200 `{status:"ok"}` with `no-store`; security
+headers on `/`, `/ar`, `/admin/sign-in` and `/api/health`; the sitemap carries `hreflang="ar-BH"` and none
+of the private paths.
+
+### Issue found
+
+The sales-manager test failed because the long-lived test database accumulates staff accounts from every
+run, which slows the staff page and sign-in beyond Playwright's 5 s default. The two slow assertions now
+allow 20–30 s. It is a test-environment effect, not a product bug.
+
+### Not verified (honest list)
+
+- Nothing is deployed; the backup and restore-rehearsal GitHub workflows and the Dockerfile have never run.
+- Sentry is not installed; errors are logged as one JSON line each (`src/instrumentation.ts`).
+- AI features were never run against the real Anthropic API; n8n workflows are only validated as JSON;
+  the WhatsApp webhook was tested only with self-signed requests.
+- Mobile Lighthouse is 81–86, below the 90 target; re-measure on the real host.
+- Arabic copy needs review by a fluent reader. There is no customer-data deletion tool.
+
 ## Phase 8 — AI and automation (2026-10-26)
 
 | Check                  | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |

@@ -71,6 +71,8 @@ end of its work.
 | `npm run test:db`                             | Integration tests against `gik_test` (refuses other databases)               |
 | `npm run build` then `npm run test:e2e`       | Playwright E2E + axe against the production build (port 3100, test database) |
 | `npm run audit:lighthouse -- <baseUrl> / /ar` | Lighthouse, mobile and desktop, against a running production server          |
+| `npm run launch:check`                        | Go / no-go check of the environment and database before and after a deploy   |
+| `npm run restore:verify`                      | Checks a restored database (data, migrations, triggers, sequences)           |
 | `npm run check`                               | lint + typecheck + unit tests + build                                        |
 
 Locally, Playwright and Lighthouse use the installed Google Chrome; CI installs Playwright's Chromium.

@@ -33,7 +33,9 @@
     "db:seed": "prisma db seed",
     "test:db": "vitest run --project db",
     "admin:create": "tsx scripts/create-admin.ts",
-    "outbox:run": "tsx scripts/run-outbox.ts"
+    "outbox:run": "tsx scripts/run-outbox.ts",
+    "launch:check": "tsx scripts/launch-check.ts",
+    "restore:verify": "tsx scripts/verify-restore.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.1",

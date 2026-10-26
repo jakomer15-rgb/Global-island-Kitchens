@@ -1,7 +1,8 @@
 # Deployment and operations
 
-Status: local development and test setup complete (Phase 4). Production hosting is set up in Phase 10;
-this document grows with it.
+Status: everything that can be prepared without accounts is done (Phase 10): health check, launch
+check, backups and restore rehearsal workflows, CI, runbook. Nothing has been deployed; the hosting plan below needs the
+owner's accounts.
 
 ## Local development
 
@@ -113,11 +114,40 @@ Behind any other proxy, make sure the proxy overwrites it, or the limits can be 
   databases. Never `migrate dev` or `migrate reset` there.
 - Hand-written constraints, triggers and the reference sequence live in the migration SQL.
 
-## Launch checklist (to complete in Phase 10)
+## Hosting plan (decided in ARCHITECTURE §9; no account exists yet)
 
-- [ ] All production variables set; `STORAGE_DRIVER` unset
-- [ ] Owner account created with `admin:create`; strong password; other staff created in Admin → Staff
-- [ ] Contact details, hours and the WhatsApp number confirmed in Admin → Settings
-- [ ] Cron configured and returning 200
-- [ ] Test enquiry received by email in both languages
-- [ ] Backups (point-in-time recovery) enabled and a restore rehearsed
+1. **Domain and DNS:** the owner registers the domain; set `NEXT_PUBLIC_SITE_URL` and `BETTER_AUTH_URL` to it (https).
+2. **Database:** create a managed PostgreSQL 17 project (Neon), choose the region closest to Bahrain that the provider
+   offers, turn on point-in-time recovery, and use its pooled connection string as `DATABASE_URL`.
+3. **Files:** create two private Cloudflare R2 buckets (uploads, backups). On the uploads bucket allow CORS `PUT` from the
+   site origin with header `content-type`.
+4. **Email:** verify the sending domain in Resend; set `RESEND_API_KEY`, `EMAIL_FROM`, `NOTIFY_EMAILS`.
+5. **Site:** import the repository into Vercel (Node 24). Add every variable from `.env.example` that applies. `vercel.json`
+   schedules `/api/cron/outbox` every 5 minutes (Vercel sends `Authorization: Bearer $CRON_SECRET` itself; sub-daily
+   schedules need a paid plan). On another host, call that URL every 5 minutes with the same header.
+6. **Quotation PDFs:** Vercel has no Chrome. Either set `BROWSER_WS_ENDPOINT` to a hosted browser service the owner pays
+   for, or run the site where Chrome exists (the optional `Dockerfile`: not built or tested in development).
+7. **Migrate and seed** the production database (`npm run db:deploy`, `npm run db:seed`) **before** the first build, then create
+   the owner (`npm run admin:create`).
+8. **GitHub secrets** for the nightly backup (docs/HANDOVER.md), then run the restore rehearsal once.
+9. Run `npm run launch:check` against the production environment, then the checklist below.
+
+## Launch checklist
+
+Automated by `npm run launch:check` (fails on anything unsafe): production variables, `STORAGE_DRIVER` and the test AI
+provider unset, https site address, strong distinct secrets, storage, cron secret, migrations applied, roles seeded, an active owner.
+
+Done by a person, with the owner:
+
+- [ ] Real content in place: contact details, hours and the WhatsApp number confirmed in Admin → Settings; EGGER décors entered
+      and checked; permitted project photos with credits; testimonials only with written permission
+- [ ] Quotation terms and validity entered; VAT status confirmed (OPEN_QUESTIONS 48-50)
+- [ ] Fluent Arabic review of all Arabic text (OPEN_QUESTIONS 47, 53, 61, 68)
+- [ ] Privacy policy and terms checked by the owner (and updated if AI or automation is switched on)
+- [ ] A test enquiry in English and Arabic arrives in Admin and by email; the cron returns 200
+- [ ] Upload a photo and a drawing; download it as staff; a quotation PDF is created in English and Arabic
+- [ ] `/api/health` monitored; error logs searchable; alerts go to a named person
+- [ ] Nightly backup ran; **a restore rehearsal passed**
+- [ ] Search Console and the sitemap submitted; analytics chosen (none is installed), with a consent banner if needed
+- [ ] Staff accounts created, each with their own password; the owner knows how to reset one
+- [ ] Mobile Lighthouse measured again on the production host (target 90; it was 81-86 locally)
