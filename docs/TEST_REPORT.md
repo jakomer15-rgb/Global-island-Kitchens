@@ -1,5 +1,51 @@
 # Test report
 
+## Phase 9 — security, SEO, performance (2026-10-26)
+
+| Check                  | Result                                                                                                |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| Lint, typecheck, build | Pass                                                                                                  |
+| `npm test` (unit)      | 73 / 73 (new: local storage move never overwrites)                                                    |
+| `npm run test:db`      | 34 / 34                                                                                               |
+| `npm run test:e2e`     | 194 pass, 50 skipped by design, 0 fail (includes uploads through the new move step, axe on all pages) |
+
+### Security review (independent read-only review of the whole repository)
+
+No critical or high findings. Two medium and five low, all addressed except where noted.
+
+| Finding                                                                                   | Result                                                                                                  |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| M1 Confirmation emails could be sent to any typed address, with free text in the greeting | Fixed: generic greeting, limit of 3 confirmations a day per address. CAPTCHA left as a decision (OQ 54) |
+| M2 Upload overwritable through its signed URL after the content check (S3/R2)             | Fixed: checked bytes are moved to a key no signed URL can write to (not tested against a real bucket)   |
+| L1 Rate limits trust the first `x-forwarded-for` entry                                    | Documented as a hosting requirement (DEPLOYMENT.md); checked at launch                                  |
+| L2 Re-storing a PDF replaced the one already sent                                         | Fixed: an existing stored PDF is kept                                                                   |
+| L3 Failed sign-in audit rows kept the typed email                                         | Fixed: keyed hash only                                                                                  |
+| L4 Anyone could lock a staff account out for 15 minutes                                   | Fixed: failure lockout is per email and IP; a high ceiling (30) across all addresses                    |
+| L5 Unlimited PDF preview rendering                                                        | Fixed: 20 per person per 15 minutes                                                                     |
+
+Also added: Content-Security-Policy (same origin and the storage bucket only), Cross-Origin-Opener-Policy,
+`/documents` in robots.txt. Not done: staff uploads (`finishMediaUpload`) still use the old key without
+the move step (staff-only, lower risk); a lead's customer record is visible to anyone with `lead.read`
+(review whether roles should separate it).
+
+### SEO
+
+Sitemap with English/Arabic alternates, robots (admin, API and documents blocked), canonical and hreflang,
+and structured data were already tested by `e2e/pages.spec.ts`; they still pass. No analytics is installed.
+
+### Lighthouse (production build on localhost, simulated mobile and desktop)
+
+| Page          | Mobile perf | LCP   | TBT    | Desktop perf | Accessibility / best practices / SEO |
+| ------------- | ----------- | ----- | ------ | ------------ | ------------------------------------ |
+| `/`           | 84          | 3.0 s | 430 ms | 100          | 96 / 100 / 100                       |
+| `/ar`         | 85          | 3.3 s | 330 ms | 100          | 96 / 100 / 100                       |
+| `/contact`    | 86          | 2.3 s | 470 ms | 100          | 100 / 96 / 100                       |
+| `/ar/contact` | 81          | 2.2 s | 710 ms | 100          | 100 / 96 / 100                       |
+
+Arabic mobile improved from 70-76 (Phase 2) to 81-85. The 90 target on mobile is not met: the remaining
+cost is the Next.js runtime and the page data sent with the HTML (about 125 KB of it on the home page).
+Measure again on the production host (OQ 57). Scores vary a few points between runs.
+
 ## Phase 6 — quotations and projects (2026-10-26)
 
 Environment: as in Phase 5, plus headless Chrome (installed) for PDFs.

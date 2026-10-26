@@ -7,7 +7,7 @@ import { audit } from "@/server/audit";
 import { auth } from "@/server/auth/auth";
 import { db } from "@/server/db";
 import { rateLimit, rateLimitCount } from "@/server/rate-limit";
-import { clientIpHash } from "@/server/request";
+import { clientIpHash, hashIp } from "@/server/request";
 
 export interface SignInState {
   error?: string;
@@ -23,6 +23,8 @@ const GENERIC = "Email or password is incorrect, or the account is not active.";
 const WINDOW = 15 * 60;
 const MAX_ATTEMPTS_PER_IP = 20;
 const MAX_FAILURES_PER_EMAIL = 5;
+/** Across all addresses: stops a distributed guesser without letting one stranger lock staff out. */
+const MAX_FAILURES_GLOBAL_PER_EMAIL = 30;
 
 /**
  * Staff sign-in. Limits: every attempt counts against the IP; only failed attempts count against
@@ -34,13 +36,15 @@ export async function signInAction(_: SignInState, formData: FormData): Promise<
   if (!parsed.success) return { error: GENERIC };
   const { email, password } = parsed.data;
   const ipHash = await clientIpHash();
-  const emailKey = `signin:fail:${email}`;
+  const emailKey = `signin:fail:${email}:${ipHash}`;
+  const globalKey = `signin:fail:${email}`;
 
-  const [ipAllowed, failures] = await Promise.all([
+  const [ipAllowed, failures, globalFailures] = await Promise.all([
     rateLimit(db, `signin:ip:${ipHash}`, MAX_ATTEMPTS_PER_IP, WINDOW),
     rateLimitCount(db, emailKey, WINDOW),
+    rateLimitCount(db, globalKey, WINDOW),
   ]);
-  if (!ipAllowed || failures >= MAX_FAILURES_PER_EMAIL) {
+  if (!ipAllowed || failures >= MAX_FAILURES_PER_EMAIL || globalFailures >= MAX_FAILURES_GLOBAL_PER_EMAIL) {
     return { error: "Too many attempts. Please wait 15 minutes and try again." };
   }
 
@@ -56,11 +60,12 @@ export async function signInAction(_: SignInState, formData: FormData): Promise<
     });
   } catch {
     await rateLimit(db, emailKey, MAX_FAILURES_PER_EMAIL, WINDOW);
+    await rateLimit(db, globalKey, MAX_FAILURES_GLOBAL_PER_EMAIL, WINDOW);
     await audit(db, {
       actorId: null,
       action: "staff.sign_in_failed",
       entityType: "user",
-      changes: { email },
+      changes: { emailHash: hashIp(email) },
       ipHash,
     });
     return { error: GENERIC };

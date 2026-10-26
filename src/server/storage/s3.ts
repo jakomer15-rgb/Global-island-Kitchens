@@ -63,6 +63,17 @@ export function s3Driver(e: Env): StorageDriver {
       });
       if (!res.ok) throw new Error(`Storage PUT failed: ${res.status}`);
     },
+    async move(from, to) {
+      const res = await client.fetch(objectUrl(to), {
+        method: "PUT",
+        headers: {
+          "x-amz-copy-source": `/${e.S3_BUCKET}/${from.split("/").map(encodeURIComponent).join("/")}`,
+          "if-none-match": "*",
+        },
+      });
+      if (!res.ok) throw new Error(`Storage COPY failed: ${res.status}`);
+      await this.delete(from);
+    },
     async delete(key) {
       const res = await client.fetch(objectUrl(key), { method: "DELETE" });
       if (!res.ok && res.status !== 404) throw new Error(`Storage DELETE failed: ${res.status}`);

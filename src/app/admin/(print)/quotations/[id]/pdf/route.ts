@@ -2,6 +2,7 @@ import { audit } from "@/server/audit";
 import { getActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
 import { db } from "@/server/db";
+import { rateLimit } from "@/server/rate-limit";
 import { renderQuotationPdf } from "@/server/quotations/pdf";
 import { clientIpHash } from "@/server/request";
 import { getStorage } from "@/server/storage/driver";
@@ -47,6 +48,10 @@ export async function GET(request: Request, ctx: RouteContext<"/admin/quotations
     return Response.redirect(new URL(url, request.url), 302);
   }
 
+  // Rendering starts a browser: at most 20 a quarter-hour per person.
+  if (!(await rateLimit(db, `pdf:render:${actor.id}`, 20, 15 * 60))) {
+    return new Response("Too many PDF previews. Please wait a few minutes.", { status: 429 });
+  }
   const bytes = await renderQuotationPdf(id, revision.id);
   const name = `${revision.quotation.number}-rev${revision.revision}${revision.lockedAt ? "" : "-draft"}.pdf`;
   return new Response(Buffer.from(bytes), {

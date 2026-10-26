@@ -57,8 +57,8 @@ export async function confirmToCustomer(e: Env, event: EnquiryReceived): Promise
     ? `استلمنا ${label} – ${event.reference}`
     : `We received your ${label} – ${event.reference}`;
   const text = ar
-    ? `مرحبًا ${event.customer.name}،\n\nشكرًا لتواصلكم مع Global Island Kitchens. استلمنا ${label} برقم المرجع ${event.reference}، وسيتواصل معكم فريقنا قريبًا.\n\nللاستفسار: 3459 7636 / 7790 1988\nglobalkitchen.bh@gmail.com`
-    : `Hello ${event.customer.name},\n\nThank you for contacting Global Island Kitchens. We received your ${label}, reference ${event.reference}, and our team will be in touch.\n\nQuestions: 3459 7636 / 7790 1988\nglobalkitchen.bh@gmail.com`;
+    ? `مرحبًا،\n\nشكرًا لتواصلكم مع Global Island Kitchens. استلمنا ${label} برقم المرجع ${event.reference}، وسيتواصل معكم فريقنا قريبًا.\n\nللاستفسار: 3459 7636 / 7790 1988\nglobalkitchen.bh@gmail.com`
+    : `Hello,\n\nThank you for contacting Global Island Kitchens. We received your ${label}, reference ${event.reference}, and our team will be in touch.\n\nQuestions: 3459 7636 / 7790 1988\nglobalkitchen.bh@gmail.com`;
   await sendEmail(e, [event.customer.email], subject, text);
   return "sent";
 }

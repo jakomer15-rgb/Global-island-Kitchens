@@ -6,7 +6,10 @@ import type { Env } from "./env";
 import { DeliveryError, defaultDelivery } from "./outbox/worker";
 import { matchesType } from "./storage/sniff";
 import { signToken, verifyToken } from "./storage/token";
-import { safeLocalPath } from "./storage/local";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { localDriver, safeLocalPath } from "./storage/local";
 import { storageChoice } from "./storage/driver";
 
 const bytes = (...values: number[]) => new Uint8Array([...values, ...new Array(64).fill(0)]);
@@ -166,6 +169,24 @@ describe("outbox delivery", () => {
       expect(headers["x-gik-signature"]).toMatch(/^[0-9a-f]{64}$/);
     } finally {
       vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("local storage move", () => {
+  it("moves a checked upload to a new key and never overwrites", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "gik-store-"));
+    try {
+      const storage = localDriver(root, "secret-a");
+      await storage.put("incoming/abc", new TextEncoder().encode("one"), "text/plain");
+      await storage.move("incoming/abc", "files/def");
+      expect(await storage.size("incoming/abc")).toBeNull();
+      expect(await readFile(path.join(root, "files", "def"), "utf8")).toBe("one");
+      await storage.put("incoming/ghi", new TextEncoder().encode("two"), "text/plain");
+      await expect(storage.move("incoming/ghi", "files/def")).rejects.toThrow();
+      expect(await readFile(path.join(root, "files", "def"), "utf8")).toBe("one");
+    } finally {
+      await rm(root, { recursive: true, force: true });
     }
   });
 });

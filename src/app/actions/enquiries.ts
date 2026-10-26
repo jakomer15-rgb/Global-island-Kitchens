@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { after } from "next/server";
 import type { z } from "zod";
 import { looksLikeBot } from "@/lib/forms/common";
@@ -33,6 +34,13 @@ function deliverSoon() {
   after(() => processOutbox(db).catch((e) => console.error("Outbox delivery failed", e)));
 }
 
+/** At most 3 confirmation emails a day to one address, so the forms can't be used to mail strangers. */
+async function addressAllowed(email: string | undefined) {
+  if (!email) return true;
+  const key = createHash("sha256").update(email.trim().toLowerCase()).digest("base64url");
+  return rateLimit(db, `form:address:${key}`, 3, 24 * 60 * 60);
+}
+
 async function guard(form: string, limit: number) {
   const ipHash = await clientIpHash();
   const allowed = await rateLimit(db, `form:${form}:${ipHash}`, limit, 60 * 60);
@@ -46,6 +54,7 @@ export async function submitQuoteAction(input: unknown): Promise<EnquiryResult> 
   if (!parsed.success) return { ok: false, error: "invalid", fieldErrors: fieldErrors(parsed.error) };
   // Bots get a normal-looking reply and nothing is saved.
   if (looksLikeBot(parsed.data)) return { ok: true, reference: null };
+  if (!(await addressAllowed(parsed.data.email))) return { ok: false, error: "tooMany" };
 
   try {
     let verifiedFileIds: string[] = [];
@@ -70,6 +79,7 @@ export async function submitConsultationAction(input: unknown): Promise<EnquiryR
   const parsed = consultationSchema().safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid", fieldErrors: fieldErrors(parsed.error) };
   if (looksLikeBot(parsed.data)) return { ok: true, reference: null };
+  if (!(await addressAllowed(parsed.data.email))) return { ok: false, error: "tooMany" };
   try {
     const { reference } = await submitConsultation(db, parsed.data, { ipHash });
     deliverSoon();
@@ -86,6 +96,7 @@ export async function submitContactAction(input: unknown): Promise<EnquiryResult
   const parsed = contactSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid", fieldErrors: fieldErrors(parsed.error) };
   if (looksLikeBot(parsed.data)) return { ok: true, reference: null };
+  if (!(await addressAllowed(parsed.data.email))) return { ok: false, error: "tooMany" };
   try {
     const { reference } = await submitContact(db, parsed.data, { ipHash });
     deliverSoon();

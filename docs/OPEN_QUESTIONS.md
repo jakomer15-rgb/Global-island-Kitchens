@@ -95,3 +95,10 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 51. **Pricing:** rates per linear metre, square metre or unit if staff want automatic estimates. Until then every price is entered by hand.
 52. **PDF hosting:** where production runs decides how PDFs are printed (a server with Chrome, or a remote Chrome via `BROWSER_WS_ENDPOINT`). Decided in Phase 10 with the hosting choice.
 53. **Quotation layout and wording** in Arabic and English (`src/content/quotation.ts`) need a fluent Arabic review and the owner's letterhead details (logo file, stamp or signature policy).
+
+## Added in Phase 9
+
+54. **Bot protection on public forms:** the forms rely on a honeypot, timing, an IP limit and a limit of 3 confirmation emails a day per address. A CAPTCHA (e.g. Cloudflare Turnstile) needs an account and a decision on privacy wording; add it if spam appears after launch.
+55. **Analytics:** none is installed. Choose a tool (and whether a cookie banner is needed) before launch; nothing loads without consent.
+56. **Customer consent records** are recorded as claimed on the form, not verified. Marketing messages need a confirmation step (double opt-in) when Phase 8 is built.
+57. **Mobile speed:** home pages score 81-86 on mobile Lighthouse. Reaching 90 needs a lighter page structure or a faster host/CDN; measure again on the production domain.

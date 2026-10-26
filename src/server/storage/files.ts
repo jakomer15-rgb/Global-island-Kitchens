@@ -80,7 +80,13 @@ export async function verifyUploads(
       await storage.delete(file.storageKey).catch(() => {});
       throw new RuleError("fileRejected", file.originalName);
     }
-    await db.fileAsset.update({ where: { id: file.id }, data: { status: "verified", verifiedAt: now } });
+    // The signed upload URL stays valid for a while; move the checked bytes to a key it can't write to.
+    const verifiedKey = `files/${randomBytes(16).toString("hex")}`;
+    await storage.move(file.storageKey, verifiedKey);
+    await db.fileAsset.update({
+      where: { id: file.id },
+      data: { status: "verified", verifiedAt: now, storageKey: verifiedKey },
+    });
     ids.push(file.id);
   }
   return ids;

@@ -27,6 +27,8 @@ export interface StorageDriver {
   downloadUrl(key: string, fileName: string, contentType: string, ttlSeconds: number): Promise<string>;
   /** Server-side write (documents the app generates, e.g. quotation PDFs). Never overwrites. */
   put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
+  /** Server-side move to a key no signed upload URL points at. Never overwrites. */
+  move(from: string, to: string): Promise<void>;
   delete(key: string): Promise<void>;
 }
 

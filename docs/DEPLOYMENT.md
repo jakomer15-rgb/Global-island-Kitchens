@@ -40,6 +40,17 @@ All are listed with comments in `.env.example` and validated at startup by `src/
 | `BROWSER_WS_ENDPOINT`                                                  | Alternative to the above | Remote Chrome (`ws://` / `wss://`) for hosts without Chrome |
 | `STORAGE_DRIVER`                                                       | **Never in production**  | Test-only override for E2E against a production build       |
 
+## Security headers and client IP
+
+`next.config.ts` sets a Content-Security-Policy (same-origin only, plus the storage bucket origin taken
+from `S3_ENDPOINT`), HSTS, COOP, `frame-ancestors 'none'` and the other baseline headers.
+`'unsafe-inline'` remains for scripts and styles because Next.js inlines its bootstrap and the
+stylesheet; a nonce would make every page dynamic. Check the browser console on the production domain
+after the first deploy for CSP violations.
+
+Rate limits key on the first `x-forwarded-for` entry. Deploy only behind a proxy that overwrites that
+header (Vercel and Cloudflare do), or the limits can be bypassed.
+
 ## Quotation PDFs
 
 Quotation PDFs are printed by headless Chrome (`puppeteer-core`) from the page

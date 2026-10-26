@@ -79,6 +79,8 @@ export async function storeQuotationPdf(db: Db, actor: Actor, quotationId: strin
     include: { quotation: { select: { number: true } } },
   });
   if (!rev) throw new NotFoundError("Sent revision");
+  // What the customer received must not change afterwards.
+  if (rev.pdfFileId) return rev.pdfFileId;
   const bytes = await renderQuotationPdf(quotationId, revisionId);
   const storageKey = `quotations/${randomBytes(16).toString("hex")}`;
   await storage.put(storageKey, bytes, "application/pdf");

@@ -1,4 +1,5 @@
-import { mkdir, open, rm, stat, writeFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { copyFile, mkdir, open, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { StorageDriver } from "./driver";
 import { signToken } from "./token";
@@ -49,6 +50,12 @@ export function localDriver(root: string, secret: string): StorageDriver {
     },
     async put(key, bytes) {
       await writeLocal(root, key, bytes);
+    },
+    async move(from, to) {
+      const target = safeLocalPath(root, to);
+      await mkdir(path.dirname(target), { recursive: true });
+      await copyFile(safeLocalPath(root, from), target, constants.COPYFILE_EXCL);
+      await rm(safeLocalPath(root, from), { force: true });
     },
     async delete(key) {
       await rm(safeLocalPath(root, key), { force: true });
