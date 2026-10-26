@@ -19,6 +19,7 @@ const groups: {
       { href: "/admin/leads", label: "Leads", permission: "lead.read" },
       { href: "/admin/customers", label: "Customers", permission: "customer.read" },
       { href: "/admin/consultations", label: "Consultations", permission: "consultation.read" },
+      { href: "/admin/designers", label: "Designers", permission: "designer.read" },
     ],
   },
   {

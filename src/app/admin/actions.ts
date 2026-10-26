@@ -50,6 +50,12 @@ export async function signInAction(_: SignInState, formData: FormData): Promise<
 
   try {
     const result = await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
+    const account = await db.user.findUnique({ where: { id: result.user.id }, select: { kind: true } });
+    if (account?.kind !== "staff") {
+      // A designer used the staff form: end the session it just created and answer like a wrong password.
+      await auth.api.signOut({ headers: await headers() });
+      throw new Error("Not a staff account");
+    }
     await db.user.update({ where: { id: result.user.id }, data: { lastLoginAt: new Date() } });
     await audit(db, {
       actorId: result.user.id,

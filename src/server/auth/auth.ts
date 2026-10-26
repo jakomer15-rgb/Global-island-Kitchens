@@ -7,10 +7,12 @@ import { env } from "@/server/env";
 
 /**
  * Better Auth: email + password, database sessions in httpOnly cookies.
- * - No public sign-up: staff accounts are created by the owner (or `npm run admin:create`).
+ * - No public sign-up route: staff accounts are created by the owner (or `npm run admin:create`);
+ *   designers register through a server action that creates a pending account.
  * - Passwords 12–128 characters, hashed with scrypt (Better Auth default).
- * - A session is created only for active staff holding at least one role; permissions are
- *   re-checked on every request (./session.ts).
+ * - A session is created only for active staff holding at least one role, or for a designer with a
+ *   profile (registered through the designer portal). Staff permissions are re-checked on every
+ *   request (./session.ts); the admin ignores designer sessions and the portal ignores staff ones.
  * - No HTTP route mounts this instance: sign-in runs through an audited, rate-limited server action.
  */
 function createAuth() {
@@ -51,11 +53,17 @@ function createAuth() {
           before: async (session) => {
             const user = await db.user.findUnique({
               where: { id: session.userId },
-              select: { status: true, kind: true, _count: { select: { roles: true } } },
+              select: {
+                status: true,
+                kind: true,
+                _count: { select: { roles: true } },
+                designerAccount: { select: { id: true } },
+              },
             });
-            return Boolean(
-              user && user.status === "active" && user.kind === "staff" && user._count.roles > 0,
-            );
+            if (!user || user.status !== "active") return false;
+            // Designers may sign in whatever their approval state; the portal itself checks it.
+            if (user.kind === "designer") return Boolean(user.designerAccount);
+            return user.kind === "staff" && user._count.roles > 0;
           },
         },
       },

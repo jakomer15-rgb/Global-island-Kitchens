@@ -51,6 +51,8 @@ test.describe("admin portal", () => {
   });
 
   test("a new sales manager sees only the CRM", async ({ page, browser }) => {
+    // Two password hashes and several page loads; slow when the whole suite runs in parallel
+    test.setTimeout(90_000);
     await signIn(page);
     await page.goto("/admin/staff");
     const email = `sales-${uid()}@example.test`;

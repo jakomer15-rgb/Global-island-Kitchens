@@ -22,6 +22,8 @@ import { getLead, leadStatuses, loggableKinds } from "@/server/crm/leads";
 import { assignableStaff } from "@/server/crm/shared";
 import { db } from "@/server/db";
 import { NotFoundError } from "@/server/errors";
+import { designerProjectForLead } from "@/server/designers/admin";
+import { designerReplyAction } from "../../designers/actions";
 import { createProjectAction } from "../../projects/actions";
 import { createQuotationAction } from "../../quotations/actions";
 import {
@@ -69,6 +71,9 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
         })
       : [],
   ]);
+  const designerProject = can(actor, "designer.read")
+    ? await designerProjectForLead(db, actor, lead.id)
+    : null;
   const qr = lead.quotationRequest;
   const messages = lead.activities.filter((a) => a.kind === "message");
   const history = lead.activities.filter((a) => a.kind !== "message");
@@ -272,6 +277,73 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
                   />
                 )}
               </div>
+            </Panel>
+          )}
+          {designerProject && (
+            <Panel title="Designer project">
+              <p className="text-sm">
+                <Link
+                  href={`/admin/designers/${designerProject.designer.id}`}
+                  className="font-medium underline"
+                >
+                  {designerProject.designer.user.name}
+                </Link>
+                {designerProject.designer.company ? `, ${designerProject.designer.company}` : ""}
+              </p>
+              <p className="mt-1 text-sm">{designerProject.title}</p>
+              {designerProject.clientLabel && (
+                <p className="text-xs text-ink-muted">Client label: {designerProject.clientLabel}</p>
+              )}
+              {designerProject.materials.length > 0 && (
+                <p className="mt-1 text-xs text-ink-muted">
+                  Chosen:{" "}
+                  {designerProject.materials.map((m) => `${m.material.code} ${m.material.nameEn}`).join("; ")}
+                </p>
+              )}
+              <h3 className="mt-4 text-sm font-medium">Messages</h3>
+              {designerProject.messages.length === 0 ? (
+                <p className="text-sm text-ink-muted">No messages yet.</p>
+              ) : (
+                <ul className="mt-2 space-y-2 text-sm">
+                  {designerProject.messages.map((m) => (
+                    <li
+                      key={m.id}
+                      className={
+                        m.internal ? "border-s-2 border-amber-600 bg-amber-50 p-2" : "border border-line p-2"
+                      }
+                    >
+                      <p className="text-xs text-ink-muted">
+                        {fmtDateTime(m.createdAt)} ·{" "}
+                        {m.fromStaff ? m.author.name : designerProject.designer.user.name}
+                        {m.internal ? " · internal note" : m.fromStaff ? " · sent to designer" : ""}
+                      </p>
+                      <p className="whitespace-pre-wrap" dir="auto">
+                        {m.body}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {can(actor, "designer.manage") && (
+                <ActionForm
+                  action={designerReplyAction.bind(null, designerProject.id, lead.id)}
+                  submitLabel="Send"
+                  className="mt-4"
+                  resetOnSuccess
+                >
+                  <AdminTextarea
+                    label="Reply to the designer"
+                    name="body"
+                    rows={3}
+                    required
+                    maxLength={2000}
+                  />
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="internal" className="size-4" /> Internal note (the designer
+                    never sees it)
+                  </label>
+                </ActionForm>
+              )}
             </Panel>
           )}
           <Panel title="Customer">

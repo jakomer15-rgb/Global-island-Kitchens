@@ -1,5 +1,32 @@
 # Test report
 
+## Phase 7 — designer portal (2026-10-26)
+
+| Check                  | Result                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Lint, typecheck, build | Pass                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `npm test` (unit)      | 73 / 73                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `npm run test:db`      | 40 / 40 (6 new): pending designers can't use the portal; a repeated email gives the same answer and no second account; a submitted project becomes a lead and request and one designer can never see, list or message another's project; staff replies are seen, internal notes are not; permissions and reasons for decisions, suspension ends sessions; designers hold no staff roles and a decision must record who made it |
+| `npm run test:e2e`     | 197 pass, 53 skipped by design, 0 fail                                                                                                                                                                                                                                                                                                                                                                                         |
+
+New E2E (`e2e/designers.spec.ts`): registration in English with axe; pending state; designer session refused by the admin and by the staff sign-in form; staff approval; project with a drawing upload; the file downloads for its owner and returns 401 without a session; the project appears as a designer-portal lead; messages both ways with an internal note hidden from the designer; progress follows the lead status; suspension ends access at once; Arabic pages are right to left and accessible; portal pages are noindex and in robots.txt.
+
+Visual check: new-project and project pages reviewed on desktop. The Arabic portal pages and a phone layout were checked by test (direction, axe) but not reviewed by eye.
+
+### Security review (Phase 7 changes, self-review; the independent review ran before this phase)
+
+| Entry point                | Protection                                                                                                                                                                                      |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Designer actions and pages | Session read on every request, state re-read from the database; every service asserts the designer is approved and filters by the designer's own id; other people's projects answer "not found" |
+| Files                      | Download only for the project's own designer through a 60-second signed link; uploads use the existing ticket, size, signature and move-after-check steps                                       |
+| Registration and sign-in   | Honeypot, timing, IP limit, 3 emails a day per address; sign-in limits as for staff (per email and IP, plus a ceiling); failed attempts audited with a hash only                                |
+| Session separation         | Designers hold no roles (trigger); admin ignores designer sessions; the staff sign-in form signs a designer out and answers as for a wrong password                                             |
+| Staff side                 | New permissions `designer.read` / `designer.manage`; decisions audited; rejecting or suspending needs a reason and deletes sessions                                                             |
+
+Found and fixed while testing: the unread dot on the notifications page had an `aria-label` without a role, which axe can flag whenever an unread notification exists (this made the "every admin page" test fail intermittently; now `role="img"`); the sales-manager E2E test needed a longer timeout when the whole suite runs in parallel.
+
+Not covered: an independent review of the designer code, Arabic text review, real devices, password reset for designers.
+
 ## Phase 9 — security, SEO, performance (2026-10-26)
 
 | Check                  | Result                                                                                                |

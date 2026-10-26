@@ -17,6 +17,8 @@ export const permissions = {
   "quotation.approve": "Record a customer's approval or rejection and convert quotations into orders",
   "project.read": "View projects and their stage history",
   "project.manage": "Create projects, move them between stages and update orders",
+  "designer.read": "View designer accounts and the projects they submitted",
+  "designer.manage": "Approve, reject or suspend designers and reply to their messages",
   "content.manage": "Edit homepage text, banner, SEO, testimonials, blog posts and website images",
   "materials.manage": "Manage the materials library (EGGER décors and painted MDF colours)",
   "portfolio.manage": "Edit portfolio projects and their photos",
@@ -65,6 +67,8 @@ export const roleDefinitions: {
       "quotation.approve",
       "project.read",
       "project.manage",
+      "designer.read",
+      "designer.manage",
     ],
   },
   {

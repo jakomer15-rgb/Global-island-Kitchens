@@ -102,3 +102,11 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 55. **Analytics:** none is installed. Choose a tool (and whether a cookie banner is needed) before launch; nothing loads without consent.
 56. **Customer consent records** are recorded as claimed on the form, not verified. Marketing messages need a confirmation step (double opt-in) when Phase 8 is built.
 57. **Mobile speed:** home pages score 81-86 on mobile Lighthouse. Reaching 90 needs a lighter page structure or a faster host/CDN; measure again on the production domain.
+
+## Added in Phase 7
+
+58. **Who approves designers** and what check counts (a call, a trade licence, a business card). The portal only opens after staff approve; the criteria are the owner's.
+59. **Designer terms:** whether designers get trade pricing, a commission or any special terms. None are shown or promised; prices stay out of the portal.
+60. **Designer emails:** approval, a staff reply and project updates reach designers only inside the portal until an email account is set up (OPEN_QUESTIONS 41).
+61. **Arabic review** of the designer portal wording in `src/content/portal.ts`.
+62. **Data requests:** how a designer's account and files are deleted on request (nothing deletes them automatically yet).

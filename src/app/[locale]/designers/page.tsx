@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { ContactActions } from "@/components/site/contact-actions";
@@ -6,9 +7,11 @@ import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
 import { pathFor } from "@/config/routes";
 import { designersPage as c } from "@/content/pages";
+import { portal } from "@/content/portal";
+import { Button } from "@/components/ui/button";
 
 import type { Locale } from "@/i18n/routing";
-import { pageMetadata } from "@/lib/seo";
+import { localizedPath, pageMetadata } from "@/lib/seo";
 import { getPortfolio } from "@/server/content/portfolio";
 import { getSiteSettings } from "@/server/settings/site";
 
@@ -42,6 +45,16 @@ export default async function DesignersPage({ params }: PageProps<"/[locale]/des
         title={c.title[locale]}
         intro={c.intro[locale]}
       />
+      <section aria-label={portal.eyebrow[locale]} className="border-b border-line bg-sand py-8">
+        <div className="container-site flex flex-wrap items-center gap-4">
+          <Button asChild>
+            <Link href={localizedPath("/designers/register", locale)}>{portal.registerCta[locale]}</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={localizedPath("/designers/sign-in", locale)}>{portal.signInCta[locale]}</Link>
+          </Button>
+        </div>
+      </section>
       <section className="py-20 md:py-28">
         <div className="container-site grid gap-14 lg:grid-cols-12">
           <ul className="space-y-5 text-lg lg:col-span-7">

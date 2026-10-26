@@ -7,6 +7,7 @@ import { products } from "@/content/products";
 import type { ConsultationRequest } from "@/lib/forms/consultation";
 import type { ContactRequest } from "@/lib/forms/contact";
 import type { QuoteRequest } from "@/lib/forms/quote";
+import type { DesignerProject } from "@/lib/designer";
 
 /**
  * Public enquiries: quotation requests, consultation bookings and contact messages. Each is saved
@@ -307,5 +308,129 @@ export async function submitContact(
       ipHash: ctx.ipHash,
     });
     return { reference: lead.reference };
+  });
+}
+
+const designerCustomerType = {
+  interior_designer: "interior_designer",
+  architect: "architect",
+  contractor: "contractor",
+  developer: "developer",
+  other: "other",
+} as const;
+
+/**
+ * A project submitted by an approved designer. It becomes a lead (source: designer portal) and a
+ * quotation request, so staff work it in the normal CRM, plus the designer's own project record.
+ */
+export async function submitDesignerProject(
+  db: Db,
+  designer: { designerId: string; userId: string },
+  input: DesignerProject,
+  ctx: { ipHash: string | null; verifiedFileIds: string[] },
+): Promise<{ id: string; reference: string }> {
+  return inTransaction(db, async (tx) => {
+    const account = await tx.designerAccount.findUniqueOrThrow({
+      where: { id: designer.designerId },
+      include: { user: { select: { name: true, email: true } } },
+    });
+    const customer = account.customerId
+      ? await tx.customer.findUniqueOrThrow({ where: { id: account.customerId } })
+      : await findOrCreateCustomer(tx, {
+          name: account.user.name,
+          phone: account.phone,
+          email: account.user.email,
+          type: designerCustomerType[account.profession],
+          locale: input.locale,
+        });
+    if (!account.customerId) {
+      await tx.designerAccount.update({ where: { id: account.id }, data: { customerId: customer.id } });
+      if (customer.company === null && account.company) {
+        await tx.customer.update({ where: { id: customer.id }, data: { company: account.company } });
+      }
+    }
+
+    const walls = input.noMeasurements ? [] : input.walls.filter((w) => w.width !== undefined);
+    const materials = input.materialIds.length
+      ? await tx.material.findMany({
+          where: { id: { in: input.materialIds } },
+          select: { id: true, code: true, nameEn: true },
+        })
+      : [];
+    const summary = `Designer project: ${input.title} · ${categoryLabel(input.category)} · ${walls.length ? `${walls.length} measurement(s) in ${input.unit}` : "no measurements yet"} · ${ctx.verifiedFileIds.length} file(s)`;
+    const lead = await createLead(tx, {
+      prefix: "Q",
+      source: "designer_portal",
+      customerId: customer.id,
+      category: input.category,
+      summary,
+      locale: input.locale,
+    });
+    const request = await tx.quotationRequest.create({
+      data: {
+        reference: lead.reference,
+        leadId: lead.id,
+        customerId: customer.id,
+        category: input.category,
+        measurements: walls as unknown as Prisma.InputJsonValue,
+        unit: input.unit,
+        preferredBoards: input.boards,
+        finishNotes: input.finishNotes ?? null,
+        message: input.message ?? null,
+        area: input.area ?? null,
+      },
+    });
+    const project = await tx.designerProject.create({
+      data: {
+        designerId: account.id,
+        requestId: request.id,
+        title: input.title,
+        clientLabel: input.clientLabel ?? null,
+        targetDate: input.targetDate ? new Date(`${input.targetDate}T00:00:00Z`) : null,
+        materials: { create: materials.map((m) => ({ materialId: m.id })) },
+      },
+    });
+    await attachUploads(tx, ctx.verifiedFileIds, request.id);
+    if (ctx.verifiedFileIds.length) {
+      await tx.fileAsset.updateMany({
+        where: { id: { in: ctx.verifiedFileIds } },
+        data: { designerProjectId: project.id },
+      });
+    }
+    await tx.leadActivity.create({
+      data: {
+        leadId: lead.id,
+        kind: "message",
+        internal: false,
+        body: [
+          `Designer: ${account.user.name}${account.company ? `, ${account.company}` : ""}`,
+          `Project: ${input.title}`,
+          input.clientLabel && `Client (designer's label): ${input.clientLabel}`,
+          input.targetDate && `Wanted by: ${input.targetDate}`,
+          input.area && `Area: ${input.area}`,
+          materials.length && `Chosen materials: ${materials.map((m) => `${m.code} ${m.nameEn}`).join("; ")}`,
+          input.message && `\n${input.message}`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      },
+    });
+    await enqueue(tx, "enquiry.received", {
+      kind: "quote",
+      reference: lead.reference,
+      leadId: lead.id,
+      locale: input.locale,
+      customer: { name: account.user.name, phone: account.phone, email: account.user.email },
+      summary,
+    });
+    await audit(tx, {
+      actorId: designer.userId,
+      action: "designer.project_submitted",
+      entityType: "designer_project",
+      entityId: project.id,
+      changes: { reference: lead.reference, files: ctx.verifiedFileIds.length },
+      ipHash: ctx.ipHash,
+    });
+    return { id: project.id, reference: lead.reference };
   });
 }

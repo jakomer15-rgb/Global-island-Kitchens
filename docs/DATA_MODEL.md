@@ -1,6 +1,6 @@
 # Data model
 
-Status: **Phases 4–6 implemented** in `prisma/schema.prisma`; Phase 4 in `prisma/migrations/20261025200000_init`:
+Status: **Phases 4–7 implemented** in `prisma/schema.prisma`; Phase 4 in `prisma/migrations/20261025200000_init`:
 identity and roles, Customer, Lead, LeadActivity, FollowUp, Consultation, ConsentRecord,
 QuotationRequest, FileAsset, Notification, OutboxEvent, AuditLog, RateLimitBucket, SiteSetting.
 Designer accounts
@@ -42,6 +42,19 @@ Order, Project and ProjectStageChange. Differences from the design below:
   revision.
 - `PricingRule`, `ProjectMaterial` and `ProjectMessage` are not built: no rates are known, and
   project messages belong to the Phase 7 designer portal.
+
+Phase 7 (`20261026150000_designer_portal`) adds DesignerAccount, DesignerProject,
+DesignerProjectMaterial and DesignerMessage, and `FileAsset.designerProjectId`. Differences from the design above:
+
+- A designer's sign-in is a User of kind `designer` with a `DesignerAccount` (status pending, approved,
+  rejected or suspended; a decision records who and when, by CHECK). Triggers keep designer profiles on
+  designer users only and stop a designer holding staff roles. Designers can sign in whatever their state;
+  the portal checks the state on every request and the admin ignores designer sessions.
+- A submitted project is a `QuotationRequest` plus Lead (`designer_portal`); `DesignerProject` links it to
+  the designer and holds the conversation. The designer's own CRM contact is a Customer of the matching type.
+  Their clients' contact details are never collected (only a free-text label).
+- Messages are append-only (trigger); internal notes can only be written by staff (CHECK).
+- A designer's files are linked to both the project and the request, so staff download them as before.
 
 Conventions:
 

@@ -17,12 +17,20 @@ Each phase ends with the same gate:
 | **4. Database, backend, auth** ✅             | Prisma schema and migrations, seed, Better Auth, roles and permissions, services layer, storage, outbox, rate limiting, audit log; forms (quote wizard, consultation, contact) saving to the database                                              | DB tests for every constraint; forms work end to end                                               |
 | **5. Admin portal and CRM** ✅                | `/admin` dashboard with real metrics, leads, customers, follow-ups, communication history, consultations, content management, materials library, media, settings, staff and roles                                                                  | Permission matrix tests; E2E admin journey                                                         |
 | **6. Quotations and projects** ✅             | Quotation builder, revisions, VAT, BHD totals, branded PDF (English/Arabic), approval, conversion to order and project, project stage tracking, optional pricing rules                                                                             | Money tests, PDF snapshot tests, E2E quote-to-project journey                                      |
-| **7. Designer portal**                        | Registration, staff approval, project submission, drawing uploads, material selection, quotation requests, status tracking, messages                                                                                                               | Access tests: a designer can never see another designer's data                                     |
+| **7. Designer portal** ✅                     | Registration, staff approval, project submission, drawing uploads, material selection, quotation requests, status tracking, messages                                                                                                               | Access tests: a designer can never see another designer's data                                     |
 | **8. AI and automation**                      | Furniture, lead and content assistants (drafts only), n8n events and example workflows, consent and unsubscribe, WhatsApp Business integration points                                                                                              | AI off by default; approval required; signed webhooks tested                                       |
 | **9. Security, testing, SEO, performance** ✅ | Security review, full E2E suite, accessibility audit, structured data, sitemap, robots, canonical URLs, analytics consent, image optimisation, Lighthouse 90+ targets measured                                                                     | Report with measured scores and fixed findings                                                     |
 | **10. Deployment and handover**               | Production hosting, environments, Sentry, backups and a tested restore, CI/CD, technical docs, admin user guide                                                                                                                                    | Production verified against a launch checklist                                                     |
 
-Phase 9 (Phases 7 and 8 were deferred at the owner's request and remain to do): independent security
+Phase 7 (built after Phase 9 at the owner's request): designers register at `/designers/register`,
+staff approve them in Admin → Designers (after calling them), approved designers send projects
+(measurements, chosen published décors, drawings and photos) and follow a simple status, and exchange
+messages with staff. A submitted project becomes a normal lead and quotation request (source: designer
+portal), so staff quote it in the existing flow. Not built: saving a project as a draft, adding files
+after sending (use a message), designer email notifications (staff replies show in the portal; email
+needs the owner's email account), password reset, and designers seeing quotation PDFs or prices.
+
+Phase 9 (Phase 8 is still to do): independent security
 review with all findings fixed or documented, Content-Security-Policy and COOP headers, per-address
 limit on confirmation emails, upload bytes moved to a key the signed URL can't reach after checking,
 sent quotation PDFs can't be replaced, sign-in lockout no longer lets a stranger lock staff out,
