@@ -124,9 +124,12 @@ Al Naseem Phase 2, Derby Cafe booth, Selvis Cafe and Trolly Market.
 
 ## Imagery
 
-The profile contains about 47 embedded photographs (product, project, factory and machinery). Whether
-they are the company's own photographs, and may be used on the website, is an open question. Until
-confirmed, the site uses no project photography (rule: no unlicensed photography).
+The profile contains about 47 embedded photographs (product, project, factory and machinery). The owner
+confirmed on 2026-10-26 that they are the company's own work and may be published. 35 are used
+(`public/images`, registry in `src/content/photos.ts`); the logo, a stock-style blueprint image, a
+ceiling-light catalogue page and one very small tower image are left out. Several interiors carry the
+company's watermark and look like design visuals rather than site photographs; alt text describes what
+is shown and does not call them finished installations. Client names stay off the site (open question 24).
 
 ## Conflicts to resolve
 

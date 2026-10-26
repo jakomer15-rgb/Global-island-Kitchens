@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Designers } from "@/components/home/designers";
 import { Hero } from "@/components/home/hero";
 import { Materials } from "@/components/home/materials";
+import { PhotoStrip } from "@/components/home/photo-strip";
 import { Process } from "@/components/home/process";
 import { Products } from "@/components/home/products";
 import { Projects } from "@/components/home/projects";
@@ -56,6 +57,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         }}
       />
       <Products />
+      <PhotoStrip />
       <Materials />
       <Why />
       <Process />

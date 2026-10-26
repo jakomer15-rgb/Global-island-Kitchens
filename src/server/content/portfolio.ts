@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { projectPhotos } from "@/content/photos";
 import { projects as builtIn, type Project } from "@/content/projects";
 import type { ScopeTag } from "@/content/products";
 import { publicProjects } from "@/server/admin/portfolio";
@@ -25,9 +26,13 @@ export const getPortfolio = cache(async (): Promise<Project[]> => {
       featured: p.featured,
       ...(p.clientName && p.clientNamePermission ? { clientName: p.clientName } : {}),
       images: p.images.map((i) => ({ fileId: i.fileId, alt: { en: i.altEn, ar: i.altAr } })),
+      ...(projectPhotos[p.slug] ? { photos: projectPhotos[p.slug] } : {}),
     }));
   } catch (error) {
     console.warn("Portfolio unavailable, using the built-in list:", reason(error));
-    return builtIn;
+    return builtIn.map((p) => ({
+      ...p,
+      ...(projectPhotos[p.slug] ? { photos: projectPhotos[p.slug] } : {}),
+    }));
   }
 });

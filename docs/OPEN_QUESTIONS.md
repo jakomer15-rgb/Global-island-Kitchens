@@ -7,8 +7,10 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 ## Brand and imagery
 
 1. ★ **Logo** files (vector: SVG, AI or PDF) in English and Arabic, and brand colours if any exist.
-2. ★ **Photographs:** are the ~47 photos in the company profile the company's own work, and may they be
-   used on the website? Are higher-resolution originals available?
+2. ✔ **Photographs:** the owner confirmed (2026-10-26) that the photos in the company profile are the
+   company's own work and may be published. **Still open:** higher-resolution originals. The profile's
+   images are small (500–1130 px wide), so they are shown at card size; larger originals would allow a
+   full-width hero and sharper project pages.
 3. Who took the project photos? Any credit required?
 
 ## Company
@@ -83,7 +85,7 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 ## Added in Phase 5
 
 44. **EGGER décors and painted MDF colours** to list in the materials library (codes the company stocks or orders regularly). Each must be checked against EGGER's current collection before it is published; none are entered by us.
-45. **Website photographs:** which project photos may be shown (client and photographer permission), and who owns each, for the credit line. Until then projects stay text-only and out of search results.
+45. **Website photographs:** which project photos may be shown (client and photographer permission), and who owns each, for the credit line. **Answered in part (2026-10-26):** the owner confirmed the profile photos may be shown; the profile gives no photographer or credit line, so none is shown. Projects without a photo stay text-only and out of search results. Photos of other projects, and any credit line, are still needed.
 46. **Opening hours wording:** the consultation form hint still says "9:00 AM – 8:00 PM" in its fixed text; if hours change in Admin → Settings, that hint needs a code change (or confirm hours won't change).
 47. Fluent Arabic review of the new public text (blog page, testimonials heading, décor library labels in `src/content/cms.ts`).
 

@@ -172,8 +172,8 @@ export const projectsPage = {
     ar: "مبانٍ وفلل ومساحات تجارية في أنحاء البحرين.",
   } satisfies L,
   intro: {
-    en: "A selection of the more than 20 projects in our company profile. Client names and photographs are added as clients give permission.",
-    ar: "مختارات من أكثر من 20 مشروعًا في ملف شركتنا. تُضاف أسماء العملاء والصور عند حصولنا على إذنهم.",
+    en: "A selection of the more than 20 projects in our company profile. Client names are added as clients give permission.",
+    ar: "مختارات من أكثر من 20 مشروعًا في ملف شركتنا. تُضاف أسماء العملاء عند حصولنا على إذنهم.",
   } satisfies L,
 };
 

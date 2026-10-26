@@ -5,6 +5,7 @@ import { PageHero } from "@/components/site/page-hero";
 import { company } from "@/config/company";
 import { pathFor } from "@/config/routes";
 import { about } from "@/content/pages";
+import { factoryPhotos } from "@/content/photos";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
 
@@ -107,6 +108,18 @@ export default async function AboutPage({ params }: PageProps<"/[locale]/about">
           <ul className="mt-12 grid gap-px bg-ivory/12 sm:grid-cols-2 lg:grid-cols-4">
             {about.machines[locale].map((m, i) => (
               <li key={m} className="bg-charcoal p-6 md:p-8">
+                {factoryPhotos[i] && (
+                  // eslint-disable-next-line @next/next/no-img-element -- static file, already optimised
+                  <img
+                    src={factoryPhotos[i].src}
+                    alt={factoryPhotos[i].alt[locale]}
+                    width={factoryPhotos[i].width}
+                    height={factoryPhotos[i].height}
+                    loading="lazy"
+                    decoding="async"
+                    className="mb-6 aspect-[3/2] w-full bg-white object-contain"
+                  />
+                )}
                 <span className="eyebrow text-walnut-soft tabular-nums" dir="ltr">
                   {String(i + 1).padStart(2, "0")}
                 </span>

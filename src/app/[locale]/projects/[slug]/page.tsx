@@ -7,7 +7,7 @@ import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
 import { pathFor } from "@/config/routes";
 import { projectsPage } from "@/content/pages";
-import { segmentLabels } from "@/content/projects";
+import { galleryOf, segmentLabels } from "@/content/projects";
 import { Link } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
@@ -35,8 +35,8 @@ export async function generateMetadata({
     description: `${project.scopeText[locale]} · ${where}${project.size ? ` · ${project.size[locale]}` : ""} · Global Island Kitchens`,
     path: `/projects/${project.slug}`,
     locale,
-    // Text-only pages stay out of search results until the project has approved photos.
-    noindex: !project.images?.length,
+    // Text-only pages stay out of search results until the project has photos.
+    noindex: galleryOf(project).length === 0,
   });
 }
 
@@ -47,6 +47,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
   const project = await getProject(slug);
   if (!project) notFound();
   const t = await getTranslations({ locale, namespace: "Page" });
+  const gallery = galleryOf(project);
   const more = (await getPortfolio())
     .filter((p) => p.segment === project.segment && p.slug !== project.slug)
     .slice(0, 3);
@@ -72,16 +73,20 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
         intro={project.location[locale]}
       />
 
-      {project.images && project.images.length > 0 && (
+      {gallery.length > 0 && (
         <section aria-label={project.name[locale]} className="pt-12 md:pt-16">
-          <ul className="container-site grid gap-4 sm:grid-cols-2">
-            {project.images.map((img, i) => (
-              <li key={img.fileId} className={i === 0 ? "sm:col-span-2" : undefined}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- website images are served by /media */}
+          {/* The profile's photos are small (about 500-1100 px wide), so they are shown at card size, never full width. */}
+          <ul className="container-site grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gallery.map((img, i) => (
+              <li key={img.src}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- static files and /media, already optimised */}
                 <img
-                  src={`/media/${img.fileId}`}
+                  src={img.src}
                   alt={img.alt[locale]}
+                  width={img.width}
+                  height={img.height}
                   loading={i === 0 ? "eager" : "lazy"}
+                  decoding="async"
                   className="aspect-[3/2] w-full bg-sand object-cover"
                 />
               </li>
@@ -101,7 +106,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
             ))}
           </dl>
           <div className="lg:col-span-4 lg:col-start-9">
-            {!project.images?.length && <p className="text-sm text-ink-muted">{t("projectNote")}</p>}
+            {gallery.length === 0 && <p className="text-sm text-ink-muted">{t("projectNote")}</p>}
             <Link
               href={pathFor("projects")}
               className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-medium underline decoration-walnut/50 underline-offset-[6px] hover:decoration-walnut"

@@ -1,21 +1,11 @@
 import { ArrowDown } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Swatch, type SwatchName } from "@/components/site/swatch";
 import { company } from "@/config/company";
 import { pathFor } from "@/config/routes";
+import { photos } from "@/content/photos";
 import { Link } from "@/i18n/navigation";
-
-/** Cabinet-front composition for the hero: an illustration of the two board families, not a photo. */
-/** Panels tile a 3 × 5 grid exactly, like a run of cabinet doors. */
-const elevation: { swatch: SwatchName; className: string }[] = [
-  { swatch: "walnut", className: "col-start-1 col-span-2 row-start-1 row-span-2" },
-  { swatch: "paintedLight", className: "col-start-3 row-start-1 row-span-3" },
-  { swatch: "oak", className: "col-start-1 row-start-3 row-span-2" },
-  { swatch: "stone", className: "col-start-2 row-start-3 row-span-2" },
-  { swatch: "solid", className: "col-start-3 row-start-4 row-span-2" },
-  { swatch: "paintedDark", className: "col-start-1 col-span-2 row-start-5" },
-];
+import type { Locale } from "@/i18n/routing";
 
 export interface HeroText {
   eyebrow: string | null;
@@ -27,6 +17,8 @@ export interface HeroText {
 /** 	ext holds the admin's homepage overrides for this locale; empty values use the built-in copy. */
 export function Hero({ text }: { text?: HeroText }) {
   const t = useTranslations("Hero");
+  const locale = useLocale() as Locale;
+  const photo = photos.heroKitchen;
   const facts = [
     { value: `${company.yearsOfExperience}+`, label: t("facts.years") },
     { value: `${company.projectsShowcased}+`, label: t("facts.projects") },
@@ -56,17 +48,16 @@ export function Hero({ text }: { text?: HeroText }) {
         </div>
 
         <div className="relative lg:col-span-5">
-          <div
-            aria-hidden
-            className="grid aspect-[4/5] grid-cols-3 grid-rows-5 gap-2 bg-sand-deep p-2 shadow-[0_40px_80px_-40px_rgb(35_32_29/0.45)]"
-          >
-            {elevation.map((panel) => (
-              <div key={panel.swatch} className={`relative overflow-hidden ${panel.className}`}>
-                <Swatch name={panel.swatch} />
-                <span className="absolute end-3 top-1/2 h-10 w-[3px] -translate-y-1/2 rounded-full bg-charcoal/35" />
-              </div>
-            ))}
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static file, already optimised */}
+          <img
+            src={photo.src}
+            alt={photo.alt[locale]}
+            width={photo.width}
+            height={photo.height}
+            fetchPriority="high"
+            decoding="async"
+            className="aspect-[5/4] w-full bg-sand-deep object-cover shadow-[0_40px_80px_-40px_rgb(35_32_29/0.45)]"
+          />
         </div>
 
         <dl

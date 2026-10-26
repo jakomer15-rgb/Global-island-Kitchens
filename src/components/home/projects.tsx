@@ -3,7 +3,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { pathFor } from "@/config/routes";
-import type { Project, Segment } from "@/content/projects";
+import { galleryOf, type Project, type Segment } from "@/content/projects";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -19,6 +19,23 @@ const selection: { segment: Segment; slugs: string[] }[] = [
     slugs: ["cafe-interiors-hamad-town", "retail-interiors-diyar-al-muharraq", "cafe-booth-sitra"],
   },
 ];
+
+function Cover({ project }: { project: Project }) {
+  const cover = galleryOf(project)[0];
+  if (!cover) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- static files and /media, already optimised
+    <img
+      src={cover.src}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      width={cover.width}
+      height={cover.height}
+      className="mb-4 aspect-[3/2] w-full bg-sand object-cover"
+    />
+  );
+}
 
 export function Projects({ portfolio }: { portfolio: Project[] }) {
   const t = useTranslations("Projects");
@@ -49,6 +66,7 @@ export function Projects({ portfolio }: { portfolio: Project[] }) {
                       p && (
                         <li key={p.slug} className="border-b border-line">
                           <Link href={`/projects/${p.slug}`} className="group block py-6">
+                            <Cover project={p} />
                             <span className="block font-display text-display-md group-hover:text-walnut">
                               {p.name[locale]}
                             </span>

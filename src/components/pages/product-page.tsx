@@ -8,6 +8,7 @@ import { projectsWithScope, type Project } from "@/content/projects";
 import { Swatch, type SwatchName } from "@/components/site/swatch";
 import { pathFor } from "@/config/routes";
 import { materialsPage } from "@/content/pages";
+import { photos, type Photo } from "@/content/photos";
 import { getProduct, type ProductKey } from "@/content/products";
 
 import { Link } from "@/i18n/navigation";
@@ -28,6 +29,16 @@ const stageKeys = [
 const familySwatches: Record<"egger" | "mdf", SwatchName[]> = {
   egger: ["oak", "walnut", "stone", "solid"],
   mdf: ["paintedLight", "paintedDark"],
+};
+
+/** Product pages that have a photo from the company profile. */
+const productPhotos: Partial<Record<ProductKey, Photo>> = {
+  woodenKitchens: photos.heroKitchen,
+  walkInClosets: photos.walkInCloset,
+  tvUnits: photos.tvUnit,
+  bathroomVanities: photos.vanity,
+  wallCladding: photos.wallCladding,
+  bedroomFurniture: photos.bedSet,
 };
 
 export function productMetadata(key: ProductKey, locale: Locale): Metadata {
@@ -72,6 +83,7 @@ export async function ProductPage({
         eyebrow={t("makes")}
         title={p.name[locale]}
         intro={p.intro[locale]}
+        image={productPhotos[productKey]}
       />
 
       <section aria-labelledby="makes-title" className="py-20 md:py-28">

@@ -1,10 +1,12 @@
+import type { Photo } from "./photos";
 import type { ScopeTag } from "./products";
 import type { L } from "./types";
 
 /**
  * Projects from the company profile (P5–P7). Client, developer and contractor names are left out
  * until the owner confirms permission (docs/OPEN_QUESTIONS.md #24); building and place names are
- * kept. No photographs until usage permission is confirmed (#2). The profile's "all wood interior
+ * kept. The profile's photographs are attached from src/content/photos.ts (the owner confirmed
+ * they may be published, #2). The profile's "all wood interior
  * work" is written as "complete interior joinery" (conflict #2 in BUSINESS_FACTS.md).
  */
 
@@ -25,6 +27,23 @@ export interface Project {
   clientName?: string;
   /** Photos added in the admin with usage permission (served by /media). */
   images?: { fileId: string; alt: L }[];
+  /** Photos from the company profile (src/content/photos.ts). */
+  photos?: Photo[];
+}
+
+export interface GalleryImage {
+  src: string;
+  alt: L;
+  width?: number;
+  height?: number;
+}
+
+/** Every photo of a project: those added in the admin first, then the profile's. */
+export function galleryOf(project: Project): GalleryImage[] {
+  return [
+    ...(project.images ?? []).map((i) => ({ src: `/media/${i.fileId}`, alt: i.alt })),
+    ...(project.photos ?? []).map((p) => ({ src: p.src, alt: p.alt, width: p.width, height: p.height })),
+  ];
 }
 
 const fullJoinery: L = { en: "Complete interior joinery", ar: "أعمال نجارة داخلية متكاملة" };

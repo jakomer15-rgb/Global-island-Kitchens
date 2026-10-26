@@ -28,7 +28,7 @@ Nothing below was invented: where a fact is missing, the site leaves it out. Num
 
 ## Content and permissions
 
-- Logo files; which project photographs may be shown, who took them and who owns the rights (45); client names only with
+- Logo files; higher-resolution originals of the profile photographs and photos of the other projects (45; the profile photos are cleared and live); client names only with
   permission; real testimonials only with written permission (see Testimonials questions).
 - A fluent Arabic reader to review all Arabic text (47, 53, 61, 68).
 - Privacy policy and terms of use checked or rewritten by the owner or their adviser.

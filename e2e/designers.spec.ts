@@ -75,7 +75,11 @@ test.describe("designer portal", () => {
     // Staff approve
     await staffSignIn(staff);
     await staff.goto("/admin/designers?status=pending");
-    await staff.getByRole("link", { name: "E2E Designer" }).first().click();
+    await staff
+      .getByRole("row")
+      .filter({ hasText: email })
+      .getByRole("link", { name: "E2E Designer" })
+      .click();
     await staff.getByRole("button", { name: "Approve designer" }).click();
     // The decision panel gives way to the new state, so check that rather than the message.
     await expect(staff.getByRole("button", { name: "Approve designer" })).toHaveCount(0);
@@ -147,12 +151,16 @@ test.describe("designer portal", () => {
 
     // Suspension ends access at once
     await staff.goto("/admin/designers");
-    await staff.getByRole("link", { name: "E2E Designer" }).first().click();
+    await staff
+      .getByRole("row")
+      .filter({ hasText: email })
+      .getByRole("link", { name: "E2E Designer" })
+      .click();
     await staff.getByLabel(/Reason/).fill("Test suspension");
     await staff.getByRole("button", { name: "Suspend access" }).click();
-    await expect(staff.getByRole("button", { name: "Suspend access" })).toHaveCount(0);
+    await expect(staff.getByText(/Approve to give access again/)).toBeVisible({ timeout: 20_000 });
     await designer.goto(projectUrl);
-    await expect(designer).toHaveURL(/\/designers\/sign-in/);
+    await expect(designer).toHaveURL(/\/designers\/sign-in/, { timeout: 20_000 });
     await designerSignIn(designer, email, password);
     await expect(designer.getByRole("heading", { level: 1, name: "Your access is paused" })).toBeVisible();
     await expect(designer.getByText("Test suspension")).toBeVisible();

@@ -1,22 +1,26 @@
 import { ArrowUpRight } from "lucide-react";
-import type { Project } from "@/content/projects";
+import { galleryOf, type Project } from "@/content/projects";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-/** Project card; shows the first photo once one is added with usage permission. */
+/** Project card; shows the project's first photo when it has one. */
 export function ProjectCard({ project, locale }: { project: Project; locale: Locale }) {
+  const cover = galleryOf(project)[0];
   return (
     <Link
       href={`/projects/${project.slug}`}
       className="group flex h-full flex-col justify-between gap-6 border-t border-charcoal/20 py-6 transition-colors hover:border-walnut"
     >
       <div>
-        {project.images?.[0] && (
-          // eslint-disable-next-line @next/next/no-img-element -- website images are served by /media
+        {cover && (
+          // eslint-disable-next-line @next/next/no-img-element -- static files and /media, already optimised
           <img
-            src={`/media/${project.images[0].fileId}`}
+            src={cover.src}
             alt=""
             loading="lazy"
+            decoding="async"
+            width={cover.width}
+            height={cover.height}
             className="mb-5 aspect-[3/2] w-full bg-sand object-cover"
           />
         )}

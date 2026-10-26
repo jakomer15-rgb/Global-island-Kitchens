@@ -1,5 +1,32 @@
 # Test report
 
+## Photographs added (2026-10-26)
+
+The owner confirmed the profile photographs are the company's own and may be published. 35 images
+(WebP, native size, 12–62 KB each) now appear on the home page (hero and a four-photo strip), eight
+product pages, 13 project pages and cards, and the factory section of About. Projects without a photo
+stay text-only and out of search results; projects with photos are indexable and in the sitemap.
+
+| Check                                              | Result                                                       |
+| -------------------------------------------------- | ------------------------------------------------------------ |
+| Lint, typecheck, format check, build               | Clean                                                        |
+| Unit tests                                         | 87 / 87                                                      |
+| E2E (full suite, 11.6 min)                         | 236 passed, 58 skipped, 0 failed                             |
+| New `e2e/photos.spec.ts` (12 pages x 2 projects +) | Passes: images load, alt text per language, sitemap, noindex |
+
+Test fixes made on the way (test problems, not product bugs): the designer suspension test waited for
+the button to vanish, which can happen before the suspension is saved (it now waits for the saved state);
+the sales-manager test (Phase 10) and the image check allow for a slow, data-heavy test database. The
+image check ignores `/media` uploads that other specs leave in the shared test database.
+
+### Limits
+
+- The profile images are small (500-1130 px wide), so they are shown at card size; a full-width hero needs
+  higher-resolution originals.
+- Several interiors carry the company watermark and look like design visuals. Alt text describes what is
+  shown and does not call them finished installations. The owner should confirm which are real installations.
+- Arabic alt text needs a fluent review. Lighthouse was not re-run after adding the images.
+
 ## Phase 10 — deployment and handover (2026-10-26)
 
 **Status: prepared, not deployed.** No domain, hosting, database, storage or email accounts exist yet, so
