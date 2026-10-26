@@ -1,6 +1,6 @@
 # Data model
 
-Status: **Phases 4–7 implemented** in `prisma/schema.prisma`; Phase 4 in `prisma/migrations/20261025200000_init`:
+Status: **Phases 4–8 implemented** in `prisma/schema.prisma`; Phase 4 in `prisma/migrations/20261025200000_init`:
 identity and roles, Customer, Lead, LeadActivity, FollowUp, Consultation, ConsentRecord,
 QuotationRequest, FileAsset, Notification, OutboxEvent, AuditLog, RateLimitBucket, SiteSetting.
 Designer accounts
@@ -55,6 +55,12 @@ DesignerProjectMaterial and DesignerMessage, and `FileAsset.designerProjectId`. 
   Their clients' contact details are never collected (only a free-text label).
 - Messages are append-only (trigger); internal notes can only be written by staff (CHECK).
 - A designer's files are linked to both the project and the request, so staff download them as before.
+
+Phase 8 (`20261026180000_ai_automation`) adds AiDraft (kind, status, input, output, requester, reviewer) and
+`LeadActivity.externalId` (unique; makes webhook retries harmless). A decision records who and when (CHECK), lead
+drafts belong to a lead and blog drafts do not, an approved blog draft points at the post it created, and a trigger
+makes a reviewed draft read-only. Consent stays in ConsentRecord (latest per channel wins; `source` is
+`unsubscribe_link` for withdrawals).
 
 Conventions:
 

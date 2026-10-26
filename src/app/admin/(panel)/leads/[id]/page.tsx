@@ -22,7 +22,10 @@ import { getLead, leadStatuses, loggableKinds } from "@/server/crm/leads";
 import { assignableStaff } from "@/server/crm/shared";
 import { db } from "@/server/db";
 import { NotFoundError } from "@/server/errors";
+import { aiAvailable, listDrafts } from "@/server/ai/drafts";
+import { DraftReview } from "@/components/admin/draft-review";
 import { designerProjectForLead } from "@/server/designers/admin";
+import { requestLeadDraftAction } from "../../ai/actions";
 import { designerReplyAction } from "../../designers/actions";
 import { createProjectAction } from "../../projects/actions";
 import { createQuotationAction } from "../../quotations/actions";
@@ -74,6 +77,9 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
   const designerProject = can(actor, "designer.read")
     ? await designerProjectForLead(db, actor, lead.id)
     : null;
+  const canAi = can(actor, "ai.use");
+  const aiOn = canAi && (await aiAvailable(db, "leadAssistant"));
+  const aiDrafts = canAi || can(actor, "ai.review") ? await listDrafts(db, actor, { leadId: lead.id }) : [];
   const qr = lead.quotationRequest;
   const messages = lead.activities.filter((a) => a.kind === "message");
   const history = lead.activities.filter((a) => a.kind !== "message");
@@ -277,6 +283,41 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
                   />
                 )}
               </div>
+            </Panel>
+          )}
+          {(aiOn || aiDrafts.length > 0) && (
+            <Panel title="AI assistant">
+              <p className="text-sm text-ink-muted">
+                Drafts only. The assistant sees the enquiry without phone or email, and nothing is sent to the
+                customer: approving a draft files it as a note for you to use.
+              </p>
+              {aiOn && (
+                <div className="mt-4 space-y-4">
+                  <ActionForm
+                    action={requestLeadDraftAction.bind(null, lead.id, "lead_reply")}
+                    submitLabel="Draft a reply"
+                    variant="outline"
+                  >
+                    <AdminInput
+                      label="What should the reply do? (optional)"
+                      name="instruction"
+                      maxLength={300}
+                    />
+                  </ActionForm>
+                  <ActionForm
+                    action={requestLeadDraftAction.bind(null, lead.id, "lead_summary")}
+                    submitLabel="Summarise this lead"
+                    variant="outline"
+                  />
+                </div>
+              )}
+              {aiDrafts.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  {aiDrafts.map((d) => (
+                    <DraftReview key={d.id} draft={d} canReview={can(actor, "ai.review")} showLead={false} />
+                  ))}
+                </div>
+              )}
             </Panel>
           )}
           {designerProject && (

@@ -80,6 +80,17 @@ export const settingSchemas = {
       message: "Enter the VAT registration number and rate before turning VAT on.",
       path: ["vatEnabled"],
     }),
+  /**
+   * AI assistants. Off by default; they also need ANTHROPIC_API_KEY on the server. They only write
+   * drafts that staff review: nothing is sent to customers or published by an assistant.
+   */
+  ai: z.object({
+    enabled: z.boolean(),
+    leadAssistant: z.boolean(),
+    contentAssistant: z.boolean(),
+    /** Public "furniture assistant" page: visitors type a question that is processed by the AI provider. */
+    furnitureAssistant: z.boolean(),
+  }),
   seo: z.object({
     titleEn: optionalText(60),
     descriptionEn: optionalText(160),
@@ -121,6 +132,7 @@ export const settingDefaults: Settings = {
     introAr: null,
   },
   seo: { titleEn: null, descriptionEn: null, titleAr: null, descriptionAr: null },
+  ai: { enabled: false, leadAssistant: true, contentAssistant: true, furnitureAssistant: false },
   quotation: {
     vatEnabled: false,
     vatRateBasisPoints: 1000,

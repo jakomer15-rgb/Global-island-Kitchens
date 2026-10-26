@@ -1,0 +1,144 @@
+{
+  "name": "GIK 01 - receive, verify, route",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "gik-events", "options": { "rawBody": true } },
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "GIK events",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "gik-events"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.GIK_WEBHOOK_SECRET;\nconst headers = $input.first().json.headers;\nconst raw = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\nconst timestamp = headers['x-gik-timestamp'];\nconst expected = crypto.createHmac('sha256', secret).update(`${timestamp}.${raw}`).digest();\nconst given = Buffer.from(headers['x-gik-signature'] || '', 'hex');\nconst fresh = Math.abs(Date.now() / 1000 - Number(timestamp)) <= 300;\nif (!fresh || given.length !== expected.length || !crypto.timingSafeEqual(given, expected)) {\n  throw new Error('Invalid signature');\n}\nreturn [{ json: JSON.parse(raw) }];"
+      },
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "enquiry.received",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "enquiry"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "lead.status_changed",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "lead status"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "quotation.sent",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "quotation sent"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "quotation.approved",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "quotation approved"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Route by event type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "Enquiry: replace with your step",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, -180]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-4000-8000-000000000005",
+      "name": "Lead status: replace with your step",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, -60]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-4000-8000-000000000006",
+      "name": "Quotation sent: replace with your step",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 60]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-4000-8000-000000000007",
+      "name": "Quotation approved: replace with your step",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 180]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-4000-8000-000000000008",
+      "name": "Other events: ignore",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 300]
+    }
+  ],
+  "connections": {
+    "GIK events": { "main": [[{ "node": "Verify signature", "type": "main", "index": 0 }]] },
+    "Verify signature": { "main": [[{ "node": "Route by event type", "type": "main", "index": 0 }]] },
+    "Route by event type": {
+      "main": [
+        [{ "node": "Enquiry: replace with your step", "type": "main", "index": 0 }],
+        [{ "node": "Lead status: replace with your step", "type": "main", "index": 0 }],
+        [{ "node": "Quotation sent: replace with your step", "type": "main", "index": 0 }],
+        [{ "node": "Quotation approved: replace with your step", "type": "main", "index": 0 }],
+        [{ "node": "Other events: ignore", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}

@@ -1,6 +1,7 @@
 import { Prisma, type CustomerType, type LeadSource } from "@/generated/prisma/client";
 import type { Db, Tx } from "@/server/db/client";
 import { audit } from "@/server/audit";
+import { consentFields } from "@/server/consent";
 import { enqueue } from "@/server/outbox/events";
 import { attachUploads } from "@/server/storage/files";
 import { products } from "@/content/products";
@@ -15,7 +16,7 @@ import type { DesignerProject } from "@/lib/designer";
  * reference the customer sees, e.g. GIK-Q-2026-00042.
  */
 
-type Prefix = "Q" | "C" | "M";
+type Prefix = "Q" | "C" | "M" | "W";
 
 export async function nextReference(tx: Tx, prefix: Prefix, now = new Date()): Promise<string> {
   const [row] = await tx.$queryRaw<{ n: bigint }[]>`SELECT nextval('enquiry_reference_seq') AS n`;
@@ -185,6 +186,7 @@ export async function submitQuoteRequest(
       locale: input.locale,
       customer: { name: input.name, phone: input.phone, email: input.email ?? null },
       summary,
+      ...(await consentFields(tx, customer.id)),
     });
     await audit(tx, {
       actorId: null,
@@ -249,6 +251,7 @@ export async function submitConsultation(
       locale: input.locale,
       customer: { name: input.name, phone: input.phone, email: input.email ?? null },
       summary,
+      ...(await consentFields(tx, customer.id)),
     });
     await audit(tx, {
       actorId: null,
@@ -298,6 +301,7 @@ export async function submitContact(
       locale: input.locale,
       customer: { name: input.name, phone: input.phone ?? null, email: input.email ?? null },
       summary,
+      ...(await consentFields(tx, customer.id)),
     });
     await audit(tx, {
       actorId: null,
@@ -422,6 +426,7 @@ export async function submitDesignerProject(
       locale: input.locale,
       customer: { name: account.user.name, phone: account.phone, email: account.user.email },
       summary,
+      ...(await consentFields(tx, customer.id)),
     });
     await audit(tx, {
       actorId: designer.userId,

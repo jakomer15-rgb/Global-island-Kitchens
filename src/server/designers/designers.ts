@@ -1,6 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import type { Db, Tx } from "@/server/db/client";
 import { audit } from "@/server/audit";
+import { enqueue } from "@/server/outbox/events";
 import { createDesignerUser } from "@/server/auth/accounts";
 import { notify } from "@/server/crm/shared";
 import { NotFoundError, RuleError } from "@/server/errors";
@@ -54,6 +55,7 @@ export async function registerDesigner(
         changes: { profession: input.profession, userId },
         ipHash: ctx.ipHash,
       });
+      await enqueue(tx, "designer.registered", { designerId, profession: input.profession });
       for (const staff of await staffWith(tx, "designer.manage")) {
         await notify(
           tx,

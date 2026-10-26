@@ -14,6 +14,7 @@ import { paged, pageArgs } from "@/server/crm/shared";
 import type { Db, Tx } from "@/server/db/client";
 import { NotFoundError, RuleError } from "@/server/errors";
 import { bahrainToday, nextNumber } from "@/server/numbers";
+import { enqueue } from "@/server/outbox/events";
 
 /**
  * Quotations: a draft revision is edited freely; sending locks it (the database refuses later
@@ -331,6 +332,12 @@ export async function markSent(db: Db, actor: Actor, quotationId: string, now = 
       entityId: quotationId,
       changes: { revision: rev.revision, totalFils: totals.totalFils, vatRateBasisPoints: rate },
     });
+    await enqueue(tx, "quotation.sent", {
+      quotationId,
+      number: quotation.number,
+      revision: rev.revision,
+      totalFils: totals.totalFils,
+    });
     return rev.id;
   });
 }
@@ -452,6 +459,12 @@ export async function recordApproval(
       entityType: "quotation",
       entityId: quotation.id,
       changes: { revision: rev.revision, method: input.method, note },
+    });
+    await enqueue(tx, "quotation.approved", {
+      quotationId: quotation.id,
+      number: quotation.number,
+      revision: rev.revision,
+      totalFils: Number(rev.totalFils),
     });
   });
 }

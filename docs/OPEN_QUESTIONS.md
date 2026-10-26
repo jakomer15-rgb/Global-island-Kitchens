@@ -110,3 +110,12 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 60. **Designer emails:** approval, a staff reply and project updates reach designers only inside the portal until an email account is set up (OPEN_QUESTIONS 41).
 61. **Arabic review** of the designer portal wording in `src/content/portal.ts`.
 62. **Data requests:** how a designer's account and files are deleted on request (nothing deletes them automatically yet).
+
+## Added in Phase 8
+
+63. **AI provider approval:** may customer enquiry text (without phone and email) and visitor questions be sent to Anthropic? The assistants stay off until the owner says yes. The privacy policy (`src/content/legal.ts`) must then say so; its wording is the owner's.
+64. **Anthropic account and budget:** who creates the account, which model, and a monthly spending limit set in the provider's console.
+65. **Public furniture assistant:** switch it on at launch or later? It is a visitor-facing AI answer; it can't quote prices or dates, but the owner should read some of its answers first.
+66. **Automation accounts:** n8n hosting, the email sending account and the WhatsApp Business account and templates. Until they exist, no workflow sends anything.
+67. **Marketing consent wording:** the tick-boxes on the forms say email and WhatsApp may be used to contact the customer; confirm they cover marketing, or keep automation to replies only.
+68. **Arabic review** of `src/content/assistant.ts` (unsubscribe page and furniture assistant).

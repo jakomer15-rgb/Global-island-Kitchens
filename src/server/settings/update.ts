@@ -12,6 +12,7 @@ export const settingPermission: Record<SettingKey, Permission> = {
   homeHero: "content.manage",
   seo: "content.manage",
   quotation: "settings.manage",
+  ai: "settings.manage",
 };
 
 export async function readSetting<K extends SettingKey>(db: Db, actor: Actor, key: K): Promise<Settings[K]> {

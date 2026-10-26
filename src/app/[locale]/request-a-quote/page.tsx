@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { FormMessages } from "@/components/forms/form-messages";
 import { QuoteWizard } from "@/components/forms/quote-wizard";
@@ -7,7 +8,10 @@ import { PageHero } from "@/components/site/page-hero";
 import { pathFor } from "@/config/routes";
 import { quotePage as c } from "@/content/pages";
 import type { Locale } from "@/i18n/routing";
-import { pageMetadata } from "@/lib/seo";
+import { furniturePage } from "@/content/assistant";
+import { localizedPath, pageMetadata } from "@/lib/seo";
+import { aiAvailable } from "@/server/ai/drafts";
+import { db } from "@/server/db";
 import { getSiteSettings } from "@/server/settings/site";
 
 export async function generateMetadata({
@@ -26,7 +30,10 @@ export async function generateMetadata({
 export default async function RequestQuotePage({ params }: PageProps<"/[locale]/request-a-quote">) {
   const locale = (await params).locale as Locale;
   setRequestLocale(locale);
-  const { contact } = await getSiteSettings();
+  const [{ contact }, assistantOn] = await Promise.all([
+    getSiteSettings(),
+    aiAvailable(db, "furnitureAssistant").catch(() => false),
+  ]);
   const [t, tp] = await Promise.all([
     getTranslations({ locale, namespace: "Page" }),
     getTranslations({ locale, namespace: "Process" }),
@@ -70,6 +77,19 @@ export default async function RequestQuotePage({ params }: PageProps<"/[locale]/
                 ))}
               </ol>
             </div>
+            {assistantOn && (
+              <p className="border border-line p-5 text-sm">
+                <Link
+                  href={localizedPath("/furniture-assistant", locale)}
+                  className="font-medium underline underline-offset-4"
+                >
+                  {furniturePage.title[locale]}
+                </Link>
+                <span className="mt-1 block text-ink-muted">
+                  {furniturePage.intro[locale].split(".")[0]}.
+                </span>
+              </p>
+            )}
             <div>
               <h2 className="font-display text-2xl">{c.sendTitle[locale]}</h2>
               <p className="mt-2 text-sm text-ink-muted">{t("ctaBody")}</p>

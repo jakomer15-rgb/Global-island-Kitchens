@@ -1,6 +1,7 @@
 import type { ActivityKind, LeadSource, LeadStatus, Prisma } from "@/generated/prisma/client";
 import type { Db } from "@/server/db/client";
 import { audit } from "@/server/audit";
+import { enqueue } from "@/server/outbox/events";
 import { assertCan, can, type Actor } from "@/server/auth/staff";
 import { NotFoundError, RuleError } from "@/server/errors";
 import { assignableStaff, notify, paged, pageArgs } from "./shared";
@@ -130,6 +131,12 @@ export async function changeLeadStatus(
       entityType: "lead",
       entityId: lead.id,
       changes: { from: lead.status, to: input.status, lostReason: lostReason ?? null },
+    });
+    await enqueue(tx, "lead.status_changed", {
+      leadId: lead.id,
+      reference: lead.reference,
+      from: lead.status,
+      to: input.status,
     });
   });
 }

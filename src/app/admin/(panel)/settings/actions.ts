@@ -39,6 +39,12 @@ const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
   banner: (f) => ({ enabled: f.get("enabled") === "on", textEn: str(f, "textEn"), textAr: str(f, "textAr") }),
   homeHero: (f) => Object.fromEntries(Object.keys(settingSchemas.homeHero.shape).map((k) => [k, str(f, k)])),
   seo: (f) => Object.fromEntries(Object.keys(settingSchemas.seo.shape).map((k) => [k, str(f, k)])),
+  ai: (f) => ({
+    enabled: f.get("enabled") === "on",
+    leadAssistant: f.get("leadAssistant") === "on",
+    contentAssistant: f.get("contentAssistant") === "on",
+    furnitureAssistant: f.get("furnitureAssistant") === "on",
+  }),
   quotation: (f) => {
     const rate = Number(str(f, "vatRate").replace("%", ""));
     const days = str(f, "validityDays");

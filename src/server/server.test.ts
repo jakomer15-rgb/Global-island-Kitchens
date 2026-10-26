@@ -3,6 +3,8 @@ import { resolveUploadType, safeFileName } from "@/lib/uploads/policy";
 import { assertCan, ForbiddenError, resolveActor } from "./auth/staff";
 import { roleDefinitions } from "./auth/permissions";
 import type { Env } from "./env";
+import { postToN8n } from "./outbox/deliver";
+import { signWebhook, verifyWebhook } from "./outbox/signature";
 import { DeliveryError, defaultDelivery } from "./outbox/worker";
 import { matchesType } from "./storage/sniff";
 import { signToken, verifyToken } from "./storage/token";
@@ -167,6 +169,64 @@ describe("outbox delivery", () => {
       expect(String(fetchMock.mock.calls[0]![0])).toContain("n8n");
       const headers = (fetchMock.mock.calls[0]![1] as RequestInit).headers as Record<string, string>;
       expect(headers["x-gik-signature"]).toMatch(/^[0-9a-f]{64}$/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("signed webhooks", () => {
+  const secret = "n8n-secret-for-tests-0123456789";
+  const body = JSON.stringify({ id: "evt1", type: "lead.status_changed", payload: { leadId: "l1" } });
+  const now = 1_800_000_000;
+
+  it("verifies what was signed, and nothing else", () => {
+    const timestamp = String(now);
+    const signature = signWebhook(secret, timestamp, body);
+    expect(signature).toMatch(/^[0-9a-f]{64}$/);
+    expect(verifyWebhook(secret, { timestamp, body, signature }, now)).toBe(true);
+    expect(verifyWebhook(secret, { timestamp, body: body + " ", signature }, now)).toBe(false);
+    expect(verifyWebhook("another-secret-0123456789abcdef", { timestamp, body, signature }, now)).toBe(false);
+    expect(verifyWebhook(secret, { timestamp, body, signature: "00" }, now)).toBe(false);
+    expect(verifyWebhook(secret, { timestamp, body, signature: "not hex" }, now)).toBe(false);
+  });
+
+  it("refuses old or future timestamps (replays)", () => {
+    const old = String(now - 301);
+    expect(
+      verifyWebhook(secret, { timestamp: old, body, signature: signWebhook(secret, old, body) }, now),
+    ).toBe(false);
+    const future = String(now + 301);
+    expect(
+      verifyWebhook(secret, { timestamp: future, body, signature: signWebhook(secret, future, body) }, now),
+    ).toBe(false);
+    const fresh = String(now - 299);
+    expect(
+      verifyWebhook(secret, { timestamp: fresh, body, signature: signWebhook(secret, fresh, body) }, now),
+    ).toBe(true);
+  });
+
+  it("is what the sender actually sends", async () => {
+    const env = {
+      N8N_WEBHOOK_URL: "https://n8n.example.com/hook",
+      N8N_WEBHOOK_SECRET: secret,
+    } as Env;
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
+      async () => new Response(null),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      await postToN8n(env, "quotation.sent", "evt2", { number: "GIK-QT-2026-00001" });
+      const init = fetchMock.mock.calls[0]![1] as RequestInit;
+      const headers = init.headers as Record<string, string>;
+      expect(headers["x-gik-event"]).toBe("quotation.sent");
+      expect(
+        verifyWebhook(secret, {
+          timestamp: headers["x-gik-timestamp"]!,
+          body: String(init.body),
+          signature: headers["x-gik-signature"]!,
+        }),
+      ).toBe(true);
     } finally {
       vi.unstubAllGlobals();
     }

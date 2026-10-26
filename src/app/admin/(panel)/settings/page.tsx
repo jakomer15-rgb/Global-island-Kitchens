@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ActionForm } from "@/components/admin/action-form";
 import { AdminCheckbox, AdminInput, AdminTextarea } from "@/components/admin/fields";
 import { PageHeader, Panel } from "@/components/admin/ui";
+import { aiConfigured } from "@/server/ai/provider";
 import { requireActor } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { readSetting } from "@/server/settings/update";
@@ -11,11 +12,13 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const actor = await requireActor("settings.manage");
-  const [contact, locations, quotation] = await Promise.all([
+  const [contact, locations, quotation, ai] = await Promise.all([
     readSetting(db, actor, "contact"),
     readSetting(db, actor, "locations"),
     readSetting(db, actor, "quotation"),
+    readSetting(db, actor, "ai"),
   ]);
+  const providerReady = aiConfigured();
 
   return (
     <>
@@ -113,6 +116,38 @@ export default async function SettingsPage() {
                 dir="rtl"
                 lang="ar"
                 required
+              />
+            </div>
+          </ActionForm>
+        </Panel>
+        <Panel title="AI assistants" className="xl:col-span-2">
+          <ActionForm action={saveSettingAction.bind(null, "ai")} submitLabel="Save AI settings">
+            <p className="text-sm text-ink-muted">
+              Assistants write drafts for staff to review; they never send or publish anything. When they are
+              on, the text they work on (enquiry messages without phone or email, blog topics, and anything a
+              visitor types into the public furniture assistant) is sent to the AI provider (Anthropic). Turn
+              them on only after the owner has approved that, and mention it in the privacy policy.
+            </p>
+            <p className="text-sm">
+              Provider key on the server:{" "}
+              <strong>{providerReady ? "set" : "not set (assistants stay off)"}</strong>
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <AdminCheckbox name="enabled" defaultChecked={ai.enabled} label="Turn AI assistants on" />
+              <AdminCheckbox
+                name="leadAssistant"
+                defaultChecked={ai.leadAssistant}
+                label="Lead assistant (reply and summary drafts)"
+              />
+              <AdminCheckbox
+                name="contentAssistant"
+                defaultChecked={ai.contentAssistant}
+                label="Content assistant (blog drafts)"
+              />
+              <AdminCheckbox
+                name="furnitureAssistant"
+                defaultChecked={ai.furnitureAssistant}
+                label="Public furniture assistant (page /furniture-assistant)"
               />
             </div>
           </ActionForm>

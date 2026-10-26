@@ -19,6 +19,8 @@ export const permissions = {
   "project.manage": "Create projects, move them between stages and update orders",
   "designer.read": "View designer accounts and the projects they submitted",
   "designer.manage": "Approve, reject or suspend designers and reply to their messages",
+  "ai.use": "Ask the AI assistants for drafts (replies, summaries, blog posts)",
+  "ai.review": "Review, edit, approve or reject AI drafts",
   "content.manage": "Edit homepage text, banner, SEO, testimonials, blog posts and website images",
   "materials.manage": "Manage the materials library (EGGER décors and painted MDF colours)",
   "portfolio.manage": "Edit portfolio projects and their photos",
@@ -69,6 +71,8 @@ export const roleDefinitions: {
       "project.manage",
       "designer.read",
       "designer.manage",
+      "ai.use",
+      "ai.review",
     ],
   },
   {
@@ -90,6 +94,13 @@ export const roleDefinitions: {
     key: "content_editor",
     name: "Content Editor",
     description: "Website content, materials, portfolio and contact details",
-    permissions: ["content.manage", "materials.manage", "portfolio.manage", "settings.manage"],
+    permissions: [
+      "content.manage",
+      "materials.manage",
+      "portfolio.manage",
+      "settings.manage",
+      "ai.use",
+      "ai.review",
+    ],
   },
 ];

@@ -71,6 +71,8 @@ model User {
   designerAccount    DesignerAccount?     @relation("DesignerUser")
   designersDecided   DesignerAccount[]    @relation("DesignerDecider")
   designerMessages   DesignerMessage[]
+  aiDraftsRequested  AiDraft[]            @relation("AiRequester")
+  aiDraftsReviewed   AiDraft[]            @relation("AiReviewer")
 
   @@map("users")
 }
@@ -259,6 +261,7 @@ model Lead {
   quotationRequest QuotationRequest?
   quotations       Quotation[]
   projects         Project[]
+  aiDrafts         AiDraft[]
 
   @@index([status, createdAt])
   @@index([assignedToId])
@@ -278,13 +281,15 @@ enum ActivityKind {
 
 /// Communication history and internal notes. Append-only (trigger in migration).
 model LeadActivity {
-  id        String       @id @default(cuid())
-  leadId    String       @map("lead_id")
-  kind      ActivityKind
-  body      String
-  internal  Boolean      @default(true)
-  authorId  String?      @map("author_id")
-  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  id         String       @id @default(cuid())
+  leadId     String       @map("lead_id")
+  kind       ActivityKind
+  body       String
+  internal   Boolean      @default(true)
+  authorId   String?      @map("author_id")
+  /// Provider message id (e.g. a WhatsApp message id); makes webhook retries harmless.
+  externalId String?      @unique @map("external_id")
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
 
   lead   Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
   author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
@@ -573,8 +578,9 @@ model BlogPost {
   createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  cover  FileAsset? @relation(fields: [coverFileId], references: [id], onDelete: SetNull)
-  author User?      @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  cover    FileAsset? @relation(fields: [coverFileId], references: [id], onDelete: SetNull)
+  author   User?      @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  aiDrafts AiDraft[]
 
   @@index([status, publishedAt])
   @@map("blog_posts")
@@ -1013,4 +1019,46 @@ model DesignerMessage {
 
   @@index([projectId, createdAt])
   @@map("designer_messages")
+}
+
+// ───────────────────────────── AI drafts (Phase 8) ─────────────────────────────
+
+enum AiDraftKind {
+  lead_reply
+  lead_summary
+  blog_post
+}
+
+enum AiDraftStatus {
+  pending_review
+  approved
+  rejected
+}
+
+/// Text an AI assistant proposed. Nothing is sent or published from here: staff review it, may edit
+/// it, and approving it only files a note on the lead or creates an unpublished blog draft.
+model AiDraft {
+  id            String        @id @default(cuid())
+  kind          AiDraftKind
+  status        AiDraftStatus @default(pending_review)
+  leadId        String?       @map("lead_id")
+  blogPostId    String?       @map("blog_post_id")
+  /// What staff asked for (instruction, topic); never customer contact details.
+  input         Json
+  output        Json
+  model         String
+  requestedById String        @map("requested_by_id")
+  reviewedById  String?       @map("reviewed_by_id")
+  reviewedAt    DateTime?     @map("reviewed_at") @db.Timestamptz(3)
+  reviewNote    String?       @map("review_note")
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  blogPost    BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: SetNull)
+  requestedBy User      @relation("AiRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  reviewedBy  User?     @relation("AiReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([leadId])
+  @@map("ai_drafts")
 }

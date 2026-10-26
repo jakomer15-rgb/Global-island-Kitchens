@@ -48,6 +48,7 @@ const groups: {
   {
     label: "Administration",
     items: [
+      { href: "/admin/ai", label: "AI drafts", permission: ["ai.use", "ai.review"] },
       { href: "/admin/settings", label: "Settings", permission: "settings.manage" },
       { href: "/admin/staff", label: "Staff", permission: "staff.manage" },
       { href: "/admin/audit", label: "Audit log", permission: "audit.read" },

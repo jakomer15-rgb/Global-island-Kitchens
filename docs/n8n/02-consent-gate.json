@@ -1,0 +1,66 @@
+{
+  "name": "GIK 02 - consent gate",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b2000000-0000-4000-8000-000000000001",
+      "name": "From the router (enquiry events)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.payload.consent.email }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            },
+            {
+              "leftValue": "={{ $json.payload.unsubscribeUrl }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "b2000000-0000-4000-8000-000000000002",
+      "name": "Email allowed? (consent and unsubscribe link)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {},
+      "id": "b2000000-0000-4000-8000-000000000003",
+      "name": "Yes: your email step (include the unsubscribe link)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [540, -80]
+    },
+    {
+      "parameters": {},
+      "id": "b2000000-0000-4000-8000-000000000004",
+      "name": "No: do not email this customer",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [540, 100]
+    }
+  ],
+  "connections": {
+    "From the router (enquiry events)": {
+      "main": [[{ "node": "Email allowed? (consent and unsubscribe link)", "type": "main", "index": 0 }]]
+    },
+    "Email allowed? (consent and unsubscribe link)": {
+      "main": [
+        [{ "node": "Yes: your email step (include the unsubscribe link)", "type": "main", "index": 0 }],
+        [{ "node": "No: do not email this customer", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}

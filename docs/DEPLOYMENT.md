@@ -51,6 +51,18 @@ after the first deploy for CSP violations.
 Rate limits key on the first `x-forwarded-for` entry. Deploy only behind a proxy that overwrites that
 header (Vercel and Cloudflare do), or the limits can be bypassed.
 
+## AI assistants and WhatsApp
+
+AI is off by default. To use it: set `ANTHROPIC_API_KEY` (and optionally `AI_MODEL`), then tick
+Admin → Settings → AI assistants. When on, the text the assistants work on goes to Anthropic: enquiry messages
+(phone and email removed, first name kept), blog topics and notes, and anything a visitor types into the public
+furniture assistant. **Get the owner's approval and add this to the privacy policy before switching it on.**
+Limits: 30 drafts an hour per staff member; the public assistant allows 5 questions an hour per visitor and 200 a
+day for the whole site. `AI_PROVIDER=mock` and `AI_MOCK_FOR_E2E` exist only for automated tests; never set them.
+
+WhatsApp inbound: set `WHATSAPP_VERIFY_TOKEN` and `WHATSAPP_APP_SECRET`, then register
+`https://<domain>/api/webhooks/whatsapp` in the Meta app. n8n: see [n8n/README.md](n8n/README.md).
+
 ## Quotation PDFs
 
 Quotation PDFs are printed by headless Chrome (`puppeteer-core`) from the page

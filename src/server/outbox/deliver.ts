@@ -1,6 +1,6 @@
-import { createHmac } from "node:crypto";
 import type { Env } from "@/server/env";
 import type { EnquiryReceived } from "./events";
+import { signWebhook } from "./signature";
 
 export type ChannelResult = "sent" | "not_configured" | "skipped";
 
@@ -73,7 +73,7 @@ export async function postToN8n(
   if (!e.N8N_WEBHOOK_URL || !e.N8N_WEBHOOK_SECRET) return "not_configured";
   const body = JSON.stringify({ id: eventId, type, payload });
   const timestamp = String(Math.floor(Date.now() / 1000));
-  const signature = createHmac("sha256", e.N8N_WEBHOOK_SECRET).update(`${timestamp}.${body}`).digest("hex");
+  const signature = signWebhook(e.N8N_WEBHOOK_SECRET, timestamp, body);
   const res = await fetch(e.N8N_WEBHOOK_URL, {
     method: "POST",
     headers: {

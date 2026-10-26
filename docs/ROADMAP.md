@@ -18,7 +18,7 @@ Each phase ends with the same gate:
 | **5. Admin portal and CRM** ✅                | `/admin` dashboard with real metrics, leads, customers, follow-ups, communication history, consultations, content management, materials library, media, settings, staff and roles                                                                  | Permission matrix tests; E2E admin journey                                                         |
 | **6. Quotations and projects** ✅             | Quotation builder, revisions, VAT, BHD totals, branded PDF (English/Arabic), approval, conversion to order and project, project stage tracking, optional pricing rules                                                                             | Money tests, PDF snapshot tests, E2E quote-to-project journey                                      |
 | **7. Designer portal** ✅                     | Registration, staff approval, project submission, drawing uploads, material selection, quotation requests, status tracking, messages                                                                                                               | Access tests: a designer can never see another designer's data                                     |
-| **8. AI and automation**                      | Furniture, lead and content assistants (drafts only), n8n events and example workflows, consent and unsubscribe, WhatsApp Business integration points                                                                                              | AI off by default; approval required; signed webhooks tested                                       |
+| **8. AI and automation** ✅                   | Furniture, lead and content assistants (drafts only), n8n events and example workflows, consent and unsubscribe, WhatsApp Business integration points                                                                                              | AI off by default; approval required; signed webhooks tested                                       |
 | **9. Security, testing, SEO, performance** ✅ | Security review, full E2E suite, accessibility audit, structured data, sitemap, robots, canonical URLs, analytics consent, image optimisation, Lighthouse 90+ targets measured                                                                     | Report with measured scores and fixed findings                                                     |
 | **10. Deployment and handover**               | Production hosting, environments, Sentry, backups and a tested restore, CI/CD, technical docs, admin user guide                                                                                                                                    | Production verified against a launch checklist                                                     |
 
@@ -30,7 +30,17 @@ portal), so staff quote it in the existing flow. Not built: saving a project as 
 after sending (use a message), designer email notifications (staff replies show in the portal; email
 needs the owner's email account), password reset, and designers seeing quotation PDFs or prices.
 
-Phase 9 (Phase 8 is still to do): independent security
+Phase 8: AI assistants that only write drafts (off by default; they need a provider key on the server and the
+owner's switch in Settings): a lead assistant (reply and summary drafts, shown without phone or email), a
+content assistant (English and Arabic blog drafts) and an optional public furniture assistant at
+`/furniture-assistant` (404 until switched on). Staff review, edit and approve each draft; approving only files
+a note on the lead or creates an unpublished blog post. Automation: signed events to n8n (lead status,
+quotations, designers, WhatsApp, enquiries with the customer's consent and an unsubscribe link), an
+unsubscribe page, a signed inbound WhatsApp webhook that logs messages on the lead, example n8n workflows
+in `docs/n8n`. Not built: any outbound email or WhatsApp to customers from automation (needs the owner's
+accounts, templates and approval), automatic replies, voice or image features, AI price estimates.
+
+Phase 9: independent security
 review with all findings fixed or documented, Content-Security-Policy and COOP headers, per-address
 limit on confirmation emails, upload bytes moved to a key the signed URL can't reach after checking,
 sent quotation PDFs can't be replaced, sign-in lockout no longer lets a stranger lock staff out,
