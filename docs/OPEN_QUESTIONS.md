@@ -8,9 +8,9 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 
 1. ★ **Logo** files (vector: SVG, AI or PDF) in English and Arabic, and brand colours if any exist.
 2. ✔ **Photographs:** the owner confirmed (2026-10-26) that the photos in the company profile are the
-   company's own work and may be published. **Still open:** higher-resolution originals. The profile's
-   images are small (500–1130 px wide), so they are shown at card size; larger originals would allow a
-   full-width hero and sharper project pages.
+   company's own work and may be published. **Higher-resolution originals are not available (owner, 2026-10-26).** The profile's
+   images are small (500–1130 px wide), so they are shown at card size and the site has no full-width
+   photo hero. New professional photography of finished projects would lift this limit.
 3. Who took the project photos? Any credit required?
 
 ## Company
