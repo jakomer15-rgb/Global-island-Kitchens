@@ -24,7 +24,11 @@ export default async function NotificationsPage() {
             <li key={n.id} className="flex items-start justify-between gap-4 p-4 text-sm">
               <span>
                 {!n.readAt && (
-                  <span className="me-2 inline-block size-2 rounded-full bg-walnut" role="img" aria-label="Unread" />
+                  <span
+                    className="me-2 inline-block size-2 rounded-full bg-walnut"
+                    role="img"
+                    aria-label="Unread"
+                  />
                 )}
                 {n.link?.startsWith("/admin/") ? (
                   <Link href={n.link} className="font-medium underline-offset-4 hover:underline">
