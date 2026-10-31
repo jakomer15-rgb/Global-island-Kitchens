@@ -21,7 +21,10 @@ export function ProjectCard({
   const cover = galleryOf(project)[0];
   const large = variant === "lead";
   return (
-    <Link href={`/projects/${project.slug}`} className="group flex h-full flex-col">
+    <Link
+      href={`/projects/${project.slug}`}
+      className="group flex h-full flex-col border border-line bg-ivory transition-colors duration-300 hover:border-oak"
+    >
       <div
         className={cn(
           "relative aspect-[4/3] overflow-hidden bg-sand",
@@ -53,9 +56,9 @@ export function ProjectCard({
           className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-oak transition-transform duration-700 ease-out-soft group-hover:scale-x-100 rtl:origin-right"
         />
       </div>
-      <div className="mt-5 flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 p-5">
         <div>
-          <p className="text-sm text-walnut">
+          <p className="text-xs tracking-[0.12em] text-walnut uppercase rtl:text-sm rtl:tracking-normal rtl:normal-case">
             {project.location[locale]}
             {project.size && <span className="text-ink-muted"> · {project.size[locale]}</span>}
           </p>

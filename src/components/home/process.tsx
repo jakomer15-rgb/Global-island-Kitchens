@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 
 /** The project stages the business tracks (docs/ARCHITECTURE.md §6). */
@@ -13,6 +14,7 @@ const steps = [
   "completion",
 ] as const;
 
+/** Numbered rows on a deep walnut ground: number, stage and a one-line description. */
 export function Process() {
   const t = useTranslations("Process");
 
@@ -20,7 +22,7 @@ export function Process() {
     <section
       aria-labelledby="process-title"
       id="process"
-      className="scroll-mt-20 bg-espresso py-24 text-ivory md:py-32"
+      className="scroll-mt-20 bg-walnut-deep py-24 text-ivory md:py-32"
     >
       <div className="container-site">
         <SectionHeading
@@ -30,22 +32,19 @@ export function Process() {
           title={t("title")}
           tone="light"
         />
-        <ol className="mt-16 grid gap-px overflow-hidden bg-ivory/10 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="mt-16 border-b border-ivory/15">
           {steps.map((step, i) => (
-            <li
+            <Reveal
+              as="li"
               key={step}
-              className="group relative bg-espresso p-6 transition-colors duration-500 hover:bg-charcoal md:p-8"
+              className="grid grid-cols-[3rem_1fr] items-baseline gap-x-6 gap-y-2 border-t border-ivory/15 py-7 transition-colors duration-500 hover:bg-ivory/[0.03] md:grid-cols-[5.5rem_1fr_1.4fr] md:gap-x-10 md:py-8"
             >
-              <span
-                aria-hidden
-                className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-walnut-soft transition-transform duration-700 ease-out-soft group-hover:scale-x-100 rtl:origin-right"
-              />
-              <span className="font-display text-4xl text-walnut-soft lining-nums tabular-nums" dir="ltr">
+              <span className="font-display text-base text-walnut-soft tabular-nums" dir="ltr">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <h3 className="mt-8 font-display text-display-md">{t(`steps.${step}.title`)}</h3>
-              <p className="mt-2 text-sm text-ivory/70">{t(`steps.${step}.body`)}</p>
-            </li>
+              <h3 className="font-display text-display-md">{t(`steps.${step}.title`)}</h3>
+              <p className="col-start-2 text-ivory/70 md:col-start-auto">{t(`steps.${step}.body`)}</p>
+            </Reveal>
           ))}
         </ol>
       </div>

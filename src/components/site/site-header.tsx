@@ -1,12 +1,12 @@
 import { Phone } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
 import { telHref, type Phone as PhoneNumber } from "@/config/company";
 import { pathFor } from "@/config/routes";
 import { photos } from "@/content/photos";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { DesktopNav } from "./desktop-nav";
+import { HeaderShell } from "./header-shell";
 import { LanguageSwitcher } from "./language-switcher";
 import { MobileNav } from "./mobile-nav";
 import { mainNavItems, productNavKeys } from "./nav-items";
@@ -25,10 +25,10 @@ export function SiteHeader({ phone }: { phone: PhoneNumber }) {
   const feature = photos.walkInCloset;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ivory/90 backdrop-blur-md backdrop-saturate-150">
-      <div className="container-site flex h-18 items-center justify-between gap-6 lg:h-20">
+    <HeaderShell>
+      <div className="container-site flex h-18 items-center justify-between gap-3 sm:gap-6 lg:h-20">
         <Link href="/" aria-label={t("Common.homeLink")} className="shrink-0 py-2">
-          <Wordmark />
+          <Wordmark tone="inherit" />
         </Link>
 
         <DesktopNav
@@ -47,16 +47,19 @@ export function SiteHeader({ phone }: { phone: PhoneNumber }) {
         <div className="flex items-center gap-1 sm:gap-2">
           <a
             href={telHref(phone)}
-            className="hidden min-h-11 items-center gap-2 px-2 text-sm text-charcoal/80 transition-colors hover:text-charcoal xl:inline-flex"
+            className="hidden min-h-11 items-center gap-2 px-2 text-sm opacity-85 transition-opacity hover:opacity-100 xl:inline-flex"
             aria-label={t("Common.callNumber", { number: phone.display })}
           >
-            <Phone aria-hidden className="size-4 text-walnut" strokeWidth={1.5} />
+            <Phone aria-hidden className="size-4" strokeWidth={1.5} />
             <span dir="ltr">{phone.display}</span>
           </a>
           <LanguageSwitcher />
-          <Button asChild className="hidden sm:inline-flex">
-            <Link href={pathFor("requestQuote")}>{t("Nav.quote")}</Link>
-          </Button>
+          <Link
+            href={pathFor("requestQuote")}
+            className="hidden min-h-11 items-center nav-cta px-5 text-xs font-medium tracking-[0.09em] uppercase sm:inline-flex rtl:tracking-normal rtl:normal-case"
+          >
+            {t("Nav.quote")}
+          </Link>
           <MobileNav
             products={products}
             links={[...links, { href: pathFor("faq"), label: t("Nav.faq") }]}
@@ -76,6 +79,6 @@ export function SiteHeader({ phone }: { phone: PhoneNumber }) {
           />
         </div>
       </div>
-    </header>
+    </HeaderShell>
   );
 }

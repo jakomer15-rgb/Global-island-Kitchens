@@ -1,21 +1,21 @@
-import { Amiri, Cormorant_Garamond, IBM_Plex_Sans_Arabic, Jost } from "next/font/google";
+import { Amiri, Fraunces, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 
-// English: Cormorant Garamond (display) and Jost (text). Arabic: Amiri (display) and
-// IBM Plex Sans Arabic (text). Nothing is preloaded, so Arabic pages don't download English
-// preloads and vice versa; `display: swap` keeps text visible while fonts load.
+// English: Fraunces (display) and Inter (text). Arabic: Amiri (display) and IBM Plex Sans Arabic
+// (text). Nothing is preloaded, so Arabic pages don't download English preloads and vice versa;
+// `display: swap` keeps text visible while fonts load.
 
-export const cormorant = Cormorant_Garamond({
+export const fraunces = Fraunces({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
-  variable: "--font-cormorant",
+  variable: "--font-fraunces",
   display: "swap",
   preload: false,
 });
 
-export const jost = Jost({
+export const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-jost",
+  variable: "--font-inter",
   display: "swap",
   preload: false,
 });
@@ -37,4 +37,4 @@ export const plexArabic = IBM_Plex_Sans_Arabic({
   preload: false,
 });
 
-export const fontVariables = [cormorant, jost, amiri, plexArabic].map((f) => f.variable).join(" ");
+export const fontVariables = [fraunces, inter, amiri, plexArabic].map((f) => f.variable).join(" ");

@@ -8,7 +8,7 @@ import type { NavLink } from "./nav-items";
 
 // The underline draws in from the start edge on hover and stays under the current page.
 const linkClass =
-  "relative inline-flex min-h-11 items-center py-2 text-sm tracking-wide whitespace-nowrap text-charcoal/80 transition-colors hover:text-charcoal aria-[current=page]:text-charcoal after:absolute after:inset-x-0 after:bottom-2 after:h-px after:origin-left after:scale-x-0 after:bg-walnut after:transition-transform after:duration-500 after:ease-out-soft hover:after:scale-x-100 aria-[current=page]:after:scale-x-100 rtl:after:origin-right";
+  "relative inline-flex min-h-11 items-center py-2 text-[0.78rem] tracking-[0.08em] whitespace-nowrap uppercase opacity-85 transition-opacity hover:opacity-100 aria-[current=page]:opacity-100 after:absolute after:inset-x-0 after:bottom-2 after:h-px after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-500 after:ease-out-soft hover:after:scale-x-100 aria-[current=page]:after:scale-x-100 rtl:text-sm rtl:tracking-normal rtl:normal-case rtl:after:origin-right";
 
 /**
  * Desktop navigation. The products menu is a disclosure (button + aria-expanded + list of links,
@@ -71,7 +71,7 @@ export function DesktopNav({
             aria-expanded={open}
             aria-controls={panelId}
             onClick={() => setOpen((v) => !v)}
-            className={cn(linkClass, "gap-1.5", inProducts && "text-charcoal")}
+            className={cn(linkClass, "gap-1.5", inProducts && "opacity-100")}
           >
             {productsLabel}
             <ChevronDown
@@ -80,7 +80,7 @@ export function DesktopNav({
             />
           </button>
           <div id={panelId} hidden={!open} className="absolute -start-6 top-full w-[48rem] pt-4">
-            <div className="grid grid-cols-[1fr_15rem] gap-8 border border-line bg-ivory p-8 shadow-[0_40px_80px_-40px_rgb(26_23_20/0.45)]">
+            <div className="grid grid-cols-[1fr_15rem] gap-8 border border-line bg-ivory p-8 text-charcoal shadow-[0_40px_80px_-40px_rgb(21_19_15/0.45)]">
               <ul className="grid grid-cols-2 content-start gap-x-8">
                 {products.map((p) => (
                   <li key={p.href}>

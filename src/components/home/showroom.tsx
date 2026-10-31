@@ -12,7 +12,11 @@ export function Showroom({ contact, locations }: { contact: ContactSettings; loc
   const [main] = contact.phones;
 
   return (
-    <section aria-labelledby="showroom-title" id="showroom" className="scroll-mt-20 bg-sand py-24 md:py-32">
+    <section
+      aria-labelledby="showroom-title"
+      id="showroom"
+      className="scroll-mt-20 bg-sand-deep py-24 md:py-32"
+    >
       <div className="container-site grid gap-14 lg:grid-cols-12">
         <SectionHeading
           index="06"
@@ -23,13 +27,13 @@ export function Showroom({ contact, locations }: { contact: ContactSettings; loc
         />
 
         <div className="grid gap-10 sm:grid-cols-2 lg:col-span-7">
-          <div className="border-t border-charcoal/20 pt-6">
+          <div className="border border-line bg-ivory p-8">
             <h3 className="eyebrow text-walnut">{t("Showroom.showroom")}</h3>
             <Address lines={ar ? locations.showroomAr : locations.showroomEn} className="mt-4 not-italic" />
             <p className="mt-6 text-sm text-ink-muted">{t("Showroom.hours")}</p>
             <p dir={ar ? "rtl" : "ltr"}>{ar ? locations.hoursAr : locations.hoursEn}</p>
           </div>
-          <div className="border-t border-charcoal/20 pt-6">
+          <div className="border border-line bg-ivory p-8">
             <h3 className="eyebrow text-walnut">{t("Showroom.headOffice")}</h3>
             <Address
               lines={ar ? locations.headOfficeAr : locations.headOfficeEn}
@@ -38,7 +42,7 @@ export function Showroom({ contact, locations }: { contact: ContactSettings; loc
           </div>
         </div>
 
-        <div className="border-t border-charcoal/20 pt-12 lg:col-span-12">
+        <div className="border-t border-espresso/20 pt-12 lg:col-span-12">
           <div className="grid items-end gap-8 lg:grid-cols-12">
             <div className="lg:col-span-7">
               <h3 className="font-display text-display-lg text-balance">{t("Consultation.title")}</h3>

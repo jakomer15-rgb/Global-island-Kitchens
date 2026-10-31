@@ -41,59 +41,64 @@ export function MobileNav({ products, links, labels, quoteHref, phone }: Props) 
           document.documentElement.style.overflow = "hidden";
           ref.current?.showModal();
         }}
-        className="inline-flex size-11 items-center justify-center text-charcoal lg:hidden"
+        className="inline-flex size-11 items-center justify-center lg:hidden"
       >
         <Menu aria-hidden className="size-5" strokeWidth={1.5} />
       </button>
       <dialog
         ref={ref}
         aria-label={labels.nav}
-        className="m-0 h-dvh max-h-none w-screen max-w-none bg-ivory p-0 text-charcoal backdrop:bg-charcoal/30 open:flex open:flex-col"
+        className="m-0 h-dvh max-h-none w-screen max-w-none bg-espresso p-0 text-ivory backdrop:bg-espresso open:flex open:flex-col"
       >
-        <div className="container-site flex h-18 shrink-0 items-center justify-end border-b border-line">
+        <div className="container-site flex h-18 shrink-0 items-center justify-end">
           <button
             type="button"
             onClick={close}
             aria-label={labels.close}
-            className="inline-flex size-11 items-center justify-center"
+            className="inline-flex min-h-11 items-center gap-2 text-xs font-medium tracking-[0.1em] uppercase rtl:tracking-normal"
           >
+            {labels.close}
             <X aria-hidden className="size-5" strokeWidth={1.5} />
           </button>
         </div>
-        <nav aria-label={labels.nav} className="container-site flex-1 overflow-y-auto py-8">
-          <p className="eyebrow text-walnut">{labels.products}</p>
-          <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">
-            {products.map((item) => (
-              <li key={item.href} className="border-b border-line">
-                <Link href={item.href} onClick={close} className="block py-3 font-display text-2xl">
+        <nav aria-label={labels.nav} className="container-site flex-1 overflow-y-auto py-6">
+          <ul>
+            {links.map((item) => (
+              <li key={item.href}>
+                <Link href={item.href} onClick={close} className="block py-3 font-display text-3xl">
                   {item.label}
                 </Link>
               </li>
             ))}
           </ul>
-          <ul className="mt-8">
-            {links.map((item) => (
-              <li key={item.href} className="border-b border-line">
-                <Link href={item.href} onClick={close} className="block py-4 font-display text-3xl">
+          <p className="mt-8 eyebrow text-walnut-soft">{labels.products}</p>
+          <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">
+            {products.map((item) => (
+              <li key={item.href} className="border-b border-ivory/15">
+                <Link
+                  href={item.href}
+                  onClick={close}
+                  className="block py-3 font-display text-xl text-ivory/90"
+                >
                   {item.label}
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
-        <div className="container-site flex shrink-0 flex-wrap items-center justify-between gap-4 border-t border-line py-5">
+        <div className="container-site flex shrink-0 flex-wrap items-center justify-between gap-4 border-t border-ivory/15 py-5">
           <a
             href={phone.href}
             aria-label={phone.label}
             className="inline-flex min-h-11 items-center gap-3 text-lg"
           >
-            <Phone aria-hidden className="size-5 text-walnut" strokeWidth={1.5} />
+            <Phone aria-hidden className="size-5 text-walnut-soft" strokeWidth={1.5} />
             <span dir="ltr">{phone.display}</span>
           </a>
           <Link
             href={quoteHref}
             onClick={close}
-            className="inline-flex min-h-11 items-center bg-charcoal px-6 text-sm font-medium text-ivory"
+            className="inline-flex min-h-11 items-center bg-ivory px-6 text-xs font-medium tracking-[0.09em] text-espresso uppercase rtl:tracking-normal rtl:normal-case"
           >
             {labels.quote}
           </Link>
