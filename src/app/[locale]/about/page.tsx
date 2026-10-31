@@ -54,7 +54,7 @@ export default async function AboutPage({ params }: PageProps<"/[locale]/about">
             {facts.map((f) => (
               <div key={f.label} className="flex flex-col-reverse border-t border-charcoal/20 pt-4">
                 <dt className="mt-1 text-sm text-ink-muted">{f.label}</dt>
-                <dd className="font-display text-display-lg tabular-nums" dir="ltr">
+                <dd className="font-display text-display-lg lining-nums tabular-nums" dir="ltr">
                   {f.value}
                 </dd>
               </div>

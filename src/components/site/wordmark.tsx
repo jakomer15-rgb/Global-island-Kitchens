@@ -5,7 +5,15 @@ import { cn } from "@/lib/cn";
  * this is replaced by the real logo when they arrive. Always Latin script: the Arabic company
  * name is not yet confirmed.
  */
-export function Wordmark({ className, tone = "dark" }: { className?: string; tone?: "dark" | "light" }) {
+export function Wordmark({
+  className,
+  tone = "dark",
+  size = "md",
+}: {
+  className?: string;
+  tone?: "dark" | "light";
+  size?: "md" | "lg";
+}) {
   return (
     <span
       lang="en"
@@ -17,10 +25,18 @@ export function Wordmark({ className, tone = "dark" }: { className?: string; ton
         className,
       )}
     >
-      <span className="font-display text-[1.375rem] tracking-[0.02em]">Global Island</span>
       <span
         className={cn(
-          "mt-1 text-[0.625rem] font-medium tracking-[0.42em] uppercase",
+          "font-display tracking-[0.02em]",
+          size === "md" ? "text-[1.375rem]" : "text-[2.25rem] md:text-[3rem]",
+        )}
+      >
+        Global Island
+      </span>
+      <span
+        className={cn(
+          "font-medium tracking-[0.42em] uppercase",
+          size === "md" ? "mt-1 text-[0.625rem]" : "mt-2 text-xs",
           tone === "dark" ? "text-walnut" : "text-walnut-soft",
         )}
       >

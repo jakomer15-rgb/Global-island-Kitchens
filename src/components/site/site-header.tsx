@@ -1,9 +1,11 @@
 import { Phone } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { telHref, type Phone as PhoneNumber } from "@/config/company";
 import { pathFor } from "@/config/routes";
+import { photos } from "@/content/photos";
 import { Link } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import { DesktopNav } from "./desktop-nav";
 import { LanguageSwitcher } from "./language-switcher";
 import { MobileNav } from "./mobile-nav";
@@ -13,16 +15,18 @@ import { Wordmark } from "./wordmark";
 /** phone is the main number from the contact settings. */
 export function SiteHeader({ phone }: { phone: PhoneNumber }) {
   const t = useTranslations();
+  const locale = useLocale() as Locale;
   const products = [
     ...productNavKeys.map((key) => ({ href: pathFor(key), label: t(`Products.items.${key}.name`) })),
     { href: pathFor("bespoke"), label: t("Nav.bespoke") },
     { href: pathFor("materials"), label: t("Nav.allMaterials") },
   ];
   const links = mainNavItems.map(([page, key]) => ({ href: pathFor(page), label: t(`Nav.${key}`) }));
+  const feature = photos.walkInCloset;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ivory/95 backdrop-blur-sm">
-      <div className="container-site flex h-18 items-center justify-between gap-6">
+    <header className="sticky top-0 z-40 border-b border-line bg-ivory/90 backdrop-blur-md backdrop-saturate-150">
+      <div className="container-site flex h-18 items-center justify-between gap-6 lg:h-20">
         <Link href="/" aria-label={t("Common.homeLink")} className="shrink-0 py-2">
           <Wordmark />
         </Link>
@@ -32,6 +36,12 @@ export function SiteHeader({ phone }: { phone: PhoneNumber }) {
           productsLabel={t("Nav.products")}
           products={products}
           links={links}
+          feature={{
+            src: feature.src,
+            alt: feature.alt[locale],
+            width: feature.width,
+            height: feature.height,
+          }}
         />
 
         <div className="flex items-center gap-1 sm:gap-2">

@@ -20,7 +20,7 @@ export function Process() {
     <section
       aria-labelledby="process-title"
       id="process"
-      className="scroll-mt-20 bg-charcoal py-24 text-ivory md:py-32"
+      className="scroll-mt-20 bg-espresso py-24 text-ivory md:py-32"
     >
       <div className="container-site">
         <SectionHeading
@@ -30,13 +30,20 @@ export function Process() {
           title={t("title")}
           tone="light"
         />
-        <ol className="mt-16 grid gap-px overflow-hidden bg-ivory/12 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="mt-16 grid gap-px overflow-hidden bg-ivory/10 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, i) => (
-            <li key={step} className="bg-charcoal p-6 md:p-8">
-              <span className="eyebrow text-walnut-soft tabular-nums" dir="ltr">
+            <li
+              key={step}
+              className="group relative bg-espresso p-6 transition-colors duration-500 hover:bg-charcoal md:p-8"
+            >
+              <span
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-walnut-soft transition-transform duration-700 ease-out-soft group-hover:scale-x-100 rtl:origin-right"
+              />
+              <span className="font-display text-4xl text-walnut-soft lining-nums tabular-nums" dir="ltr">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <h3 className="mt-6 font-display text-display-md">{t(`steps.${step}.title`)}</h3>
+              <h3 className="mt-8 font-display text-display-md">{t(`steps.${step}.title`)}</h3>
               <p className="mt-2 text-sm text-ivory/70">{t(`steps.${step}.body`)}</p>
             </li>
           ))}

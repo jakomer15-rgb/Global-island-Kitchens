@@ -34,7 +34,9 @@ export async function PageHero({
   const trail = [{ label: t("home"), path: "/" }, ...crumbs];
 
   return (
-    <header className="border-b border-line">
+    <header className="relative overflow-hidden border-b border-line">
+      {/* Sand panel behind the photo, running to the page edge on wide screens. */}
+      {image && <div aria-hidden className="absolute inset-y-0 end-0 hidden w-[30%] bg-sand lg:block" />}
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -47,9 +49,9 @@ export async function PageHero({
           })),
         }}
       />
-      <div className="container-site py-14 md:py-20">
-        <div className={image ? "grid items-end gap-12 lg:grid-cols-12" : undefined}>
-          <div className={image ? "lg:col-span-7" : undefined}>
+      <div className="relative container-site py-14 md:py-20">
+        <div className={image ? "grid items-center gap-12 lg:grid-cols-12" : undefined}>
+          <div className={image ? "lg:col-span-6" : undefined}>
             <nav aria-label={t("breadcrumb")}>
               <ol className="flex flex-wrap items-center gap-1.5 text-sm text-ink-muted">
                 {trail.map((c, i) => {
@@ -76,12 +78,19 @@ export async function PageHero({
                 })}
               </ol>
             </nav>
-            <p className="mt-10 eyebrow text-walnut">{eyebrow}</p>
+            <p className="mt-12 flex items-center gap-4 eyebrow text-walnut">
+              <span aria-hidden className="h-px w-10 bg-current opacity-60" />
+              {eyebrow}
+            </p>
             <h1 className="mt-6 max-w-4xl font-display text-display-xl text-balance">{title}</h1>
             {intro && <p className="mt-6 max-w-copy text-lg text-ink-muted">{intro}</p>}
           </div>
           {image && (
-            <div className="lg:col-span-5">
+            <div className="relative lg:col-span-6">
+              <div
+                aria-hidden
+                className="absolute inset-0 translate-x-4 translate-y-4 border border-oak/70 rtl:-translate-x-4"
+              />
               {/* eslint-disable-next-line @next/next/no-img-element -- static file, already optimised */}
               <img
                 src={image.src}
@@ -89,7 +98,7 @@ export async function PageHero({
                 width={image.width}
                 height={image.height}
                 decoding="async"
-                className="aspect-[4/3] w-full bg-sand-deep object-cover"
+                className="relative aspect-[4/3] w-full bg-sand-deep object-cover shadow-[0_40px_80px_-40px_rgb(26_23_20/0.5)]"
               />
             </div>
           )}

@@ -1,5 +1,21 @@
 # Test report
 
+## Visual redesign (2026-10-31)
+
+Restyled the home page sections, header, products menu, footer, project cards and page heroes (see
+`docs/DESIGN_SYSTEM.md`). No data, routes or server logic changed.
+
+| Check                                                                   | Result                                                                                    |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Lint, typecheck, build                                                  | Clean                                                                                     |
+| Unit tests                                                              | 87 / 87                                                                                   |
+| E2E (first full suite)                                                  | 234 passed, 58 skipped, 2 failed                                                          |
+| The 2 failures                                                          | One bug: the "Why" factory photo was hidden and lazy-loaded on phones, so it never loaded |
+| After the fix: photos, home, all-pages and axe specs (desktop + mobile) | 204 passed, 0 failed                                                                      |
+
+The full suite was not re-run after the fix; the admin, form, designer and quotation specs passed in the
+first run and the fix does not touch them. Lighthouse was not re-run.
+
 ## Photographs added (2026-10-26)
 
 The owner confirmed the profile photographs are the company's own and may be published. 35 images

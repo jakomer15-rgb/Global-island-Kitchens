@@ -65,7 +65,7 @@ export function MobileNav({ products, links, labels, quoteHref, phone }: Props) 
           <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">
             {products.map((item) => (
               <li key={item.href} className="border-b border-line">
-                <Link href={item.href} onClick={close} className="block py-3 text-lg">
+                <Link href={item.href} onClick={close} className="block py-3 font-display text-2xl">
                   {item.label}
                 </Link>
               </li>
