@@ -126,10 +126,12 @@ test.describe("designer portal", () => {
     // Messages: designer writes, staff reply and leave an internal note
     await designer.getByLabel("Write a message").fill("Can you also quote the island?");
     await designer.getByRole("button", { name: "Send message" }).click();
+    // Wait for the saved state before staff reload; CI's shared runner can be slow to commit it
+    await expect(designer.getByText("Message sent.")).toBeVisible({ timeout: 20_000 });
     await expect(designer.getByText("Can you also quote the island?")).toBeVisible();
 
     await staff.reload();
-    await expect(staff.getByText("Can you also quote the island?")).toBeVisible();
+    await expect(staff.getByText("Can you also quote the island?")).toBeVisible({ timeout: 20_000 });
     await staff.getByLabel("Reply to the designer").fill("Yes, send the island drawing.");
     await staff.getByRole("button", { name: "Send", exact: true }).click();
     await expect(staff.getByText("Message sent.")).toBeVisible();
