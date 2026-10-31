@@ -31,7 +31,9 @@ export function Wordmark({
       <span
         className={cn(
           "font-display tracking-[0.04em] uppercase",
-          size === "md" ? "text-[0.875rem] sm:text-[1.25rem]" : "text-[1.5rem] sm:text-[2rem] md:text-[2.5rem]",
+          size === "md"
+            ? "text-[0.875rem] sm:text-[1.25rem]"
+            : "text-[1.5rem] sm:text-[2rem] md:text-[2.5rem]",
         )}
       >
         Global Island Kitchens
