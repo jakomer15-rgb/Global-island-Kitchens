@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { CtaBand } from "@/components/site/cta-band";
 import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
+import { Reveal } from "@/components/site/reveal";
 import { pathFor } from "@/config/routes";
 import { projectsPage as c } from "@/content/pages";
 import { segmentLabels, type Segment } from "@/content/projects";
@@ -42,22 +43,22 @@ export default async function ProjectsPage({ params }: PageProps<"/[locale]/proj
           <section
             key={segment}
             aria-labelledby={`seg-${segment}`}
-            className={i % 2 ? "bg-sand py-16 md:py-24" : "py-16 md:py-24"}
+            className={i % 2 ? "bg-sand py-20 md:py-28" : "py-20 md:py-28"}
           >
             <div className="container-site">
-              <div className="flex items-baseline justify-between gap-6 border-b border-charcoal pb-4">
+              <div className="flex items-baseline justify-between gap-6 border-b border-charcoal/30 pb-5">
                 <h2 id={`seg-${segment}`} className="font-display text-display-lg">
                   {segmentLabels[segment][locale]}
                 </h2>
-                <span className="text-sm text-ink-muted tabular-nums" dir="ltr">
-                  {items.length}
+                <span className="font-display text-3xl text-walnut lining-nums tabular-nums" dir="ltr">
+                  {String(items.length).padStart(2, "0")}
                 </span>
               </div>
-              <ul className="mt-6 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
                 {items.map((project) => (
-                  <li key={project.slug}>
+                  <Reveal as="li" key={project.slug}>
                     <ProjectCard project={project} locale={locale} />
-                  </li>
+                  </Reveal>
                 ))}
               </ul>
             </div>

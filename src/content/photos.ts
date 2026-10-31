@@ -1,3 +1,4 @@
+import type { ProductKey } from "./products";
 import type { L } from "./types";
 
 /**
@@ -257,6 +258,16 @@ export const photos = {
   ),
   miterStation: photo("machine-miter", 760, 450, "Miter station", "محطة قص بزاوية"),
 } satisfies Record<string, Photo>;
+
+/** Product pages and cards that have a photo from the company profile; the others show a finish illustration. */
+export const productPhotos: Partial<Record<ProductKey, Photo>> = {
+  woodenKitchens: photos.heroKitchen,
+  walkInClosets: photos.walkInCloset,
+  tvUnits: photos.tvUnit,
+  bathroomVanities: photos.vanity,
+  wallCladding: photos.wallCladding,
+  bedroomFurniture: photos.bedSet,
+};
 
 /** Photos per project, by project slug. */
 export const projectPhotos: Record<string, Photo[]> = {

@@ -8,7 +8,7 @@ import { projectsWithScope, type Project } from "@/content/projects";
 import { Swatch, type SwatchName } from "@/components/site/swatch";
 import { pathFor } from "@/config/routes";
 import { materialsPage } from "@/content/pages";
-import { photos, type Photo } from "@/content/photos";
+import { productPhotos } from "@/content/photos";
 import { getProduct, type ProductKey } from "@/content/products";
 
 import { Link } from "@/i18n/navigation";
@@ -29,16 +29,6 @@ const stageKeys = [
 const familySwatches: Record<"egger" | "mdf", SwatchName[]> = {
   egger: ["oak", "walnut", "stone", "solid"],
   mdf: ["paintedLight", "paintedDark"],
-};
-
-/** Product pages that have a photo from the company profile. */
-const productPhotos: Partial<Record<ProductKey, Photo>> = {
-  woodenKitchens: photos.heroKitchen,
-  walkInClosets: photos.walkInCloset,
-  tvUnits: photos.tvUnit,
-  bathroomVanities: photos.vanity,
-  wallCladding: photos.wallCladding,
-  bedroomFurniture: photos.bedSet,
 };
 
 export function productMetadata(key: ProductKey, locale: Locale): Metadata {
@@ -110,7 +100,11 @@ export async function ProductPage({
                   {family !== "aluminium" && (
                     <ul className="grid grid-cols-4 gap-2">
                       {familySwatches[family].map((s) => (
-                        <li key={s} className="aspect-square overflow-hidden" title={tm(`swatches.${s}`)}>
+                        <li
+                          key={s}
+                          className="aspect-square overflow-hidden shadow-[inset_0_0_0_1px_rgb(0_0_0/0.06)] transition-transform duration-500 ease-out-soft hover:-translate-y-1"
+                          title={tm(`swatches.${s}`)}
+                        >
                           <Swatch name={s} />
                         </li>
                       ))}
@@ -139,10 +133,10 @@ export async function ProductPage({
           <h2 id="process-title" className="font-display text-display-lg">
             {t("process")}
           </h2>
-          <ol className="mt-12 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
             {stageKeys.map((step, i) => (
               <li key={step} className="border-t border-charcoal/20 pt-5">
-                <span className="eyebrow text-walnut tabular-nums" dir="ltr">
+                <span className="font-display text-3xl text-walnut lining-nums tabular-nums" dir="ltr">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <h3 className="mt-3 font-display text-2xl">{tp(`steps.${step}.title`)}</h3>
@@ -170,7 +164,7 @@ export async function ProductPage({
                 {t("allProjects")} <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
               </Link>
             </div>
-            <ul className="mt-10 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((project) => (
                 <li key={project.slug}>
                   <ProjectCard project={project} locale={locale} />

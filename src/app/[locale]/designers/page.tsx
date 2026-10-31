@@ -65,7 +65,7 @@ export default async function DesignersPage({ params }: PageProps<"/[locale]/des
               </li>
             ))}
           </ul>
-          <ul className="lg:col-span-4 lg:col-start-9">
+          <ul className="grid gap-12 sm:grid-cols-2 lg:col-span-4 lg:col-start-9 lg:grid-cols-1">
             {projects.map((project) => (
               <li key={project.slug}>
                 <ProjectCard project={project} locale={locale} />

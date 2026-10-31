@@ -76,9 +76,9 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
       {gallery.length > 0 && (
         <section aria-label={project.name[locale]} className="pt-12 md:pt-16">
           {/* The profile's photos are small (about 500-1100 px wide), so they are shown at card size, never full width. */}
-          <ul className="container-site grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="container-site grid gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
             {gallery.map((img, i) => (
-              <li key={img.src}>
+              <li key={img.src} className="overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element -- static files and /media, already optimised */}
                 <img
                   src={img.src}
@@ -87,7 +87,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
                   height={img.height}
                   loading={i === 0 ? "eager" : "lazy"}
                   decoding="async"
-                  className="aspect-[3/2] w-full bg-sand object-cover"
+                  className="aspect-[3/2] w-full bg-sand object-cover transition-[scale] duration-[1.2s] ease-out-soft hover:scale-105"
                 />
               </li>
             ))}
@@ -123,7 +123,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
             <h2 id="more-title" className="font-display text-display-lg">
               {t("moreProjects")}
             </h2>
-            <ul className="mt-8 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
               {more.map((p) => (
                 <li key={p.slug}>
                   <ProjectCard project={p} locale={locale} />

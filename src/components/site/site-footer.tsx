@@ -1,4 +1,6 @@
+import { ArrowRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import { instagramUrl, telHref } from "@/config/company";
 import type { ContactSettings, LocationSettings } from "@/lib/site-settings";
 import { pathFor, type PageKey } from "@/config/routes";
@@ -32,14 +34,37 @@ export function SiteFooter({
   const ar = useLocale() === "ar";
   const year = new Date().getFullYear();
   const heading = "eyebrow text-walnut-soft";
-  const link = "transition-colors hover:text-ivory";
+  const link = "link-draw pb-0.5 transition-colors hover:text-ivory";
 
   return (
-    <footer className="bg-charcoal text-ivory/80">
+    <footer className="bg-espresso text-ivory/80">
+      <div className="container-site flex flex-col gap-10 border-b border-ivory/10 py-16 md:py-20 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <Wordmark tone="light" size="lg" />
+          <p className="mt-6 max-w-md text-sm leading-relaxed">{t("Footer.tagline")}</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild variant="light" size="lg">
+            <Link href={pathFor("requestQuote")}>
+              {t("Nav.quote")} <ArrowRight aria-hidden className="rtl:rotate-180" />
+            </Link>
+          </Button>
+          <Button asChild variant="outlineLight" size="lg">
+            <Link href={pathFor("bookConsultation")}>{t("Nav.consultation")}</Link>
+          </Button>
+        </div>
+      </div>
+
       <div className="container-site grid gap-12 py-16 sm:grid-cols-2 md:py-20 lg:grid-cols-12">
         <div className="lg:col-span-3">
-          <Wordmark tone="light" />
-          <p className="mt-6 max-w-xs text-sm leading-relaxed">{t("Footer.tagline")}</p>
+          <h2 className={heading}>{t("Showroom.showroom")}</h2>
+          <div className="mt-5 text-sm">
+            <Address lines={ar ? locations.showroomAr : locations.showroomEn} />
+          </div>
+          <h2 className={`${heading} mt-8`}>{t("Showroom.headOffice")}</h2>
+          <div className="mt-5 text-sm">
+            <Address lines={ar ? locations.headOfficeAr : locations.headOfficeEn} />
+          </div>
         </div>
 
         <nav aria-labelledby="footer-products" className="lg:col-span-3">
@@ -77,12 +102,12 @@ export function SiteFooter({
           </ul>
         </nav>
 
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-3 lg:col-start-10">
           <h2 className={heading}>{t("Footer.contact")}</h2>
-          <ul className="mt-5 space-y-2 text-sm">
+          <ul className="mt-5 space-y-3 text-sm">
             {contact.phones.map((phone) => (
               <li key={phone.e164}>
-                <a href={telHref(phone)} className={link} dir="ltr">
+                <a href={telHref(phone)} className={`${link} font-display text-xl text-ivory`} dir="ltr">
                   {phone.display}
                 </a>
               </li>
@@ -103,16 +128,6 @@ export function SiteFooter({
               </a>
             </li>
           </ul>
-          <div className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
-            <div>
-              <p className="text-ivory">{t("Showroom.showroom")}</p>
-              <Address lines={ar ? locations.showroomAr : locations.showroomEn} />
-            </div>
-            <div>
-              <p className="text-ivory">{t("Showroom.headOffice")}</p>
-              <Address lines={ar ? locations.headOfficeAr : locations.headOfficeEn} />
-            </div>
-          </div>
         </div>
       </div>
 

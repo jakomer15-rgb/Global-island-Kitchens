@@ -11,6 +11,7 @@ export const buttonVariants = cva(
       variant: {
         primary: "bg-charcoal text-ivory hover:bg-walnut-deep",
         accent: "bg-walnut text-ivory hover:bg-walnut-deep",
+        light: "bg-ivory text-charcoal hover:bg-sand",
         outline:
           "border border-charcoal/30 text-charcoal hover:border-charcoal hover:bg-charcoal hover:text-ivory",
         outlineLight:

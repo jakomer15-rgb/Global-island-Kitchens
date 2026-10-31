@@ -19,16 +19,17 @@ export async function CtaBand({
 }) {
   const t = await getTranslations({ locale, namespace: "Page" });
   return (
-    <section aria-labelledby="cta-title" className="bg-charcoal py-20 text-ivory md:py-24">
+    <section aria-labelledby="cta-title" className="bg-walnut-deep py-20 text-ivory md:py-28">
       <div className="container-site grid items-end gap-10 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <h2 id="cta-title" className="font-display text-display-lg text-balance">
+          <span aria-hidden className="mb-8 block h-px w-16 bg-walnut-soft" />
+          <h2 id="cta-title" className="font-display text-display-xl text-balance">
             {title ?? t("ctaTitle")}
           </h2>
           <p className="mt-5 max-w-copy text-ivory/75">{body ?? t("ctaBody")}</p>
         </div>
         <div className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">
-          <Button asChild size="lg" variant="accent">
+          <Button asChild size="lg" variant="light">
             <Link href={{ pathname: pathFor("requestQuote"), query: category ? { category } : undefined }}>
               {t("requestQuote")} <ArrowRight aria-hidden className="rtl:rotate-180" />
             </Link>
