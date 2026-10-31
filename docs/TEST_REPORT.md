@@ -1,5 +1,23 @@
 # Test report
 
+## Reference redesign (2026-11-01)
+
+Restyled to the owner's single-page reference: new palette and fonts (Fraunces, Inter), square uppercase
+buttons, a header that is transparent over a full-bleed hero, a dark product grid, numbered process rows,
+a one-line wordmark with tagline and a black full-screen mobile menu (see `docs/DESIGN_SYSTEM.md`). No
+data, routes or server logic changed.
+
+| Check                          | Result                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| Lint, typecheck, build         | Clean                                                                            |
+| Unit tests                     | 87 / 87                                                                          |
+| E2E before the wordmark change | 236 passed, 58 skipped, 0 failed                                                 |
+| E2E after the final changes    | 235 passed, 58 skipped, 1 failed (home page axe scan timed out at 30 s)          |
+| That test re-run               | The 44 desktop axe specs, including `/`, pass (3.1 min); a timeout on a cold run |
+
+Not done: Lighthouse was not re-run. The hero photograph is about 1,080 px wide, so it looks soft on very
+wide screens. Project filter buttons and the designers tick-list from the reference are not built.
+
 ## Visual redesign (2026-10-31)
 
 Restyled the home page sections, header, products menu, footer, project cards and page heroes (see

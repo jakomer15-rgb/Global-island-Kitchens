@@ -1,39 +1,40 @@
-# Design system
+﻿# Design system
 
 Source of truth for tokens: `src/app/globals.css` (`@theme`). Components: `src/components/ui` (shadcn/ui,
 restyled) and `src/components/site`.
 
 ## Direction
 
-Luxury European interiors: warm ivory and beige grounds, walnut accents, charcoal type, generous space,
-thin rules instead of boxes, editorial (asymmetric 12-column) layouts. No stock imagery: until the
+Luxury European interiors, following the owner's single-page reference (2026-11-01): warm ivory grounds,
+full-bleed photography under dark overlays, brass hairlines, walnut and espresso bands, square uppercase
+buttons, a header that is transparent over the hero, generous space and thin rules instead of boxes. No stock imagery: until the
 company's photographs are approved, material swatches are CSS illustrations, labelled as such.
 
 ## Colour
 
 | Token         | Value           | Use                                                                     |
 | ------------- | --------------- | ----------------------------------------------------------------------- |
-| `ivory`       | `#faf7f2`       | Page background                                                         |
-| `sand`        | `#f1e9dd`       | Alternate section background                                            |
-| `sand-deep`   | `#e6d9c6`       | Frames, hero illustration ground                                        |
-| `walnut`      | `#6b4429`       | Accent text, icons, eyebrows on light grounds (8:1 on ivory)            |
-| `walnut-deep` | `#4a2e1b`       | Dark accent band (designers section)                                    |
+| `ivory`       | `#f6f2ea`       | Page background                                                         |
+| `sand`        | `#efe9dd`       | Alternate section background                                            |
+| `sand-deep`   | `#ded0b6`       | Showroom ground, hero accent word                                       |
+| `walnut`      | `#6b4a32`       | Accent text, icons, eyebrows on light grounds (8:1 on ivory)            |
+| `walnut-deep` | `#3e2c1e`       | Dark accent band (process section)                                      |
 | `walnut-soft` | `#c9a27e`       | Accent text on dark grounds (≥ 6.5:1 on charcoal, ≥ 5:1 on walnut-deep) |
-| `charcoal`    | `#23201d`       | Text, primary buttons                                                   |
-| `espresso`    | `#1a1714`       | Deepest ground: process section, footer                                 |
-| `oak`         | `#b08a62`       | Decorative only (photo frames, hover rules); never small text           |
+| `charcoal`    | `#26221d`       | Text, products section ground                                           |
+| `espresso`    | `#15130f`       | Deepest ground: hero, designers, CTA, footer, buttons                   |
+| `oak`         | `#a98a5c`       | Brass: decorative only (hairlines, frames); never small text            |
 | `stone`       | `#d9cfc1`       | Spare neutral for frames and fills                                      |
-| `ink-muted`   | `#5c544c`       | Secondary text (≥ 6.9:1 on ivory)                                       |
-| `line`        | charcoal at 14% | Rules and borders                                                       |
+| `ink-muted`   | `#4f4a42`       | Secondary text (≥ 7:1 on ivory)                                         |
+| `line`        | espresso at 12% | Rules and borders                                                       |
 
 All text combinations pass WCAG 2.1 AA; axe runs on every E2E build.
 
 ## Typography
 
-| Role                     | English                               | Arabic                   |
-| ------------------------ | ------------------------------------- | ------------------------ |
-| Display (`font-display`) | Cormorant Garamond 400, italic accent | Amiri 400                |
-| Text (`font-sans`)       | Jost (variable)                       | IBM Plex Sans Arabic 400 |
+| Role                     | English                     | Arabic                   |
+| ------------------------ | --------------------------- | ------------------------ |
+| Display (`font-display`) | Fraunces 400, italic accent | Amiri 400                |
+| Text (`font-sans`)       | Inter (variable)            | IBM Plex Sans Arabic 400 |
 
 - Arabic pages swap the `--font-display` / `--font-sans` tokens on `html[lang^="ar"]`, so components
   use the same classes in both languages. Arabic display text gets `line-height: 1.45` and no
@@ -43,8 +44,9 @@ All text combinations pass WCAG 2.1 AA; axe runs on every E2E build.
   files, so weights are kept to the minimum (see `src/app/fonts.ts`).
 - Fluid sizes: `text-display-2xl` (hero), `-xl`, `-lg` (section titles), `-md` (item titles); `eyebrow`
   utility for small uppercase labels (not uppercase-spaced in Arabic).
-- `font-display` uses lining figures (Cormorant's default old-style figures make "11" read as "II");
-  add `lining-nums` next to `tabular-nums` on display numbers, since `tabular-nums` resets it.
+- `font-display` uses lining figures; add `lining-nums` next to `tabular-nums` on display numbers, since
+  `tabular-nums` resets it.
+- Buttons and the main navigation are small tracked capitals; Arabic is never uppercased or letter-spaced.
 
 ## Layout
 
@@ -58,25 +60,25 @@ All text combinations pass WCAG 2.1 AA; axe runs on every E2E build.
 
 ## Components
 
-| Component          | Notes                                                                                                                        |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `Button` (shadcn)  | Variants `primary`, `accent`, `light`, `outline`, `outlineLight`, `link`; sizes `md`, `lg`, `icon`; min 44 px tall           |
-| `SiteHeader`       | Sticky translucent ivory bar: products menu, main links, phone (xl+), language switch, "Request a quote", mobile menu        |
-| `DesktopNav`       | Products menu as a WAI disclosure with a photo panel (mounted only while open); drawn underline on hover and the active link |
-| `SiteFooter`       | Espresso: large wordmark and quote/consultation buttons, then addresses, product and company links, contact                  |
-| Home `Hero`        | Text beside the kitchen photo with an offset oak frame, an inset walk-in-closet photo and a sand panel to the page edge      |
-| Home `Products`    | Category cards: company photo (decorative, `alt=""`) or a finish illustration where no photo exists; zoom on hover           |
-| `MobileNav`        | Native `<dialog>` with `showModal()`: focus trap, inert background, Escape to close; no library                              |
-| `PageHero`         | Breadcrumbs (with BreadcrumbList JSON-LD), eyebrow, `h1`, intro — every inner page                                           |
-| `ContactDetails`   | Valid `dl` of phones, email, Instagram, showroom, hours, head office                                                         |
-| `ContactActions`   | Email (optionally pre-filled) and call buttons                                                                               |
-| `CtaBand`          | Closing call to action: quotation and consultation pages                                                                     |
-| `ProjectCard`      | Photo-first card (sand panel with the name when a project has no photo); `variant` `lead` / `fill` for the homepage gallery  |
-| `LanguageSwitcher` | Full page load to the same page in the other language (canonical URLs, correct `lang`/`dir`)                                 |
-| `WhatsAppButton`   | Hidden until `NEXT_PUBLIC_WHATSAPP_NUMBER` is set                                                                            |
-| `Swatch`           | CSS-gradient finish illustrations (no images or SVG filters, cheap to paint)                                                 |
-| `Reveal`           | CSS scroll-driven fade-up; content is visible without it (no JS, reduced motion, unsupported browsers)                       |
-| `Wordmark`         | Typographic placeholder until the logo is supplied                                                                           |
+| Component          | Notes                                                                                                                                                                                                       |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button` (shadcn)  | Square, small tracked capitals. Variants `primary`, `accent`, `light`, `outline`, `outlineLight`, `link`; sizes `md`, `lg`, `icon`; min 44 px tall                                                          |
+| `SiteHeader`       | `HeaderShell`: transparent with light text over the home hero, solid ivory once scrolled (and on every other page); products menu, main links, phone (xl+), language switch, "Request a quote", mobile menu |
+| `DesktopNav`       | Products menu as a WAI disclosure with a photo panel (mounted only while open); drawn underline on hover and the active link                                                                                |
+| `SiteFooter`       | Espresso: large wordmark and quote/consultation buttons, then addresses, product and company links, contact                                                                                                 |
+| Home `Hero`        | Full-height kitchen photo under a dark gradient; headline left, intro and buttons right, key facts along the foot                                                                                           |
+| Home `Products`    | Dark four-column tile grid (4:5): photo or finish illustration, name and text over a gradient at the foot; zoom on hover                                                                                    |
+| `MobileNav`        | Native `<dialog>` with `showModal()`: focus trap, inert background, Escape to close; no library                                                                                                             |
+| `PageHero`         | Breadcrumbs (with BreadcrumbList JSON-LD), eyebrow, `h1`, intro — every inner page                                                                                                                          |
+| `ContactDetails`   | Valid `dl` of phones, email, Instagram, showroom, hours, head office                                                                                                                                        |
+| `ContactActions`   | Email (optionally pre-filled) and call buttons                                                                                                                                                              |
+| `CtaBand`          | Centred closing call to action on espresso with faint vertical rules                                                                                                                                        |
+| `ProjectCard`      | Photo-first card (sand panel with the name when a project has no photo); `variant` `lead` / `fill` for the homepage gallery                                                                                 |
+| `LanguageSwitcher` | Full page load to the same page in the other language (canonical URLs, correct `lang`/`dir`)                                                                                                                |
+| `WhatsAppButton`   | Hidden until `NEXT_PUBLIC_WHATSAPP_NUMBER` is set                                                                                                                                                           |
+| `Swatch`           | CSS-gradient finish illustrations (no images or SVG filters, cheap to paint)                                                                                                                                |
+| `Reveal`           | CSS scroll-driven fade-up; content is visible without it (no JS, reduced motion, unsupported browsers)                                                                                                      |
+| `Wordmark`         | Typographic placeholder until the logo is supplied                                                                                                                                                          |
 
 ## Motion
 

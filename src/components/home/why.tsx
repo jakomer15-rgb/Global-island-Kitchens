@@ -29,20 +29,20 @@ export function Why() {
             />
           </Reveal>
         </div>
-        <dl className="grid content-start gap-x-10 sm:grid-cols-2 lg:col-span-6 lg:col-start-7">
+        <dl className="grid content-start gap-px border border-line bg-line sm:grid-cols-2 lg:col-span-6 lg:col-start-7">
           {keys.map((key, i) => (
-            <Reveal key={key} className="border-t border-charcoal/20 py-8">
+            <Reveal key={key} className="bg-ivory p-8 transition-colors duration-300 hover:bg-sand md:p-10">
               <dt className="font-display text-display-md">
                 <span
                   aria-hidden
-                  className="mb-4 block text-5xl text-walnut lining-nums tabular-nums"
+                  className="mb-6 block text-sm tracking-[0.14em] text-walnut tabular-nums"
                   dir="ltr"
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 {t(`items.${key}.title`)}
               </dt>
-              <dd className="mt-3 text-ink-muted">{t(`items.${key}.body`)}</dd>
+              <dd className="mt-3 text-sm text-ink-muted">{t(`items.${key}.body`)}</dd>
             </Reveal>
           ))}
         </dl>

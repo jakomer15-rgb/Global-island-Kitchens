@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
       hrefLang={target}
       lang={target}
       aria-label={t("languageLabel")}
-      className="inline-flex min-h-11 items-center px-3 text-sm text-charcoal/80 transition-colors hover:text-charcoal"
+      className="inline-flex min-h-11 items-center px-3 text-sm opacity-85 transition-opacity hover:opacity-100"
     >
       {t("language")}
     </a>
