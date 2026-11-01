@@ -35,3 +35,6 @@ next-env.d.ts
 *.pem
 npm-debug.log*
 .vercel
+
+.vercel
+.env*
