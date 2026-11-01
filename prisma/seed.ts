@@ -3,7 +3,8 @@
 // - role permissions are set when a role is created; afterwards only newly introduced permissions
 //   are granted (per the defaults), so changes the owner makes in the admin are kept. The owner
 //   role always has every permission.
-// - settings, portfolio projects and product categories are created if missing, never overwritten.
+// - settings and product categories are created if missing, never overwritten; the portfolio projects
+//   only when the portfolio is empty (a new database), so projects staff delete stay deleted.
 // Never seeds testimonials, prices, photos or customer data.
 import { createPrismaClient } from "../src/server/db/client";
 import { permissions, roleDefinitions } from "../src/server/auth/permissions";
@@ -63,8 +64,11 @@ async function main() {
     await db.siteSetting.upsert({ where: { key }, update: {}, create: { key, value: value as object } });
   }
 
+  // The portfolio is loaded only into an empty table: projects staff delete must not come back (the seed
+  // runs on every production deployment).
   let created = 0;
-  for (const [i, p] of projects.entries()) {
+  const hasPortfolio = (await db.portfolioProject.count()) > 0;
+  for (const [i, p] of hasPortfolio ? [] : projects.entries()) {
     const exists = await db.portfolioProject.findUnique({ where: { slug: p.slug }, select: { id: true } });
     if (exists) continue;
     await db.portfolioProject.create({
