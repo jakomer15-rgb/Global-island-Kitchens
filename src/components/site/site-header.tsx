@@ -9,15 +9,15 @@ import { DesktopNav } from "./desktop-nav";
 import { HeaderShell } from "./header-shell";
 import { LanguageSwitcher } from "./language-switcher";
 import { MobileNav } from "./mobile-nav";
-import { mainNavItems, productNavKeys } from "./nav-items";
+import { mainNavItems, type NavLink } from "./nav-items";
 import { Wordmark } from "./wordmark";
 
-/** phone is the main number from the contact settings. */
-export function SiteHeader({ phone }: { phone: PhoneNumber }) {
+/** phone is the main number from the contact settings; productLinks are the product categories. */
+export function SiteHeader({ phone, productLinks }: { phone: PhoneNumber; productLinks: NavLink[] }) {
   const t = useTranslations();
   const locale = useLocale() as Locale;
   const products = [
-    ...productNavKeys.map((key) => ({ href: pathFor(key), label: t(`Products.items.${key}.name`) })),
+    ...productLinks,
     { href: pathFor("bespoke"), label: t("Nav.bespoke") },
     { href: pathFor("materials"), label: t("Nav.allMaterials") },
   ];

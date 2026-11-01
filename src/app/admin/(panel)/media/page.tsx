@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import { ActionForm } from "@/components/admin/action-form";
 import { MediaUploader } from "@/components/admin/media-uploader";
 import { Empty, fmtDate, PageHeader, Panel } from "@/components/admin/ui";
-import { canManageMedia, listMedia, mediaKinds, mediaUrl, type MediaKind } from "@/server/admin/media";
+import {
+  canManageMedia,
+  listMedia,
+  mediaKinds,
+  mediaUrl,
+  timesUsed,
+  type MediaKind,
+} from "@/server/admin/media";
 import { requireActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
 import { db } from "@/server/db";
@@ -15,6 +22,7 @@ const kindLabels: Record<MediaKind, string> = {
   material_image: "Material décor",
   project_photo: "Project photo",
   blog_image: "Blog image",
+  catalog_image: "Category, product or machine",
 };
 
 export default async function MediaPage() {
@@ -39,7 +47,7 @@ export default async function MediaPage() {
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((m) => {
-            const uses = m._count.materials + m._count.portfolioImages + m._count.blogCovers;
+            const uses = timesUsed(m._count);
             return (
               <li key={m.id} className="border border-line bg-white">
                 {/* eslint-disable-next-line @next/next/no-img-element -- served through /media redirects */}

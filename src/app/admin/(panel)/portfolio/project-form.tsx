@@ -18,7 +18,14 @@ const tagLabels: Record<(typeof scopeTags)[number], string> = {
   commercial: "Commercial fit-out",
 };
 
-export function ProjectForm({ project }: { project?: PortfolioProject }) {
+export function ProjectForm({
+  project,
+  categories,
+}: {
+  project?: PortfolioProject;
+  /** Categories in the "projects" section (Manage categories). */
+  categories: { id: string; nameEn: string }[];
+}) {
   const ar = { dir: "rtl", lang: "ar" } as const;
   return (
     <ActionForm
@@ -40,6 +47,16 @@ export function ProjectForm({ project }: { project?: PortfolioProject }) {
           name="segment"
           defaultValue={project?.segment ?? "residential"}
           options={segments.map((s) => ({ value: s, label: label(s) }))}
+        />
+        <AdminSelect
+          label="Category"
+          name="categoryId"
+          defaultValue={project?.categoryId ?? ""}
+          options={[
+            { value: "", label: "No category (grouped by type)" },
+            ...categories.map((c) => ({ value: c.id, label: c.nameEn })),
+          ]}
+          hint="Project categories are added in Manage categories → Projects."
         />
         <AdminInput
           label="Name (English)"

@@ -78,7 +78,10 @@
     "moreTitle": "More we make",
     "faqTitle": "Questions",
     "faqLink": "Read all FAQs",
-    "swatchNote": "Swatches are illustrations of finish families, not product photographs."
+    "swatchNote": "Swatches are illustrations of finish families, not product photographs.",
+    "rangeTitle": "Products in this range",
+    "rangeEmpty": "Tell us about your space and what you need, and we will advise on sizes, finishes and options.",
+    "otherProjects": "More projects"
   },
   "Hero": {
     "eyebrow": "Manufacturing · Supply · Installation",

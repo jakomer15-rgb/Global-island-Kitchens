@@ -1,27 +1,29 @@
 import { ArrowUpRight } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { productNavKeys } from "@/components/site/nav-items";
+import { useLocale, useTranslations } from "next-intl";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Swatch, type SwatchName } from "@/components/site/swatch";
-import { hrefFor, pathFor } from "@/config/routes";
-import { productPhotos } from "@/content/photos";
+import { pathFor } from "@/config/routes";
 import type { ProductKey } from "@/content/products";
 import { Link } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
+import type { CatalogCategory } from "@/content/categories";
 
-/** Finish illustration for categories without a company photograph yet. */
+/** Finish illustration for categories without a photograph yet. */
 const fallbackSwatch: Partial<Record<ProductKey, SwatchName>> = {
   aluminiumKitchens: "solid",
   wardrobes: "oak",
 };
 
 /**
- * Category tiles on a dark ground: the company's photo where there is one (decorative, the tile
- * names it), otherwise a finish illustration. Name and description sit over a gradient at the foot.
+ * Category tiles on a dark ground, one per product category (managed in the admin): its photo where
+ * there is one (decorative, the tile names it), otherwise a finish illustration. Name and
+ * description sit over a gradient at the foot.
  */
-export function Products() {
+export function Products({ categories }: { categories: CatalogCategory[] }) {
   const t = useTranslations("Products");
   const tn = useTranslations("Nav");
+  const locale = useLocale() as Locale;
 
   return (
     <section
@@ -40,9 +42,9 @@ export function Products() {
         />
       </div>
       <ul className="mt-16 grid gap-0.5 bg-ivory/10 sm:grid-cols-2 lg:grid-cols-4">
-        {productNavKeys.map((key, i) => {
-          const href = hrefFor(key);
-          const photo = productPhotos[key];
+        {categories.map((category, i) => {
+          const href = category.href;
+          const photo = category.image;
           const content = (
             <>
               <span className="absolute inset-0 block bg-espresso">
@@ -59,7 +61,7 @@ export function Products() {
                   />
                 ) : (
                   <span className="block size-full img-zoom">
-                    <Swatch name={fallbackSwatch[key] ?? "stone"} />
+                    <Swatch name={(category.pageKey && fallbackSwatch[category.pageKey]) || "stone"} />
                   </span>
                 )}
               </span>
@@ -76,7 +78,7 @@ export function Products() {
               </span>
               <span className="absolute inset-x-0 bottom-0 block p-6">
                 <span className="flex items-start justify-between gap-3">
-                  <span className="block font-display text-display-md">{t(`items.${key}.name`)}</span>
+                  <span className="block font-display text-display-md">{category.name[locale]}</span>
                   {href && (
                     <ArrowUpRight
                       aria-hidden
@@ -84,15 +86,17 @@ export function Products() {
                     />
                   )}
                 </span>
-                <span className="mt-2 block max-w-[17rem] text-sm text-ivory/75">
-                  {t(`items.${key}.body`)}
-                </span>
+                {category.description && (
+                  <span className="mt-2 block max-w-[17rem] text-sm text-ivory/75">
+                    {category.description[locale]}
+                  </span>
+                )}
               </span>
             </>
           );
           const tile = "group relative block aspect-[4/5] overflow-hidden";
           return (
-            <Reveal as="li" key={key}>
+            <Reveal as="li" key={category.id}>
               {href ? (
                 <Link href={href} className={tile}>
                   {content}

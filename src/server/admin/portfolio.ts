@@ -1,3 +1,4 @@
+import { assertProjectCategory } from "@/server/admin/categories";
 import { audit } from "@/server/audit";
 import { assertCan, type Actor } from "@/server/auth/staff";
 import type { Db } from "@/server/db/client";
@@ -38,6 +39,8 @@ export interface ProjectInput {
   scopeTags: string[];
   clientName: string | null;
   clientNamePermission: boolean;
+  /** A category in the "projects" section, or null. */
+  categoryId: string | null;
   featured: boolean;
   published: boolean;
   sortOrder: number;
@@ -46,7 +49,7 @@ export interface ProjectInput {
 export async function listProjects(db: Db, actor: Actor) {
   assertCan(actor, "portfolio.manage");
   return db.portfolioProject.findMany({
-    include: { _count: { select: { images: true } } },
+    include: { _count: { select: { images: true } }, category: { select: { nameEn: true } } },
     orderBy: [{ segment: "asc" }, { sortOrder: "asc" }],
   });
 }
@@ -82,6 +85,7 @@ export async function saveProject(db: Db, actor: Actor, id: string | null, input
       select: { id: true },
     });
     if (clash) throw new RuleError("slug", "Another project already uses this web address.");
+    await assertProjectCategory(tx, input.categoryId);
     const data = {
       ...input,
       scopeTags: tags,

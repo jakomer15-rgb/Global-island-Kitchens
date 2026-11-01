@@ -103,10 +103,18 @@ product lines in the company profile:
 | 20  | Contact us                      | `/contact`              | —                                                     |
 | 21  | Privacy policy                  | `/privacy-policy`       | —                                                     |
 | 22  | Terms and conditions            | `/terms`                | —                                                     |
+| 23  | Product category (admin-added)  | `/products/[slug]`      | Categories staff add in Manage categories             |
 
 Profile products without a page of their own in the brief (laundry rooms, laminate doors, ceiling
 umbrellas, custom cabinets, bespoke furniture) go on a **"More we make"** page (`/bespoke`, built in Phase 3) if the owner
 agrees **(approve)**.
+
+Since 2026-11-02 the product lines are database categories (Manage categories in the admin): the
+menu, footer and homepage tiles list them in the order staff set, and a new category gets a page at
+`/products/[slug]` listing its products. The eight lines above keep their pages and copy in the code,
+linked by `pageKey`. If the database is unreachable they are shown from `src/content/categories.ts`.
+The same screen manages project categories (grouping `/projects`) and factory categories (machinery on
+`/about`). See DATA_MODEL.md.
 
 Portals:
 

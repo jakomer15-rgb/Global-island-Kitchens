@@ -16,6 +16,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { routing } from "@/i18n/routing";
 import { alternates } from "@/lib/seo";
 import { organizationJsonLd } from "@/lib/structured-data";
+import { getCatalog } from "@/server/content/catalog";
 import { getPortfolio } from "@/server/content/portfolio";
 import { getTestimonials } from "@/server/content/public";
 import { getSiteSettings } from "@/server/settings/site";
@@ -37,10 +38,11 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const [settings, testimonials, portfolio] = await Promise.all([
+  const [settings, testimonials, portfolio, catalog] = await Promise.all([
     getSiteSettings(),
     getTestimonials(),
     getPortfolio(),
+    getCatalog(),
   ]);
   const hero = settings.homeHero;
   const ar = locale === "ar";
@@ -56,7 +58,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           intro: ar ? hero.introAr : hero.introEn,
         }}
       />
-      <Products />
+      <Products categories={catalog.products} />
       <PhotoStrip />
       <Materials />
       <Why />

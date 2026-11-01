@@ -18,6 +18,7 @@ export const mediaKinds = {
   material_image: "materials.manage",
   project_photo: "portfolio.manage",
   blog_image: "content.manage",
+  catalog_image: "catalog.manage",
 } as const satisfies Record<string, Permission>;
 export type MediaKind = keyof typeof mediaKinds;
 
@@ -103,6 +104,19 @@ export async function finishMediaUpload(
   return file.id;
 }
 
+/** Everything that can show a website image. */
+const usageCount = {
+  materials: true,
+  portfolioImages: true,
+  blogCovers: true,
+  categories: true,
+  catalogItems: true,
+} as const;
+
+export function timesUsed(count: Record<keyof typeof usageCount, number>) {
+  return Object.values(count).reduce((sum, n) => sum + n, 0);
+}
+
 export async function listMedia(db: Db, actor: Actor, kind?: MediaKind) {
   const kinds = (Object.keys(mediaKinds) as MediaKind[]).filter(
     (k) => can(actor, mediaKinds[k]) && (!kind || k === kind),
@@ -118,7 +132,7 @@ export async function listMedia(db: Db, actor: Actor, kind?: MediaKind) {
       sizeBytes: true,
       createdAt: true,
       uploadedBy: { select: { name: true } },
-      _count: { select: { materials: true, portfolioImages: true, blogCovers: true } },
+      _count: { select: usageCount },
     },
     orderBy: { createdAt: "desc" },
     take: 200,
@@ -129,12 +143,12 @@ export async function listMedia(db: Db, actor: Actor, kind?: MediaKind) {
 export async function deleteMedia(db: Db, storage: StorageDriver, actor: Actor, id: string) {
   const file = await db.fileAsset.findFirst({
     where: { id, visibility: "public" },
-    include: { _count: { select: { materials: true, portfolioImages: true, blogCovers: true } } },
+    include: { _count: { select: usageCount } },
   });
   if (!file || !(file.kind in mediaKinds)) throw new NotFoundError("Image");
   assertMedia(actor, file.kind as MediaKind);
-  const used = file._count.materials + file._count.portfolioImages + file._count.blogCovers;
-  if (used > 0) throw new RuleError("in_use", "This image is still used. Remove it from those pages first.");
+  if (timesUsed(file._count) > 0)
+    throw new RuleError("in_use", "This image is still used. Remove it from those pages first.");
   await db.$transaction(async (tx) => {
     await tx.fileAsset.delete({ where: { id } });
     await audit(tx, {

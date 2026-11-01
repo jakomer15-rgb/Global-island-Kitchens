@@ -34,6 +34,7 @@ const groups: {
     label: "Website",
     items: [
       { href: "/admin/content", label: "Homepage and banner", permission: "content.manage" },
+      { href: "/admin/categories", label: "Manage categories", permission: "catalog.manage" },
       { href: "/admin/materials", label: "Materials", permission: "materials.manage" },
       { href: "/admin/portfolio", label: "Portfolio", permission: "portfolio.manage" },
       { href: "/admin/testimonials", label: "Testimonials", permission: "content.manage" },
@@ -41,7 +42,7 @@ const groups: {
       {
         href: "/admin/media",
         label: "Website images",
-        permission: ["content.manage", "materials.manage", "portfolio.manage"],
+        permission: ["content.manage", "materials.manage", "portfolio.manage", "catalog.manage"],
       },
     ],
   },

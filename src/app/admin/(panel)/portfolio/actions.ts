@@ -7,6 +7,7 @@ import type { ActionState } from "@/lib/admin/action-state";
 import {
   CUID,
   formCheckbox,
+  formId,
   formInt,
   formRequired,
   formText,
@@ -45,6 +46,7 @@ const projectSchema = z.object({
   ),
   clientName: formText(120),
   clientNamePermission: formCheckbox,
+  categoryId: formId,
   featured: formCheckbox,
   published: formCheckbox,
   sortOrder: formInt(0, 9999),
@@ -52,6 +54,7 @@ const projectSchema = z.object({
 
 function revalidatePortfolio() {
   revalidatePath("/admin/portfolio");
+  revalidatePath("/admin/categories", "layout");
   // Projects appear on the homepage, product pages, the designers page and the projects pages.
   revalidatePath("/[locale]", "layout");
 }
