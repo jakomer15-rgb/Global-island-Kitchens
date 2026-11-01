@@ -1,43 +1,49 @@
-// Seed: permissions, system roles, settings and the portfolio, from verified facts only
+// Seed: permissions, system roles, settings, the portfolio and the built-in product categories, from verified facts only
 // (docs/BUSINESS_FACTS.md). Idempotent and safe to run on every deploy:
 // - role permissions are set when a role is created; afterwards only newly introduced permissions
 //   are granted (per the defaults), so changes the owner makes in the admin are kept. The owner
 //   role always has every permission.
-// - settings and portfolio projects are created if missing, never overwritten.
+// - settings, portfolio projects and product categories are created if missing, never overwritten.
 // Never seeds testimonials, prices, photos or customer data.
 import { createPrismaClient } from "../src/server/db/client";
 import { permissions, roleDefinitions } from "../src/server/auth/permissions";
 import { settingDefaults } from "../src/lib/site-settings";
 import { projects } from "../src/content/projects";
+import { builtInCategories } from "../src/content/categories";
 
 const db = createPrismaClient();
 
 async function main() {
   // One transaction: if anything fails, new permissions aren't recorded without their grants.
-  const newKeys = await db.$transaction(async (tx) => {
-    const existingKeys = new Set((await tx.permission.findMany({ select: { key: true } })).map((p) => p.key));
-    const added = new Set(Object.keys(permissions).filter((k) => !existingKeys.has(k)));
-    for (const [key, description] of Object.entries(permissions)) {
-      await tx.permission.upsert({ where: { key }, update: { description }, create: { key, description } });
-    }
-    for (const role of roleDefinitions) {
-      const existing = await tx.role.findUnique({ where: { key: role.key } });
-      const saved = await tx.role.upsert({
-        where: { key: role.key },
-        update: { name: role.name, description: role.description, system: true },
-        create: { key: role.key, name: role.name, description: role.description, system: true },
-      });
-      const grant =
-        role.key === "owner" || !existing ? role.permissions : role.permissions.filter((p) => added.has(p));
-      if (grant.length) {
-        await tx.rolePermission.createMany({
-          data: grant.map((permissionKey) => ({ roleId: saved.id, permissionKey })),
-          skipDuplicates: true,
-        });
+  const newKeys = await db.$transaction(
+    async (tx) => {
+      const existingKeys = new Set(
+        (await tx.permission.findMany({ select: { key: true } })).map((p) => p.key),
+      );
+      const added = new Set(Object.keys(permissions).filter((k) => !existingKeys.has(k)));
+      for (const [key, description] of Object.entries(permissions)) {
+        await tx.permission.upsert({ where: { key }, update: { description }, create: { key, description } });
       }
-    }
-    return added;
-  });
+      for (const role of roleDefinitions) {
+        const existing = await tx.role.findUnique({ where: { key: role.key } });
+        const saved = await tx.role.upsert({
+          where: { key: role.key },
+          update: { name: role.name, description: role.description, system: true },
+          create: { key: role.key, name: role.name, description: role.description, system: true },
+        });
+        const grant =
+          role.key === "owner" || !existing ? role.permissions : role.permissions.filter((p) => added.has(p));
+        if (grant.length) {
+          await tx.rolePermission.createMany({
+            data: grant.map((permissionKey) => ({ roleId: saved.id, permissionKey })),
+            skipDuplicates: true,
+          });
+        }
+      }
+      return added;
+    },
+    { timeout: 120_000, maxWait: 30_000 },
+  ); // a remote database needs more than the 5 s default
 
   // Phase 4 stored contact details under finer keys; they are replaced by the grouped settings.
   await db.siteSetting.deleteMany({
@@ -81,8 +87,28 @@ async function main() {
     created++;
   }
 
+  // The product lines with a page in the code become the first product categories.
+  let categories = 0;
+  for (const [i, c] of builtInCategories.entries()) {
+    const exists = await db.category.findUnique({ where: { pageKey: c.pageKey }, select: { id: true } });
+    if (exists) continue;
+    await db.category.create({
+      data: {
+        section: "products",
+        pageKey: c.pageKey,
+        slug: c.slug,
+        nameEn: c.name.en,
+        nameAr: c.name.ar,
+        descriptionEn: c.description.en,
+        descriptionAr: c.description.ar,
+        sortOrder: i,
+      },
+    });
+    categories++;
+  }
+
   console.log(
-    `Seeded ${Object.keys(permissions).length} permissions (${newKeys.size} new), ${roleDefinitions.length} roles, ${Object.keys(settingDefaults).length} settings, ${created} new portfolio projects.`,
+    `Seeded ${Object.keys(permissions).length} permissions (${newKeys.size} new), ${roleDefinitions.length} roles, ${Object.keys(settingDefaults).length} settings, ${created} new portfolio projects, ${categories} new product categories.`,
   );
 }
 

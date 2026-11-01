@@ -62,6 +62,21 @@ drafts belong to a lead and blog drafts do not, an approved blog draft points at
 makes a reviewed draft read-only. Consent stays in ConsentRecord (latest per channel wins; `source` is
 `unsubscribe_link` for withdrawals).
 
+Categories (`20261102120000_categories`, 2026-11-02) replace the planned `FurnitureCategory` with
+`Category` and `CatalogItem`, and add `PortfolioProject.categoryId` and the `catalog_image` file kind:
+
+- A `Category` belongs to one section: `products`, `projects` or `factory`. It has en/ar name and
+  description, an optional image (`catalog_image`), `published` and `sortOrder`. The slug is unique
+  within a section and checked for format (CHECK).
+- The eight product lines with a page in the code are seeded as product categories, linked by
+  `pageKey` (unique; products section only, by CHECK). Their address is fixed and they can be hidden but
+  not deleted. Other product categories get a page at `/products/<slug>`.
+- A `CatalogItem` is a product (in a products category) or a machine (in a factory category); it can
+  move to another category of the same section. A category with items can't be deleted (FK RESTRICT).
+- A portfolio project may belong to a projects category; deleting the category leaves the project
+  without one (FK SET NULL).
+- The `catalog.manage` permission covers all of it (owner, general manager and content editor).
+
 Conventions:
 
 - IDs are `cuid` strings. Timestamps are `timestamptz` (`createdAt`, `updatedAt`).
@@ -147,6 +162,7 @@ Conventions:
 Seeded (idempotent, never overwriting staff edits): permissions, system roles (new permissions are
 granted to existing roles only when introduced; the owner always has all), site settings from
 [BUSINESS_FACTS.md](BUSINESS_FACTS.md) (contact, hours, addresses), and the 21 portfolio projects
-from the company profile (created if missing). Page copy stays in `src/content` and `src/messages`.
+from the company profile (created if missing), and the eight built-in product categories (from
+`src/content/categories.ts`, created if missing). Page copy stays in `src/content` and `src/messages`.
 Not seeded: testimonials, blog posts, prices, pricing rules, photos, material décors (staff add and
 verify them).

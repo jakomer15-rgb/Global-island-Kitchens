@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ProductPage, productMetadata } from "@/components/pages/product-page";
 import type { Locale } from "@/i18n/routing";
+import { getBuiltInCategory } from "@/server/content/catalog";
 import { getPortfolio } from "@/server/content/portfolio";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/tv-units">): Promise<Metadata> {
@@ -13,6 +14,7 @@ export default async function Page({ params }: PageProps<"/[locale]/tv-units">) 
       productKey="tvUnits"
       locale={(await params).locale as Locale}
       portfolio={await getPortfolio()}
+      category={await getBuiltInCategory("tvUnits")}
     />
   );
 }

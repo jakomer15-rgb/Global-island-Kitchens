@@ -5,6 +5,7 @@ import { ActionForm } from "@/components/admin/action-form";
 import { AdminCheckbox, AdminInput, AdminSelect } from "@/components/admin/fields";
 import { Empty, PageHeader, Panel } from "@/components/admin/ui";
 import { CUID } from "@/server/admin/action";
+import { projectCategoryOptions } from "@/server/admin/categories";
 import { listMedia, mediaUrl } from "@/server/admin/media";
 import { getProjectForEdit } from "@/server/admin/portfolio";
 import { requireActor } from "@/server/auth/session";
@@ -23,7 +24,10 @@ export default async function ProjectPage({ params }: PageProps<"/admin/portfoli
     if (e instanceof NotFoundError) notFound();
     throw e;
   });
-  const photos = await listMedia(db, actor, "project_photo");
+  const [photos, categories] = await Promise.all([
+    listMedia(db, actor, "project_photo"),
+    projectCategoryOptions(db, actor),
+  ]);
   const used = new Set(project.images.map((i) => i.fileId));
   const available = photos.filter((p) => !used.has(p.id));
 
@@ -51,7 +55,7 @@ export default async function ProjectPage({ params }: PageProps<"/admin/portfoli
       />
       <div className="grid gap-6 xl:grid-cols-3">
         <Panel className="xl:col-span-2">
-          <ProjectForm project={project} />
+          <ProjectForm project={project} categories={categories} />
         </Panel>
         <div className="space-y-6">
           <Panel title="Photos">

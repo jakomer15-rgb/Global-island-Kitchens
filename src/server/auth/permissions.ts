@@ -24,6 +24,7 @@ export const permissions = {
   "content.manage": "Edit homepage text, banner, SEO, testimonials, blog posts and website images",
   "materials.manage": "Manage the materials library (EGGER décors and painted MDF colours)",
   "portfolio.manage": "Edit portfolio projects and their photos",
+  "catalog.manage": "Manage website categories (products, projects, factory), products and machinery",
   "settings.manage": "Change contact details, opening hours and the WhatsApp number",
   "staff.manage": "Create staff accounts and change roles",
   "audit.read": "View the audit log",
@@ -93,11 +94,12 @@ export const roleDefinitions: {
   {
     key: "content_editor",
     name: "Content Editor",
-    description: "Website content, materials, portfolio and contact details",
+    description: "Website content, categories, materials, portfolio and contact details",
     permissions: [
       "content.manage",
       "materials.manage",
       "portfolio.manage",
+      "catalog.manage",
       "settings.manage",
       "ai.use",
       "ai.review",

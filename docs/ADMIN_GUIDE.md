@@ -51,6 +51,23 @@ see. Suspending a designer signs them out at once.
 
 ## Website content
 
+- **Manage categories** has three tabs:
+  - **Products**: the lines in the "What we make" menu, the footer and the homepage tiles. To add a new
+    line (for example laundry rooms, laminate doors or ceiling umbrellas), press **Add products
+    category** and fill in the English and Arabic name, a short description, the web address
+    (`laundry-rooms` makes the page `/products/laundry-rooms`) and an image. It appears on the website
+    as soon as you save, with its own page. Open a category to add the products in it. A product's
+    **Category** field moves it to another category.
+  - **Projects**: categories that group the portfolio on the Projects page. Choose a project's category
+    in **Portfolio**. Until a project category has a published project, the page groups projects by
+    type as before.
+  - **Factory**: categories of machinery, each holding machines. Once one has a published machine, the
+    About page shows them instead of the machinery list from the company profile.
+  - **Up** and **Down** set the order on the website. Untick "Show on the website" to hide something.
+    A category can be deleted only once it is empty. The original eight product lines can be renamed,
+    reordered, illustrated or hidden but not deleted, because their pages are part of the site. Hiding
+    one also takes its page down. Their main page text stays as written.
+  - Images come from **Website images** (type "Category, product or machine"), with their credit.
 - **Materials** (EGGER laminate/melamine décors and painted MDF colours only): a décor appears on the
   website only after you tick that you checked it against EGGER's current range and switch on "Show on the
   website". Never publish a décor you have not checked.

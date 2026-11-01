@@ -130,7 +130,10 @@ Behind any other proxy, make sure the proxy overwrites it, or the limits can be 
 6. **Quotation PDFs:** Vercel has no Chrome. Either set `BROWSER_WS_ENDPOINT` to a hosted browser service the owner pays
    for, or run the site where Chrome exists (the optional `Dockerfile`: not built or tested in development).
 7. **Migrate and seed** the production database (`npm run db:deploy`, `npm run db:seed`) **before** the first build, then create
-   the owner (`npm run admin:create`).
+   the owner (`npm run admin:create`). Since 2026-11-02 every production deployment also does this itself:
+   `vercel.json` runs `npm run vercel-build` (`scripts/vercel-build.mjs`), which applies pending migrations and the
+   idempotent seed with Vercel's `DATABASE_URL` before `next build`. If either fails, the build fails and the current
+   deployment stays live. Preview deployments skip it.
 8. **GitHub secrets** for the nightly backup (docs/HANDOVER.md), then run the restore rehearsal once.
 9. Run `npm run launch:check` against the production environment, then the checklist below.
 

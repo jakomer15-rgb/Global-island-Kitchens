@@ -6,7 +6,7 @@ import type { ContactSettings, LocationSettings } from "@/lib/site-settings";
 import { pathFor, type PageKey } from "@/config/routes";
 import { Link } from "@/i18n/navigation";
 import { Address } from "./address";
-import { productNavKeys } from "./nav-items";
+import type { NavLink } from "./nav-items";
 import { Wordmark } from "./wordmark";
 
 const companyLinks: [PageKey, string][] = [
@@ -20,14 +20,16 @@ const companyLinks: [PageKey, string][] = [
 ];
 const blogLink: [PageKey, string] = ["blog", "blog"];
 
-/** `showBlog`: link the blog once a post is published. */
+/** `productLinks`: the product categories. `showBlog`: link the blog once a post is published. */
 export function SiteFooter({
   contact,
   locations,
+  productLinks,
   showBlog = false,
 }: {
   contact: ContactSettings;
   locations: LocationSettings;
+  productLinks: NavLink[];
   showBlog?: boolean;
 }) {
   const t = useTranslations();
@@ -72,10 +74,10 @@ export function SiteFooter({
             {t("Nav.products")}
           </h2>
           <ul className="mt-5 space-y-2 text-sm">
-            {productNavKeys.map((key) => (
-              <li key={key}>
-                <Link href={pathFor(key)} className={link}>
-                  {t(`Products.items.${key}.name`)}
+            {productLinks.map((item) => (
+              <li key={item.href}>
+                <Link href={item.href} className={link}>
+                  {item.label}
                 </Link>
               </li>
             ))}

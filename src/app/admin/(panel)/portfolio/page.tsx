@@ -29,7 +29,7 @@ export default async function PortfolioPage() {
           <thead>
             <tr>
               <Th>Project</Th>
-              <Th>Type</Th>
+              <Th>Type / category</Th>
               <Th>Photos</Th>
               <Th>Website</Th>
             </tr>
@@ -46,7 +46,10 @@ export default async function PortfolioPage() {
                   </Link>
                   <span className="block text-xs text-ink-muted">{p.locationEn}</span>
                 </Td>
-                <Td>{label(p.segment)}</Td>
+                <Td>
+                  {label(p.segment)}
+                  {p.category && <span className="block text-xs text-ink-muted">{p.category.nameEn}</span>}
+                </Td>
                 <Td className="tabular-nums">{p._count.images}</Td>
                 <Td>
                   {p.published ? <Badge tone="good">Published</Badge> : <Badge>Hidden</Badge>}{" "}

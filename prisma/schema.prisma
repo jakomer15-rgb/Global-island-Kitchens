@@ -429,6 +429,7 @@ enum FileKind {
   material_image
   project_photo
   blog_image
+  catalog_image
   quotation_pdf
   other
 }
@@ -475,6 +476,8 @@ model FileAsset {
   materials        Material[]
   portfolioImages  PortfolioImage[]
   blogCovers       BlogPost[]
+  categories       Category[]
+  catalogItems     CatalogItem[]
   quotationPdfs    QuotationRevision[]
 
   @@index([status, createdAt])
@@ -609,15 +612,19 @@ model PortfolioProject {
   scopeTags            String[]         @map("scope_tags")
   clientName           String?          @map("client_name")
   clientNamePermission Boolean          @default(false) @map("client_name_permission")
+  /// A category in the "projects" section (checked by the service); null groups it by segment.
+  categoryId           String?          @map("category_id")
   featured             Boolean          @default(false)
   published            Boolean          @default(true)
   sortOrder            Int              @default(0) @map("sort_order")
   createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  images PortfolioImage[]
+  category Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images   PortfolioImage[]
 
   @@index([published, segment, sortOrder])
+  @@index([categoryId])
   @@map("portfolio_projects")
 }
 
@@ -637,6 +644,64 @@ model PortfolioImage {
 
   @@index([projectId, sortOrder])
   @@map("portfolio_images")
+}
+
+// ───────────────────────────── Categories ─────────────────────────────
+
+enum CategorySection {
+  products
+  projects
+  factory
+}
+
+/// Website categories, managed in the admin. The product lines with a page built in code are linked
+/// by `pageKey` (seeded; they can be hidden but not deleted). Other product categories get a page at
+/// /products/<slug>; project categories group the portfolio; factory categories group machinery.
+model Category {
+  id            String          @id @default(cuid())
+  section       CategorySection
+  /// Lowercase letters, numbers and hyphens (CHECK in migration). Unique within a section.
+  slug          String
+  /// Product page key from src/config/routes.ts for a built-in product line.
+  pageKey       String?         @unique @map("page_key")
+  nameEn        String          @map("name_en")
+  nameAr        String          @map("name_ar")
+  descriptionEn String?         @map("description_en")
+  descriptionAr String?         @map("description_ar")
+  imageFileId   String?         @map("image_file_id")
+  published     Boolean         @default(true)
+  sortOrder     Int             @default(0) @map("sort_order")
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  image    FileAsset?         @relation(fields: [imageFileId], references: [id], onDelete: SetNull)
+  items    CatalogItem[]
+  projects PortfolioProject[]
+
+  @@unique([section, slug])
+  @@index([section, published, sortOrder])
+  @@map("categories")
+}
+
+/// A product (in a products category) or a machine (in a factory category).
+model CatalogItem {
+  id            String    @id @default(cuid())
+  categoryId    String    @map("category_id")
+  nameEn        String    @map("name_en")
+  nameAr        String    @map("name_ar")
+  descriptionEn String?   @map("description_en")
+  descriptionAr String?   @map("description_ar")
+  imageFileId   String?   @map("image_file_id")
+  published     Boolean   @default(true)
+  sortOrder     Int       @default(0) @map("sort_order")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  category Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  image    FileAsset? @relation(fields: [imageFileId], references: [id], onDelete: SetNull)
+
+  @@index([categoryId, published, sortOrder])
+  @@map("catalog_items")
 }
 
 // ───────────────────────────── Platform ─────────────────────────────

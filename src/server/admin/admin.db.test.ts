@@ -487,6 +487,7 @@ describe("website images and portfolio", () => {
       scopeTags: ["kitchens", "closets", "not-a-tag"],
       clientName: "Mr Example",
       clientNamePermission: false,
+      categoryId: null,
       featured: false,
       published: true,
       sortOrder: 99,

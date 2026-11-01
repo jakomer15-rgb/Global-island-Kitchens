@@ -1,6 +1,8 @@
 import { ArrowRight, Check } from "lucide-react";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CatalogItems } from "@/components/site/catalog-items";
 import { CtaBand } from "@/components/site/cta-band";
 import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
@@ -8,9 +10,8 @@ import { projectsWithScope, type Project } from "@/content/projects";
 import { Swatch, type SwatchName } from "@/components/site/swatch";
 import { pathFor } from "@/config/routes";
 import { materialsPage } from "@/content/pages";
-import { productPhotos } from "@/content/photos";
 import { getProduct, type ProductKey } from "@/content/products";
-
+import type { CatalogCategory } from "@/content/categories";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
@@ -45,14 +46,19 @@ export async function ProductPage({
   productKey,
   locale,
   portfolio,
+  category,
 }: {
   productKey: ProductKey;
   locale: Locale;
   /** The published portfolio (from the page), for related projects. */
   portfolio: Project[];
+  /** This line's category from the admin (image, products); null when staff have hidden it. */
+  category: CatalogCategory | null;
 }) {
   setRequestLocale(locale);
   const p = getProduct(productKey);
+  // Staff can hide a product line in Manage categories; its page then goes too.
+  if (!category) notFound();
   const [t, tm, tp] = await Promise.all([
     getTranslations({ locale, namespace: "Page" }),
     getTranslations({ locale, namespace: "Materials" }),
@@ -73,8 +79,21 @@ export async function ProductPage({
         eyebrow={t("makes")}
         title={p.name[locale]}
         intro={p.intro[locale]}
-        image={productPhotos[productKey]}
+        image={category.image ?? undefined}
       />
+
+      {category.items.length > 0 && (
+        <section aria-labelledby="range-title" className="border-b border-line py-20 md:py-28">
+          <div className="container-site">
+            <h2 id="range-title" className="font-display text-display-lg">
+              {t("rangeTitle")}
+            </h2>
+            <div className="mt-12">
+              <CatalogItems items={category.items} locale={locale} />
+            </div>
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="makes-title" className="py-20 md:py-28">
         <div className="container-site grid gap-14 lg:grid-cols-12">

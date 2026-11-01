@@ -11,6 +11,7 @@ import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { company } from "@/config/company";
 import { siteUrl } from "@/config/site";
 import { htmlLang, localeDirection, routing } from "@/i18n/routing";
+import { getCatalog } from "@/server/content/catalog";
 import { getBlogPosts } from "@/server/content/public";
 import { getSiteSettings } from "@/server/settings/site";
 import "../globals.css";
@@ -49,8 +50,14 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const [{ contact, locations, banner }, posts] = await Promise.all([getSiteSettings(), getBlogPosts()]);
+  const [{ contact, locations, banner }, posts, catalog] = await Promise.all([
+    getSiteSettings(),
+    getBlogPosts(),
+    getCatalog(),
+  ]);
   const bannerText = banner.enabled ? (locale === "ar" ? banner.textAr : banner.textEn) : null;
+  // Product categories from the admin, in the order staff set.
+  const productLinks = catalog.products.map((c) => ({ href: c.href!, label: c.name[locale] }));
 
   return (
     <html lang={htmlLang[locale]} dir={localeDirection[locale]} className={fontVariables}>
@@ -59,11 +66,16 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <NextIntlClientProvider messages={pick(await getMessages(), ["Common"])}>
           <SkipLink />
           <AnnouncementBanner text={bannerText} />
-          <SiteHeader phone={contact.phones[0]} />
+          <SiteHeader phone={contact.phones[0]} productLinks={productLinks} />
           <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
             {children}
           </main>
-          <SiteFooter contact={contact} locations={locations} showBlog={posts.length > 0} />
+          <SiteFooter
+            contact={contact}
+            locations={locations}
+            productLinks={productLinks}
+            showBlog={posts.length > 0}
+          />
           <WhatsAppButton number={contact.whatsappNumber} />
         </NextIntlClientProvider>
       </body>
