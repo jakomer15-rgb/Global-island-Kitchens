@@ -4,12 +4,14 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CatalogItems } from "@/components/site/catalog-items";
 import { CtaBand } from "@/components/site/cta-band";
+import { EnquirySection } from "@/components/site/enquiry-section";
 import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
 import { projectsWithScope, type Project } from "@/content/projects";
 import { Swatch, type SwatchName } from "@/components/site/swatch";
 import { pathFor } from "@/config/routes";
 import { materialsPage } from "@/content/pages";
+import { productPhotos } from "@/content/photos";
 import { getProduct, type ProductKey } from "@/content/products";
 import type { CatalogCategory } from "@/content/categories";
 import { Link } from "@/i18n/navigation";
@@ -39,6 +41,7 @@ export function productMetadata(key: ProductKey, locale: Locale): Metadata {
     description: p.metaDescription[locale],
     path: pathFor(key),
     locale,
+    image: productPhotos[key]?.src,
   });
 }
 
@@ -147,6 +150,17 @@ export async function ProductPage({
         </div>
       </section>
 
+      <section className="border-t border-line py-20 md:py-28">
+        <div className="container-site grid gap-12 md:grid-cols-2 lg:grid-cols-3">
+          {p.details.map((d) => (
+            <div key={d.title.en}>
+              <h2 className="font-display text-display-md">{d.title[locale]}</h2>
+              <p className="mt-4 text-ink-muted">{d.body[locale]}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section aria-labelledby="process-title" className="bg-sand py-20 md:py-28">
         <div className="container-site">
           <h2 id="process-title" className="font-display text-display-lg">
@@ -194,6 +208,7 @@ export async function ProductPage({
         </section>
       )}
 
+      <EnquirySection locale={locale} subject={p.name[locale]} />
       <CtaBand locale={locale} category={productKey} />
     </>
   );

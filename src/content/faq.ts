@@ -69,8 +69,8 @@ export const faqs: Faq[] = [
     id: "showroom",
     question: { en: "Where is your showroom, and when is it open?", ar: "أين صالة العرض، ومتى تفتح؟" },
     answer: {
-      en: "Our showroom is at Building 2253B, Road 90, Block 1014, Al-Hamalah. Showroom hours are 9:00 AM to 8:00 PM.",
-      ar: "صالة العرض في مبنى 2253B، طريق 90، مجمع 1014، الهملة. ساعات عمل صالة العرض من 9:00 صباحًا إلى 8:00 مساءً.",
+      en: "Our showroom is at Building 2253B, Road 90, Block 1014, Al-Hamalah. It is open Saturday to Thursday, 9:00 AM to 8:00 PM, and closed on Friday.",
+      ar: "صالة العرض في مبنى 2253B، طريق 90، مجمع 1014، الهملة. وهي مفتوحة من السبت إلى الخميس من 9:00 صباحًا إلى 8:00 مساءً، ومغلقة يوم الجمعة.",
     },
   },
   {

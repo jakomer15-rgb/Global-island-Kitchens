@@ -2,13 +2,13 @@ import { company, instagramUrl } from "@/config/company";
 import { siteUrl } from "@/config/site";
 import { localizedPath } from "@/lib/seo";
 import type { Locale } from "@/i18n/routing";
-import type { ContactSettings } from "@/lib/site-settings";
+import type { ContactSettings, LocationSettings } from "@/lib/site-settings";
 
 /**
- * Organization and showroom JSON-LD from verified facts only. Opening days and map coordinates
- * are left out until confirmed (docs/OPEN_QUESTIONS.md #7, #9). No review markup.
+ * Organization and showroom JSON-LD from verified facts only. Map coordinates are left out until
+ * confirmed (docs/OPEN_QUESTIONS.md #9). No review markup.
  */
-export function organizationJsonLd(locale: Locale, contact: ContactSettings) {
+export function organizationJsonLd(locale: Locale, contact: ContactSettings, locations: LocationSettings) {
   const url = new URL(localizedPath("/", locale), siteUrl).toString();
   return {
     "@context": "https://schema.org",
@@ -42,6 +42,13 @@ export function organizationJsonLd(locale: Locale, contact: ContactSettings) {
           addressLocality: "Al-Hamalah",
           addressCountry: "BH",
         },
+        openingHoursSpecification: {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: company.showroom.openDays,
+          opens: company.showroom.opens,
+          closes: company.showroom.closes,
+        },
+        ...(locations.mapUrl ? { hasMap: locations.mapUrl } : {}),
       },
     ],
   };

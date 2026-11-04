@@ -257,6 +257,31 @@ export const segmentLabels: Record<Segment, L> = {
   commercial: { en: "Commercial & hospitality", ar: "مساحات تجارية وضيافة" },
 };
 
+/** What the company does for each kind of project, from the approved facts. */
+export const segmentAbout: Record<Segment, L> = {
+  residential: {
+    en: "We specialise in producing and fixing kitchens and wardrobes in bulk, manufactured in our Hamad Town factory in EGGER boards and painted MDF, for developers and contractors across Bahrain.",
+    ar: "نتخصص في إنتاج المطابخ وخزائن الملابس وتركيبها بكميات كبيرة، وتُصنع في مصنعنا بمدينة حمد من ألواح إيجر (EGGER) وألواح MDF المدهونة، للمطورين والمقاولين في أنحاء البحرين.",
+  },
+  villas: {
+    en: "For villas we make the joinery room by room, from kitchens and closets to vanities and cladding depending on the scope. Everything is manufactured in our Hamad Town factory in EGGER boards and painted MDF, and installed by our company.",
+    ar: "ننفذ أعمال النجارة في الفلل غرفة بغرفة، من المطابخ والخزائن إلى وحدات المغاسل والتكسيات بحسب نطاق العمل. ويُصنع كل ذلك في مصنعنا بمدينة حمد من ألواح إيجر (EGGER) وألواح MDF المدهونة، وتتولى شركتنا تركيبه.",
+  },
+  commercial: {
+    en: "Commercial spaces need joinery made for the way they operate. We make custom sizes, shapes and finishes for offices and commercial spaces, manufactured in our Hamad Town factory and installed by our company.",
+    ar: "تحتاج المساحات التجارية إلى أعمال نجارة تناسب طريقة تشغيلها. نصنع مقاسات وأشكالًا وتشطيبات حسب الطلب للمكاتب والمساحات التجارية، في مصنعنا بمدينة حمد، وتتولى شركتنا تركيبها.",
+  },
+};
+
+/** One sentence from the project's stated facts; nothing about it is assumed. */
+export function projectSummary(project: Project): L {
+  const scope = project.scopeText.en;
+  return {
+    en: `Scope of work on this project in ${project.location.en}: ${scope.charAt(0).toLowerCase()}${scope.slice(1)}.`,
+    ar: `نطاق العمل في هذا المشروع في ${project.location.ar}: ${project.scopeText.ar}.`,
+  };
+}
+
 export function getProject(slug: string) {
   return projects.find((p) => p.slug === slug);
 }

@@ -3,14 +3,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CtaBand } from "@/components/site/cta-band";
+import { EnquirySection } from "@/components/site/enquiry-section";
 import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
 import { pathFor } from "@/config/routes";
 import { projectsPage } from "@/content/pages";
-import { galleryOf, segmentLabels } from "@/content/projects";
+import { products } from "@/content/products";
+import { galleryOf, projectSummary, segmentAbout, segmentLabels } from "@/content/projects";
 import { Link } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { getCatalog } from "@/server/content/catalog";
 import { getPortfolio } from "@/server/content/portfolio";
 
 export async function generateStaticParams() {
@@ -30,13 +33,15 @@ export async function generateMetadata({
   const project = await getProject(slug);
   if (!project) return {};
   const where = project.location[locale];
+  const gallery = galleryOf(project);
   return pageMetadata({
     title: `${project.name[locale]}, ${where}`,
     description: `${project.scopeText[locale]} · ${where}${project.size ? ` · ${project.size[locale]}` : ""} · Global Island Kitchens`,
     path: `/projects/${project.slug}`,
     locale,
+    image: gallery[0]?.src,
     // Text-only pages stay out of search results until the project has photos.
-    noindex: galleryOf(project).length === 0,
+    noindex: gallery.length === 0,
   });
 }
 
@@ -51,6 +56,13 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
   const more = (await getPortfolio())
     .filter((p) => p.segment === project.segment && p.slug !== project.slug)
     .slice(0, 3);
+  // Product pages matching the project's stated scope, leaving out any line staff have hidden.
+  const relatedKeys = products
+    .filter((p) => p.scope.some((s) => project.scope.includes(s)))
+    .map((p) => p.key);
+  const relatedProducts = (await getCatalog()).products.filter(
+    (c) => c.pageKey && relatedKeys.includes(c.pageKey),
+  );
 
   const facts = [
     { label: t("segment"), value: segmentLabels[project.segment][locale] },
@@ -97,15 +109,37 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
 
       <section className="py-20 md:py-28">
         <div className="container-site grid gap-12 lg:grid-cols-12">
-          <dl className="lg:col-span-7">
-            {facts.map((f) => (
-              <div key={f.label} className="grid gap-2 border-t border-line py-6 sm:grid-cols-3">
-                <dt className="text-sm text-ink-muted">{f.label}</dt>
-                <dd className="font-display text-display-md sm:col-span-2">{f.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="lg:col-span-7">
+            <h2 className="font-display text-display-lg">{t("aboutProject")}</h2>
+            <p className="mt-6">{projectSummary(project)[locale]}</p>
+            <p className="mt-4 text-ink-muted">{segmentAbout[project.segment][locale]}</p>
+            <dl className="mt-10">
+              {facts.map((f) => (
+                <div key={f.label} className="grid gap-2 border-t border-line py-6 sm:grid-cols-3">
+                  <dt className="text-sm text-ink-muted">{f.label}</dt>
+                  <dd className="font-display text-display-md sm:col-span-2">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
           <div className="lg:col-span-4 lg:col-start-9">
+            {relatedProducts.length > 0 && (
+              <>
+                <h2 className="font-display text-display-md">{t("relatedProducts")}</h2>
+                <ul className="mt-4 mb-8 space-y-1">
+                  {relatedProducts.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        href={c.href!}
+                        className="inline-flex min-h-11 items-center text-sm font-medium underline decoration-walnut/50 underline-offset-[6px] hover:decoration-walnut"
+                      >
+                        {c.name[locale]}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
             {gallery.length === 0 && <p className="text-sm text-ink-muted">{t("projectNote")}</p>}
             <Link
               href={pathFor("projects")}
@@ -134,6 +168,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
         </section>
       )}
 
+      <EnquirySection locale={locale} subject={`${project.name[locale]}, ${project.location[locale]}`} />
       <CtaBand locale={locale} />
     </>
   );

@@ -11,6 +11,7 @@ import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { company } from "@/config/company";
 import { siteUrl } from "@/config/site";
 import { htmlLang, localeDirection, routing } from "@/i18n/routing";
+import { socialImage } from "@/lib/seo";
 import { getCatalog } from "@/server/content/catalog";
 import { getBlogPosts } from "@/server/content/public";
 import { getSiteSettings } from "@/server/settings/site";
@@ -38,7 +39,9 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
       type: "website",
       siteName: company.shortName,
       locale: locale === "ar" ? "ar_BH" : "en_BH",
+      images: [{ url: socialImage(), width: 1200, height: 630, alt: company.shortName }],
     },
+    twitter: { card: "summary_large_image", images: [socialImage()] },
   };
 }
 

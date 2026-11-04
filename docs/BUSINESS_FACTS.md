@@ -35,7 +35,7 @@ is published until the owner decides.
 | Instagram                 | @global_islandkitchens                                          | P1, P8                   |
 | Head office (and factory) | Bldg 3301, Road 360, Block 1203, Hamad Town, Kingdom of Bahrain | P8 (factory location: O) |
 | Showroom                  | Building 2253B, Road 90, Block 1014, Al-Hamalah                 | P8                       |
-| Showroom hours            | 9:00 AM – 8:00 PM (days not stated)                             | O                        |
+| Showroom hours            | Saturday to Thursday, 9:00 AM – 8:00 PM; closed Friday          | O (2026-11-05)           |
 
 ## Team structure (roles only, no names)
 

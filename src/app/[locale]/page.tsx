@@ -14,7 +14,7 @@ import { Testimonials } from "@/components/home/testimonials";
 import { Why } from "@/components/home/why";
 import { JsonLd } from "@/components/seo/json-ld";
 import { routing } from "@/i18n/routing";
-import { alternates } from "@/lib/seo";
+import { alternates, socialMetadata } from "@/lib/seo";
 import { organizationJsonLd } from "@/lib/structured-data";
 import { getCatalog } from "@/server/content/catalog";
 import { getPortfolio } from "@/server/content/portfolio";
@@ -26,10 +26,13 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
   const t = await getTranslations({ locale, namespace: "Meta" });
   const { seo } = await getSiteSettings();
   const ar = locale === "ar";
+  const title = `${(ar ? seo.titleAr : seo.titleEn) ?? t("title")} | Global Island Kitchens`;
+  const description = (ar ? seo.descriptionAr : seo.descriptionEn) ?? t("description");
   return {
-    title: { absolute: `${(ar ? seo.titleAr : seo.titleEn) ?? t("title")} | Global Island Kitchens` },
-    description: (ar ? seo.descriptionAr : seo.descriptionEn) ?? t("description"),
-    alternates: alternates("/", locale === "ar" ? "ar" : "en"),
+    title: { absolute: title },
+    description,
+    alternates: alternates("/", ar ? "ar" : "en"),
+    ...socialMetadata({ title, description, path: "/", locale: ar ? "ar" : "en" }),
   };
 }
 
@@ -49,7 +52,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
   return (
     <>
-      <JsonLd data={organizationJsonLd(locale, settings.contact)} />
+      <JsonLd data={organizationJsonLd(locale, settings.contact, settings.locations)} />
       <Hero
         text={{
           eyebrow: ar ? hero.eyebrowAr : hero.eyebrowEn,

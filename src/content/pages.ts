@@ -254,8 +254,8 @@ export const quotePage = {
 export const consultationPage = {
   metaTitle: { en: "Book a Consultation", ar: "حجز استشارة" } satisfies L,
   metaDescription: {
-    en: "Book a consultation with Global Island Kitchens at our Al-Hamalah showroom, open 9:00 AM to 8:00 PM, by phone or email.",
-    ar: "احجزوا استشارة مع Global Island Kitchens في صالة العرض بالهملة، المفتوحة من 9:00 صباحًا إلى 8:00 مساءً، عبر الهاتف أو البريد الإلكتروني.",
+    en: "Book a consultation with Global Island Kitchens at our Al-Hamalah showroom, open Saturday to Thursday, 9:00 AM to 8:00 PM, by phone or email.",
+    ar: "احجزوا استشارة مع Global Island Kitchens في صالة العرض بالهملة، المفتوحة من السبت إلى الخميس، 9:00 صباحًا إلى 8:00 مساءً، عبر الهاتف أو البريد الإلكتروني.",
   } satisfies L,
   eyebrow: { en: "Book a consultation", ar: "حجز استشارة" } satisfies L,
   title: { en: "Talk to us about your space.", ar: "تحدّثوا إلينا عن مساحتكم." } satisfies L,
@@ -286,8 +286,8 @@ export const consultationPage = {
 export const showroomPage = {
   metaTitle: { en: "Our Showroom in Al-Hamalah", ar: "صالة العرض في الهملة" } satisfies L,
   metaDescription: {
-    en: "Visit the Global Island Kitchens showroom at Building 2253B, Road 90, Block 1014, Al-Hamalah. Showroom hours 9:00 AM – 8:00 PM.",
-    ar: "زوروا صالة عرض Global Island Kitchens في مبنى 2253B، طريق 90، مجمع 1014، الهملة. ساعات العمل 9:00 صباحًا – 8:00 مساءً.",
+    en: "Visit the Global Island Kitchens showroom at Building 2253B, Road 90, Block 1014, Al-Hamalah. Open Saturday to Thursday, 9:00 AM – 8:00 PM. Closed Friday.",
+    ar: "زوروا صالة عرض Global Island Kitchens في مبنى 2253B، طريق 90، مجمع 1014، الهملة. من السبت إلى الخميس، 9:00 صباحًا – 8:00 مساءً. الجمعة مغلق.",
   } satisfies L,
   eyebrow: { en: "Our showroom", ar: "صالة العرض" } satisfies L,
   title: { en: "Visit us in Al-Hamalah.", ar: "زورونا في الهملة." } satisfies L,

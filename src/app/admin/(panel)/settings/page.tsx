@@ -117,6 +117,13 @@ export default async function SettingsPage() {
                 lang="ar"
                 required
               />
+              <AdminInput
+                label="Google Maps link"
+                name="mapUrl"
+                type="url"
+                defaultValue={locations.mapUrl ?? ""}
+                hint="The Share link from the showroom's Google Business Profile. Until it is set, the directions link searches Google Maps for the address."
+              />
             </div>
           </ActionForm>
         </Panel>

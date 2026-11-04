@@ -10,7 +10,8 @@ import { contactSchema, type ContactInput } from "@/lib/forms/contact";
 import { Field, FormAlert, SpamTraps, TextArea, TextInput } from "./fields";
 import { ConsentFields, errorKey, SuccessPanel, useStartedAt } from "./shared";
 
-export function ContactForm() {
+/** `initialMessage` starts the message box, so staff can see which page an enquiry came from. */
+export function ContactForm({ initialMessage = "" }: { initialMessage?: string }) {
   const t = useTranslations("Forms");
   const locale = useLocale() as "en" | "ar";
   const [done, setDone] = useState<{ reference: string | null } | null>(null);
@@ -20,7 +21,7 @@ export function ContactForm() {
     name: "",
     phone: "",
     email: "",
-    message: "",
+    message: initialMessage,
     consentEmail: false,
     consentWhatsapp: false,
     privacyAccepted: false as true,

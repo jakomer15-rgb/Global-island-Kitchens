@@ -18,9 +18,9 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 4. ★ **Arabic company name** as registered.
 5. Commercial Registration (CR) number, for the footer and legal pages (optional but common in Bahrain).
 6. Year founded (the profile says "over 11 years").
-7. Showroom **days** of opening (hours are 9:00 AM – 8:00 PM: every day? Friday?). Factory visiting hours, if visits are allowed.
+7. ✔ Showroom days confirmed (owner, 2026-11-05): Saturday to Thursday, 9:00 AM – 8:00 PM, closed Friday. Still open: factory visiting hours, if visits are allowed.
 8. Which phone number is for sales, and which has **WhatsApp**? Which number should the WhatsApp button use?
-9. Google Maps links (or exact pins) for the showroom and the head office/factory.
+9. ★ **Google Business Profile** for the Al-Hamalah showroom: the owner creates and verifies it at business.google.com (only the owner can). Then paste its Share link into Admin → Settings → Google Maps link; the website and its structured data use it from then on. Until then the directions link searches Google Maps for the address. Exact pins for the head office/factory are also needed.
 10. Head office: is it also the factory? (The brief says the factory is in Hamad Town; the profile lists the head office there.)
 11. Languages the team speaks with customers (English, Arabic, others?).
 
@@ -33,7 +33,7 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 16. Murphy beds, laundry rooms, laminate doors: confirm they should appear.
 17. Painted MDF: sheens offered (matt, satin, gloss) and colour system (RAL, NCS, other).
 18. Which EGGER décors are kept in stock or shown in the showroom (codes and names), for the materials gallery.
-19. Aluminium kitchens: profile systems, glass types and colours offered.
+19. Aluminium kitchens: profile systems, glass types and colours offered, and **photographs of finished aluminium kitchens**. None of the profile's photos is identified as aluminium, so the page has none; add them in Admin → Manage categories.
 20. Worktop materials offered (if any).
 21. Hardware brands used (hinges, runners), if they may be named.
 22. Warranty terms, if any.
@@ -86,7 +86,7 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 
 44. **EGGER décors and painted MDF colours** to list in the materials library (codes the company stocks or orders regularly). Each must be checked against EGGER's current collection before it is published; none are entered by us.
 45. **Website photographs:** which project photos may be shown (client and photographer permission), and who owns each, for the credit line. **Answered in part (2026-10-26):** the owner confirmed the profile photos may be shown; the profile gives no photographer or credit line, so none is shown. Projects without a photo stay text-only and out of search results. Photos of other projects, and any credit line, are still needed.
-46. **Opening hours wording:** the consultation form hint still says "9:00 AM – 8:00 PM" in its fixed text; if hours change in Admin → Settings, that hint needs a code change (or confirm hours won't change).
+46. **Opening hours wording:** Admin → Settings changes the hours shown in contact details only. The consultation form hint, the FAQ answer, two meta descriptions and the structured data (`company.showroom`) are fixed text; if the hours change, they need a code change.
 47. Fluent Arabic review of the new public text (blog page, testimonials heading, décor library labels in `src/content/cms.ts`).
 
 ## Added in Phase 6
@@ -104,6 +104,11 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 55. **Analytics:** none is installed. Choose a tool (and whether a cookie banner is needed) before launch; nothing loads without consent.
 56. **Customer consent records** are recorded as claimed on the form, not verified. Marketing messages need a confirmation step (double opt-in) when Phase 8 is built.
 57. **Mobile speed:** home pages score 81-86 on mobile Lighthouse. Reaching 90 needs a lighter page structure or a faster host/CDN; measure again on the production domain.
+
+## Added after the SEO review (2026-11-05)
+
+69. **Project stories:** project pages are built from the profile's facts. What was asked for, what was made and how it went (with completion years, #26) would make them stronger, and the owner has to supply it.
+70. Fluent Arabic review of the new product notes (`details` in `src/content/products.ts`), project text (`segmentAbout` in `src/content/projects.ts`) and enquiry form wording in `src/messages/ar.json`.
 
 ## Added in Phase 7
 
