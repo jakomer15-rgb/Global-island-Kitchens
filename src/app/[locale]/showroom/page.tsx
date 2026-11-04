@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { JsonLd } from "@/components/seo/json-ld";
 import { ContactDetails } from "@/components/site/contact-details";
 import { CtaBand } from "@/components/site/cta-band";
 import { PageHero } from "@/components/site/page-hero";
@@ -7,6 +8,7 @@ import { pathFor } from "@/config/routes";
 import { showroomPage as c } from "@/content/pages";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { organizationJsonLd } from "@/lib/structured-data";
 import { getSiteSettings } from "@/server/settings/site";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/showroom">): Promise<Metadata> {
@@ -19,7 +21,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/showroom
   });
 }
 
-// No map yet: the exact location pin hasn't been confirmed (docs/OPEN_QUESTIONS.md #9).
+// No embedded map: the exact location pin hasn't been confirmed (docs/OPEN_QUESTIONS.md #9).
 export default async function ShowroomPage({ params }: PageProps<"/[locale]/showroom">) {
   const locale = (await params).locale as Locale;
   setRequestLocale(locale);
@@ -28,6 +30,7 @@ export default async function ShowroomPage({ params }: PageProps<"/[locale]/show
 
   return (
     <>
+      <JsonLd data={organizationJsonLd(locale, contact, locations)} />
       <PageHero
         locale={locale}
         crumbs={[{ label: c.eyebrow[locale], path: pathFor("showroom") }]}

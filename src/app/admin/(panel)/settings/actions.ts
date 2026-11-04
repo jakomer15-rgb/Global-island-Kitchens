@@ -35,6 +35,7 @@ const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
     headOfficeAr: lines(f, "headOfficeAr"),
     hoursEn: str(f, "hoursEn"),
     hoursAr: str(f, "hoursAr"),
+    mapUrl: str(f, "mapUrl"),
   }),
   banner: (f) => ({ enabled: f.get("enabled") === "on", textEn: str(f, "textEn"), textAr: str(f, "textAr") }),
   homeHero: (f) => Object.fromEntries(Object.keys(settingSchemas.homeHero.shape).map((k) => [k, str(f, k)])),

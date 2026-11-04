@@ -1,5 +1,28 @@
 # Test report
 
+## SEO review fixes (2026-11-05)
+
+Showroom days in contact details, FAQ, meta descriptions and structured data; link previews (1200x630
+JPEGs in `public/images/og`, made by `scripts/prepare-social-images.mjs`); more text on product and
+project pages; the contact form on those pages; a Google Maps directions link and an admin setting
+for the Business Profile link.
+
+| Check                     | Result                 |
+| ------------------------- | ---------------------- |
+| Prettier, typecheck, lint | Pass                   |
+| Unit tests                | 91 passed              |
+| Database tests            | 56 passed              |
+| Production build          | Pass                   |
+| Playwright + axe          | 236 passed, 58 skipped |
+
+Checked by hand on the development server: an enquiry sent from `/kitchens/aluminium` saved and returned
+a reference; `/ar/projects/capri-suites-janabiya` and `/showroom` have no sideways scrolling at 375 px;
+`og:image` returned a JPEG on all nine pages sampled. Words in `main`: `/kitchens/aluminium` 416,
+`/projects/capri-suites-janabiya` 232.
+
+**Not verified:** a real WhatsApp preview and Google's Rich Results Test (both need the deployed site). The
+preview needs `NEXT_PUBLIC_SITE_URL` to be the public address in production, or the image links will not resolve.
+
 ## Reference redesign (2026-11-01)
 
 Restyled to the owner's single-page reference: new palette and fonts (Fraunces, Inter), square uppercase

@@ -43,7 +43,8 @@ export const company = {
     // [P8]
     lines: ["Building 2253B, Road 90", "Block 1014, Al-Hamalah", "Kingdom of Bahrain"],
     linesAr: ["مبنى 2253B، طريق 90", "مجمع 1014، الهملة", "مملكة البحرين"],
-    /** 9:00 AM – 8:00 PM [O]; opening days are not yet confirmed (OPEN_QUESTIONS #7). */
+    /** Saturday to Thursday, 9:00 AM – 8:00 PM, closed Friday [O]. */
+    openDays: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
     opens: "09:00",
     closes: "20:00",
   },
@@ -56,6 +57,12 @@ export function telHref(phone: Phone) {
 
 export function instagramUrl(handle: string) {
   return `https://www.instagram.com/${handle}/`;
+}
+
+/** The showroom on Google Maps: the link set in the admin, or a search for its address. */
+export function directionsHref(locations: { showroomEn: string[]; mapUrl: string | null }) {
+  const query = encodeURIComponent(locations.showroomEn.join(", "));
+  return locations.mapUrl ?? `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
 /** mailto: link with a pre-filled subject and body. */

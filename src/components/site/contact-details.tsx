@@ -1,7 +1,7 @@
 import { AtSign, Clock, Mail, MapPin, Phone, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
-import { instagramUrl, telHref } from "@/config/company";
+import { directionsHref, instagramUrl, telHref } from "@/config/company";
 import type { Locale } from "@/i18n/routing";
 import type { ContactSettings, LocationSettings } from "@/lib/site-settings";
 import { Address } from "./address";
@@ -63,6 +63,14 @@ export async function ContactDetails({
       </Row>
       <Row icon={MapPin} label={t("showroom")}>
         <Address lines={ar ? locations.showroomAr : locations.showroomEn} />
+        <a
+          href={directionsHref(locations)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline decoration-walnut/50 underline-offset-[6px] hover:decoration-walnut"
+        >
+          {t("directions")}
+        </a>
       </Row>
       <Row icon={Clock} label={t("hours")}>
         {ar ? locations.hoursAr : locations.hoursEn}

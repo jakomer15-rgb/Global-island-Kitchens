@@ -43,6 +43,15 @@ export const settingSchemas = {
     headOfficeAr: lines,
     hoursEn: z.string().trim().min(1).max(80),
     hoursAr: z.string().trim().min(1).max(80),
+    /** The showroom's Google Maps or Google Business Profile link; null uses a search for the address. */
+    mapUrl: z
+      .string()
+      .trim()
+      .max(500)
+      .regex(/^(https:\/\/.+)?$/, "Enter a full link starting with https://")
+      .transform((v) => v || null)
+      .nullable()
+      .default(null),
   }),
   banner: z
     .object({
@@ -116,8 +125,9 @@ export const settingDefaults: Settings = {
     showroomAr: [...company.showroom.linesAr],
     headOfficeEn: [...company.headOffice.lines],
     headOfficeAr: [...company.headOffice.linesAr],
-    hoursEn: "9:00 AM – 8:00 PM",
-    hoursAr: "9:00 صباحًا – 8:00 مساءً",
+    hoursEn: "Saturday to Thursday, 9:00 AM – 8:00 PM. Closed Friday.",
+    hoursAr: "من السبت إلى الخميس، 9:00 صباحًا – 8:00 مساءً. الجمعة مغلق.",
+    mapUrl: null,
   },
   // Empty values fall back to the built-in copy (src/messages).
   banner: { enabled: false, textEn: null, textAr: null },

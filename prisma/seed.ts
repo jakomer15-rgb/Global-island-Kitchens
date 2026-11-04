@@ -63,6 +63,17 @@ async function main() {
   for (const [key, value] of Object.entries(settingDefaults)) {
     await db.siteSetting.upsert({ where: { key }, update: {}, create: { key, value: value as object } });
   }
+  // Databases seeded before the opening days were confirmed: replace only that exact text, so hours
+  // edited in the admin stay.
+  const locations = await db.siteSetting.findUnique({ where: { key: "locations" } });
+  const stored = locations?.value as { hoursEn?: string } | undefined;
+  if (stored?.hoursEn === "9:00 AM – 8:00 PM") {
+    const { hoursEn, hoursAr } = settingDefaults.locations;
+    await db.siteSetting.update({
+      where: { key: "locations" },
+      data: { value: { ...(locations!.value as object), hoursEn, hoursAr } },
+    });
+  }
 
   // The portfolio is loaded only into an empty table: projects staff delete must not come back (the seed
   // runs on every production deployment).
