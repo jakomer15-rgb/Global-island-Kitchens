@@ -29,6 +29,8 @@ export type ScopeTag =
 export interface Product {
   key: ProductKey;
   name: L;
+  /** The page's h1: the name plus where it's made, matching how people search (SEO). */
+  heading: L;
   /** Meta title (≤ 60 characters with the brand suffix). */
   metaTitle: L;
   metaDescription: L;
@@ -46,7 +48,11 @@ export const products: Product[] = [
   {
     key: "woodenKitchens",
     name: { en: "Customised wooden kitchens", ar: "مطابخ خشبية حسب الطلب" },
-    metaTitle: { en: "Custom Kitchens in Bahrain", ar: "مطابخ حسب الطلب في البحرين" },
+    heading: {
+      en: "Customised wooden kitchens, made in Bahrain",
+      ar: "مطابخ خشبية حسب الطلب، تُصنع في البحرين",
+    },
+    metaTitle: { en: "Custom Fitted Kitchens in Bahrain", ar: "مطابخ مجهّزة حسب الطلب في البحرين" },
     metaDescription: {
       en: "Modern fitted kitchens made to measure in EGGER laminate and melamine boards or painted MDF, manufactured in Hamad Town and installed across Bahrain.",
       ar: "مطابخ عصرية مجهّزة على المقاس من ألواح اللامينيت والميلامين من إيجر (EGGER) أو ألواح MDF مدهونة، تُصنع في مدينة حمد وتُركَّب في أنحاء البحرين.",
@@ -89,10 +95,14 @@ export const products: Product[] = [
   {
     key: "aluminiumKitchens",
     name: { en: "Aluminium kitchens", ar: "مطابخ الألمنيوم" },
+    heading: {
+      en: "Aluminium kitchens, made to order in Bahrain",
+      ar: "مطابخ ألمنيوم حسب الطلب، تُصنع في البحرين",
+    },
     metaTitle: { en: "Aluminium Kitchens in Bahrain", ar: "مطابخ الألمنيوم في البحرين" },
     metaDescription: {
-      en: "Aluminium kitchens made to order by Global Island Kitchens in Bahrain. Visit our Al-Hamalah showroom or contact us to discuss your kitchen.",
-      ar: "مطابخ ألمنيوم تُصنع حسب الطلب لدى Global Island Kitchens في البحرين. زوروا صالة العرض في الهملة أو تواصلوا معنا لمناقشة مطبخكم.",
+      en: "Aluminium kitchens made to order in Bahrain, with glass where the design calls for it. Designed, manufactured and installed by one company. Visit our Al-Hamalah showroom.",
+      ar: "مطابخ ألمنيوم تُصنع حسب الطلب في البحرين، مع الزجاج حيث يتطلّب التصميم. تصميم وتصنيع وتركيب من شركة واحدة. زوروا صالة العرض في الهملة.",
     },
     intro: {
       en: "Aluminium kitchens are one of our core product lines, made to order alongside our board kitchens. Talk to us about your space and we will advise on the options.",
@@ -133,7 +143,11 @@ export const products: Product[] = [
   {
     key: "wardrobes",
     name: { en: "Wardrobes", ar: "خزائن الملابس" },
-    metaTitle: { en: "Fitted Wardrobes in Bahrain", ar: "خزائن ملابس مدمجة في البحرين" },
+    heading: {
+      en: "Fitted wardrobes, made to measure in Bahrain",
+      ar: "خزائن ملابس مدمجة، تُصنع على المقاس في البحرين",
+    },
+    metaTitle: { en: "Fitted & Sliding Wardrobes, Bahrain", ar: "خزائن ملابس مدمجة ومنزلقة في البحرين" },
     metaDescription: {
       en: "Hinged-door and sliding-door wardrobes and glass-door closets, made to measure in EGGER boards or painted MDF and installed across Bahrain.",
       ar: "خزائن ملابس بأبواب مفصلية وأبواب منزلقة وخزائن بأبواب زجاجية، تُصنع على المقاس من ألواح إيجر (EGGER) أو MDF مدهون وتُركَّب في أنحاء البحرين.",
@@ -178,6 +192,10 @@ export const products: Product[] = [
   {
     key: "walkInClosets",
     name: { en: "Walk-in closets", ar: "غرف الملابس" },
+    heading: {
+      en: "Walk-in closets, made to measure in Bahrain",
+      ar: "غرف ملابس تُصنع على المقاس في البحرين",
+    },
     metaTitle: { en: "Walk-in Closets in Bahrain", ar: "غرف الملابس في البحرين" },
     metaDescription: {
       en: "Walk-in closets made to measure by Global Island Kitchens, in EGGER laminate and melamine boards or painted MDF, manufactured in Hamad Town.",
@@ -213,6 +231,10 @@ export const products: Product[] = [
   {
     key: "bedroomFurniture",
     name: { en: "Bedroom furniture", ar: "أثاث غرف النوم" },
+    heading: {
+      en: "Bedroom furniture, made to order in Bahrain",
+      ar: "أثاث غرف نوم حسب الطلب، يُصنع في البحرين",
+    },
     metaTitle: { en: "Custom Bedroom Furniture, Bahrain", ar: "أثاث غرف نوم حسب الطلب، البحرين" },
     metaDescription: {
       en: "Bed sets with headboard panels, bedside units and dressing tables, and Murphy beds, made to order in EGGER boards or painted MDF in Bahrain.",
@@ -248,6 +270,10 @@ export const products: Product[] = [
   {
     key: "tvUnits",
     name: { en: "TV units", ar: "وحدات التلفزيون" },
+    heading: {
+      en: "TV units and feature walls, made in Bahrain",
+      ar: "وحدات تلفزيون وجدران مميزة، تُصنع في البحرين",
+    },
     metaTitle: { en: "TV Units & Feature Walls, Bahrain", ar: "وحدات التلفزيون والجدران المميزة، البحرين" },
     metaDescription: {
       en: "TV units and feature walls with integrated lighting, made to measure in EGGER boards or painted MDF by Global Island Kitchens in Bahrain.",
@@ -283,6 +309,10 @@ export const products: Product[] = [
   {
     key: "wallCladding",
     name: { en: "Wall cladding", ar: "تكسيات الجدران" },
+    heading: {
+      en: "Wall cladding and panelling, made in Bahrain",
+      ar: "تكسيات وألواح جدران، تُصنع في البحرين",
+    },
     metaTitle: { en: "Wall Cladding & Panelling, Bahrain", ar: "تكسيات وألواح الجدران، البحرين" },
     metaDescription: {
       en: "Slatted and panel wall cladding and panelled living spaces with LED accents, in EGGER boards or painted MDF, made in Bahrain.",
@@ -318,6 +348,10 @@ export const products: Product[] = [
   {
     key: "bathroomVanities",
     name: { en: "Bathroom vanities", ar: "وحدات المغاسل" },
+    heading: {
+      en: "Bathroom vanities, made to measure in Bahrain",
+      ar: "وحدات مغاسل تُصنع على المقاس في البحرين",
+    },
     metaTitle: { en: "Bathroom Vanities in Bahrain", ar: "وحدات مغاسل الحمامات في البحرين" },
     metaDescription: {
       en: "Floating and tall-unit bathroom vanities made to measure by Global Island Kitchens, manufactured in Hamad Town and installed across Bahrain.",

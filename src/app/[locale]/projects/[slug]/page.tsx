@@ -9,7 +9,7 @@ import { ProjectCard } from "@/components/site/project-card";
 import { pathFor } from "@/config/routes";
 import { projectsPage } from "@/content/pages";
 import { products } from "@/content/products";
-import { galleryOf, projectSummary, segmentAbout, segmentLabels } from "@/content/projects";
+import { galleryOf, projectSummary, segmentAbout, segmentLabels, type Project } from "@/content/projects";
 import { Link } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
@@ -19,6 +19,42 @@ import { getPortfolio } from "@/server/content/portfolio";
 export async function generateStaticParams() {
   const projects = await getPortfolio();
   return routing.locales.flatMap((locale) => projects.map((p) => ({ locale, slug: p.slug })));
+}
+
+/**
+ * "Name, place" within 60 characters with the brand suffix: the full place, else its last part
+ * ("Applied Science University, Sitra" → "Sitra"), else the name alone.
+ */
+function projectTitle(name: string, where: string) {
+  const fits = (t: string) => t.length + " | Global Island Kitchens".length <= 60;
+  const lastPart = where.split(/[,،]/).pop()!.trim();
+  return [`${name}, ${where}`, `${name}, ${lastPart}`, name].find(fits) ?? name;
+}
+
+/**
+ * The project's name, place, size and stated scope, then one line about the company (approved
+ * facts only), kept within 160 characters by dropping that line if needed.
+ */
+function projectDescription(project: Project, locale: Locale) {
+  const name = project.name[locale];
+  const scope = project.scopeText[locale];
+  const size = project.size ? ` (${project.size[locale]})` : "";
+  const place = `${name}${locale === "ar" ? "،" : ","} ${project.location[locale]}${size}`;
+  // Commercial projects' scope repeats their name ("Cafe booth"), so it's said once.
+  const sameAsName = scope.toLowerCase() === name.toLowerCase();
+  const lead =
+    locale === "ar"
+      ? sameAsName
+        ? `${place}.`
+        : `${place}: ${scope}.`
+      : sameAsName
+        ? `${place}.`
+        : `${place}: ${scope.charAt(0).toLowerCase()}${scope.slice(1)}.`;
+  const close =
+    locale === "ar"
+      ? " من Global Island Kitchens، صانعي المطابخ وخزائن الملابس وأعمال النجارة في البحرين."
+      : " By Global Island Kitchens, makers of kitchens, wardrobes and joinery in Bahrain.";
+  return (lead + close).length <= 160 ? lead + close : lead;
 }
 
 async function getProject(slug: string) {
@@ -35,8 +71,8 @@ export async function generateMetadata({
   const where = project.location[locale];
   const gallery = galleryOf(project);
   return pageMetadata({
-    title: `${project.name[locale]}, ${where}`,
-    description: `${project.scopeText[locale]} · ${where}${project.size ? ` · ${project.size[locale]}` : ""} · Global Island Kitchens`,
+    title: projectTitle(project.name[locale], where),
+    description: projectDescription(project, locale),
     path: `/projects/${project.slug}`,
     locale,
     image: gallery[0]?.src,

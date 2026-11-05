@@ -7,17 +7,20 @@ import { getCatalog } from "@/server/content/catalog";
 import { getPortfolio } from "@/server/content/portfolio";
 import { getBlogPosts } from "@/server/content/public";
 
-function entry(path: string, lastModified?: Date): MetadataRoute.Sitemap[number] {
-  return {
-    url: new URL(localizedPath(path, "en"), siteUrl).toString(),
-    ...(lastModified && { lastModified }),
-    alternates: {
-      languages: {
-        "en-BH": new URL(localizedPath(path, "en"), siteUrl).toString(),
-        "ar-BH": new URL(localizedPath(path, "ar"), siteUrl).toString(),
-      },
-    },
+/**
+ * A page in both languages: one entry for the English URL and one for the Arabic URL, each listing
+ * both as alternates, so search engines discover the Arabic pages directly (not only via hreflang).
+ */
+function entry(path: string, lastModified?: Date): MetadataRoute.Sitemap {
+  const languages = {
+    "en-BH": new URL(localizedPath(path, "en"), siteUrl).toString(),
+    "ar-BH": new URL(localizedPath(path, "ar"), siteUrl).toString(),
   };
+  return [languages["en-BH"], languages["ar-BH"]].map((url) => ({
+    url,
+    ...(lastModified && { lastModified }),
+    alternates: { languages },
+  }));
 }
 
 /**
@@ -30,10 +33,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...Object.values(pages)
       .filter((page) => page.ready && !hidden.has(page.path))
-      .map((page) => entry(page.path)),
-    ...catalog.products.filter((c) => !c.pageKey).map((c) => entry(c.href!)),
-    ...portfolio.filter((p) => galleryOf(p).length > 0).map((p) => entry(`${pathFor("projects")}/${p.slug}`)),
-    ...(posts.length > 0 ? [entry(pathFor("blog"))] : []),
-    ...posts.map((p) => entry(`${pathFor("blog")}/${p.slug}`, p.updatedAt)),
+      .flatMap((page) => entry(page.path)),
+    ...catalog.products.filter((c) => !c.pageKey).flatMap((c) => entry(c.href!)),
+    ...portfolio
+      .filter((p) => galleryOf(p).length > 0)
+      .flatMap((p) => entry(`${pathFor("projects")}/${p.slug}`)),
+    ...(posts.length > 0 ? entry(pathFor("blog")) : []),
+    ...posts.flatMap((p) => entry(`${pathFor("blog")}/${p.slug}`, p.updatedAt)),
   ];
 }

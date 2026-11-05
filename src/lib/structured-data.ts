@@ -1,8 +1,12 @@
 import { company, instagramUrl } from "@/config/company";
+import { pathFor } from "@/config/routes";
 import { siteUrl } from "@/config/site";
-import { localizedPath } from "@/lib/seo";
+import { localizedPath, socialImage } from "@/lib/seo";
 import type { Locale } from "@/i18n/routing";
 import type { ContactSettings, LocationSettings } from "@/lib/site-settings";
+
+/** The country the company serves (BUSINESS_FACTS: Kingdom of Bahrain). */
+const areaServed = { "@type": "Country", name: "Bahrain" } as const;
 
 /**
  * Organization and showroom JSON-LD from verified facts only. Map coordinates are left out until
@@ -17,7 +21,10 @@ export function organizationJsonLd(locale: Locale, contact: ContactSettings, loc
         "@type": "Organization",
         "@id": `${siteUrl}/#organization`,
         name: company.legalName,
+        alternateName: company.shortName,
         url,
+        image: new URL(socialImage(), siteUrl).toString(),
+        areaServed,
         email: contact.email,
         telephone: contact.phones.map((p) => p.e164),
         sameAs: [instagramUrl(contact.instagramHandle)],
@@ -33,7 +40,8 @@ export function organizationJsonLd(locale: Locale, contact: ContactSettings, loc
         "@id": `${siteUrl}/#showroom`,
         name: `${company.shortName} Showroom`,
         parentOrganization: { "@id": `${siteUrl}/#organization` },
-        url,
+        url: new URL(localizedPath(pathFor("showroom"), locale), siteUrl).toString(),
+        image: new URL(socialImage(), siteUrl).toString(),
         email: contact.email,
         telephone: contact.phones[0].e164,
         address: {
@@ -51,5 +59,37 @@ export function organizationJsonLd(locale: Locale, contact: ContactSettings, loc
         ...(locations.mapUrl ? { hasMap: locations.mapUrl } : {}),
       },
     ],
+  };
+}
+
+/**
+ * A product line as a Service made and installed by the company in Bahrain. Only the page's own
+ * name and description (approved copy); no prices, ratings or offers.
+ */
+export function serviceJsonLd({
+  name,
+  description,
+  path,
+  locale,
+}: {
+  name: string;
+  description: string;
+  path: string;
+  locale: Locale;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name,
+    serviceType: name,
+    description,
+    url: new URL(localizedPath(path, locale), siteUrl).toString(),
+    areaServed,
+    provider: {
+      "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
+      name: company.legalName,
+      url: new URL(localizedPath("/", locale), siteUrl).toString(),
+    },
   };
 }

@@ -54,9 +54,10 @@ export function Hero({ text }: { text?: HeroText }) {
           {text?.eyebrow ?? t("eyebrow")}
         </p>
         <div className="mt-6 flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+          {/* No entrance animation on the h1: it is the page's largest paint (LCP), so it shows at once. */}
           <h1
             id="hero-title"
-            className="max-w-[15ch] rise font-display text-display-2xl text-balance [animation-delay:100ms] rtl:max-w-[18ch]"
+            className="max-w-[15ch] font-display text-display-2xl text-balance rtl:max-w-[18ch]"
           >
             {text?.title ?? t("title")}{" "}
             <em className="text-sand-deep italic rtl:not-italic">{text?.accent ?? t("titleAccent")}</em>

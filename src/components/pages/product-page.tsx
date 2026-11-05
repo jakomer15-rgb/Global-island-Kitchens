@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CatalogItems } from "@/components/site/catalog-items";
 import { CtaBand } from "@/components/site/cta-band";
 import { EnquirySection } from "@/components/site/enquiry-section";
+import { JsonLd } from "@/components/seo/json-ld";
 import { PageHero } from "@/components/site/page-hero";
 import { ProjectCard } from "@/components/site/project-card";
 import { projectsWithScope, type Project } from "@/content/projects";
@@ -17,6 +18,7 @@ import type { CatalogCategory } from "@/content/categories";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { pageMetadata } from "@/lib/seo";
+import { serviceJsonLd } from "@/lib/structured-data";
 
 const stageKeys = [
   "inquiry",
@@ -76,11 +78,19 @@ export async function ProductPage({
 
   return (
     <>
+      <JsonLd
+        data={serviceJsonLd({
+          name: p.name[locale],
+          description: p.metaDescription[locale],
+          path: pathFor(productKey),
+          locale,
+        })}
+      />
       <PageHero
         locale={locale}
         crumbs={[{ label: p.name[locale], path: pathFor(productKey) }]}
         eyebrow={t("makes")}
-        title={p.name[locale]}
+        title={p.heading[locale]}
         intro={p.intro[locale]}
         image={category.image ?? undefined}
       />

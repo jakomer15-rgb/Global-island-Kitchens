@@ -77,7 +77,7 @@ test("mobile menu opens, navigates and closes", async ({ page, isMobile }) => {
   await dialog.getByRole("link", { name: "Wardrobes" }).click();
   await expect(dialog).toBeHidden();
   await expect(page).toHaveURL(/\/wardrobes$/);
-  await expect(page.locator("h1")).toHaveText("Wardrobes");
+  await expect(page.locator("h1")).toHaveText("Fitted wardrobes, made to measure in Bahrain");
 });
 
 test("WhatsApp button stays hidden until a number is configured", async ({ page }) => {

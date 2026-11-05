@@ -3,7 +3,7 @@ import type { L, LList } from "./types";
 /** Copy for the non-product pages, from docs/BUSINESS_FACTS.md only. */
 
 export const about = {
-  metaTitle: { en: "About Us", ar: "من نحن" } satisfies L,
+  metaTitle: { en: "About Our Joinery Factory, Bahrain", ar: "من نحن: مصنع نجارة في البحرين" } satisfies L,
   metaDescription: {
     en: "Global Island Kitchens W.L.L: over 11 years manufacturing, supplying and installing kitchens, wardrobes and interior joinery in Bahrain, from our Hamad Town factory.",
     ar: "Global Island Kitchens W.L.L: أكثر من 11 عامًا في تصنيع المطابخ وخزائن الملابس وأعمال النجارة الداخلية وتوريدها وتركيبها في البحرين، من مصنعنا في مدينة حمد.",
@@ -98,8 +98,8 @@ export const about = {
 
 export const bespokePage = {
   metaTitle: {
-    en: "Laundry Rooms, Doors & Bespoke Joinery",
-    ar: "غرف الغسيل والأبواب والنجارة حسب الطلب",
+    en: "Laundry Rooms & Bespoke Joinery",
+    ar: "غرف الغسيل والنجارة حسب الطلب",
   } satisfies L,
   metaDescription: {
     en: "Fitted laundry rooms, laminate doors with concealed hinges, Murphy beds and custom cabinets, made to measure by Global Island Kitchens in Bahrain.",
@@ -161,7 +161,10 @@ export const materialsPage = {
 };
 
 export const projectsPage = {
-  metaTitle: { en: "Our Projects", ar: "مشاريعنا" } satisfies L,
+  metaTitle: {
+    en: "Kitchen & Joinery Projects, Bahrain",
+    ar: "مشاريع المطابخ والنجارة في البحرين",
+  } satisfies L,
   metaDescription: {
     en: "Residential buildings, villas and commercial interiors across Bahrain by Global Island Kitchens: kitchens, closets, bed sets, TV units, vanities, doors and cladding.",
     ar: "مبانٍ سكنية وفلل وتصاميم داخلية تجارية في أنحاء البحرين من Global Island Kitchens: مطابخ وخزائن وأطقم غرف نوم ووحدات تلفزيون ووحدات مغاسل وأبواب وتكسيات.",
@@ -179,8 +182,8 @@ export const projectsPage = {
 
 export const designersPage = {
   metaTitle: {
-    en: "For Designers, Architects & Developers",
-    ar: "للمصممين والمعماريين والمطوّرين",
+    en: "Joinery Manufacturer for Developers",
+    ar: "مصنع نجارة للمطوّرين والمصممين",
   } satisfies L,
   metaDescription: {
     en: "Global Island Kitchens manufactures and installs kitchens, wardrobes and joinery for interior designers, architects, developers and contractors in Bahrain.",
@@ -284,7 +287,7 @@ export const consultationPage = {
 };
 
 export const showroomPage = {
-  metaTitle: { en: "Our Showroom in Al-Hamalah", ar: "صالة العرض في الهملة" } satisfies L,
+  metaTitle: { en: "Kitchen Showroom in Al-Hamalah", ar: "صالة عرض المطابخ في الهملة" } satisfies L,
   metaDescription: {
     en: "Visit the Global Island Kitchens showroom at Building 2253B, Road 90, Block 1014, Al-Hamalah. Open Saturday to Thursday, 9:00 AM – 8:00 PM. Closed Friday.",
     ar: "زوروا صالة عرض Global Island Kitchens في مبنى 2253B، طريق 90، مجمع 1014، الهملة. من السبت إلى الخميس، 9:00 صباحًا – 8:00 مساءً. الجمعة مغلق.",

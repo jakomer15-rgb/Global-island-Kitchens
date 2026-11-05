@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { alternates, localizedPath, pageMetadata, socialImage } from "./seo";
 import { settingDefaults } from "@/lib/site-settings";
-import { organizationJsonLd } from "./structured-data";
+import { organizationJsonLd, serviceJsonLd } from "./structured-data";
 
 describe("seo", () => {
   it("keeps English unprefixed and puts Arabic under /ar", () => {
@@ -56,5 +56,30 @@ describe("structured data", () => {
     const { contact, locations } = settingDefaults;
     const mapUrl = "https://maps.app.goo.gl/example";
     expect(JSON.stringify(organizationJsonLd("en", contact, { ...locations, mapUrl }))).toContain(mapUrl);
+  });
+});
+
+describe("service structured data", () => {
+  it("describes a product line as a Service in Bahrain, provided by the company, with no offers or reviews", () => {
+    const json = serviceJsonLd({
+      name: "Wardrobes",
+      description: "D",
+      path: "/wardrobes",
+      locale: "ar",
+    });
+    expect(json).toMatchObject({
+      "@type": "Service",
+      name: "Wardrobes",
+      areaServed: { "@type": "Country", name: "Bahrain" },
+      provider: { "@type": "Organization", name: "Global Island Kitchens W.L.L" },
+    });
+    expect(json.url).toMatch(/\/ar\/wardrobes$/);
+    expect(JSON.stringify(json)).not.toMatch(/Review|AggregateRating|Offer|price/);
+  });
+
+  it("points the showroom at its own page", () => {
+    const { contact, locations } = settingDefaults;
+    const graph = organizationJsonLd("en", contact, locations)["@graph"];
+    expect(graph[1].url).toMatch(/\/showroom$/);
   });
 });

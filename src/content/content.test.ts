@@ -81,6 +81,22 @@ describe("content", () => {
     for (const p of products) expect(p.metaTitle.en.length + 25, p.metaTitle.en).toBeLessThanOrEqual(60);
   });
 
+  it("gives every product page an h1 that names Bahrain, distinct from its menu name", () => {
+    for (const p of products) {
+      expect(p.heading.en, p.key).toMatch(/Bahrain/);
+      expect(p.heading.ar, p.key).toMatch(/البحرين/);
+      expect(p.heading.en).not.toBe(p.name.en);
+    }
+  });
+
+  it("keeps every page title within 60 characters with the brand suffix", () => {
+    const titles = [
+      ...products.map((p) => p.metaTitle.en),
+      ...Object.values(pageCopy).map((c) => c.metaTitle.en),
+    ];
+    for (const title of titles) expect(title.length + 25, title).toBeLessThanOrEqual(60);
+  });
+
   it("has a page for every product and unique project slugs", () => {
     for (const p of products) expect(pages[p.key as ProductKey].ready).toBe(true);
     expect(pages.bespoke.ready).toBe(true);
