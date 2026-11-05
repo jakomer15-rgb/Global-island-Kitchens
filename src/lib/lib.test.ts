@@ -80,6 +80,6 @@ describe("service structured data", () => {
   it("points the showroom at its own page", () => {
     const { contact, locations } = settingDefaults;
     const graph = organizationJsonLd("en", contact, locations)["@graph"];
-    expect(graph[1].url).toMatch(/\/showroom$/);
+    expect(graph[1]?.url).toMatch(/\/showroom$/);
   });
 });
