@@ -73,7 +73,7 @@ export function SiteFooter({
           <h2 id="footer-products" className={heading}>
             {t("Nav.products")}
           </h2>
-          <ul className="mt-5 space-y-2 text-sm">
+          <ul className="mt-5 space-y-3 text-sm">
             {productLinks.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} className={link}>
@@ -93,7 +93,7 @@ export function SiteFooter({
           <h2 id="footer-company" className={heading}>
             {t("Nav.company")}
           </h2>
-          <ul className="mt-5 space-y-2 text-sm">
+          <ul className="mt-5 space-y-3 text-sm">
             {(showBlog ? [...companyLinks, blogLink] : companyLinks).map(([page, key]) => (
               <li key={page}>
                 <Link href={pathFor(page)} className={link}>

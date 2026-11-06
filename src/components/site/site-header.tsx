@@ -27,8 +27,9 @@ export function SiteHeader({ phone, productLinks }: { phone: PhoneNumber; produc
   return (
     <HeaderShell>
       <div className="container-site flex h-18 items-center justify-between gap-3 sm:gap-6 lg:h-20">
-        <Link href="/" aria-label={t("Common.homeLink")} className="shrink-0 py-2">
+        <Link href="/" className="shrink-0 py-2">
           <Wordmark tone="inherit" />
+          <span className="sr-only">{t("Common.homeLink")}</span>
         </Link>
 
         <DesktopNav

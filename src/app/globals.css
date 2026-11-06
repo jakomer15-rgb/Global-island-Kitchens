@@ -82,12 +82,16 @@
   }
 
   /*
-   * Sections after the first are laid out only when scrolled near (content and accessibility tree
-   * are unaffected). The intrinsic size placeholder keeps the scrollbar stable.
+   * On phones and tablets, sections after the first are laid out only when scrolled near (content
+   * and accessibility tree are unaffected), which is where the long page's layout cost matters. The
+   * intrinsic size placeholder keeps the scrollbar stable. Not on desktop: the cost is small there,
+   * and Lighthouse's axe reads the wrong background behind sections that haven't been rendered.
    */
-  main > section ~ section {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 900px;
+  @media (width < 64rem) {
+    main > section ~ section {
+      content-visibility: auto;
+      contain-intrinsic-size: auto 900px;
+    }
   }
 
   ::selection {
@@ -127,13 +131,12 @@
   }
 }
 
+/* Movement only: fading would lower the text's contrast while it is on screen. */
 @keyframes reveal-up {
   from {
-    opacity: 0;
     translate: 0 1.5rem;
   }
   to {
-    opacity: 1;
     translate: 0 0;
   }
 }

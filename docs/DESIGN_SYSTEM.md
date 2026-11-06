@@ -53,8 +53,9 @@ All text combinations pass WCAG 2.1 AA; axe runs on every E2E build.
 - `container-site`: max 84 rem, 20 px gutters on mobile, 40 px from 768 px.
 - Sections: `py-24 md:py-32`, alternating ivory / sand, with charcoal and walnut-deep bands for rhythm.
 - Section headings: numbered eyebrow (`01 —— What we make`), display title, optional intro (max 38 rem).
-- Sections after the first in `main` use `content-visibility: auto` (laid out only when near the
-  viewport). Accessibility scans must render them first (`e2e/axe.ts`).
+- Below `lg`, sections after the first in `main` use `content-visibility: auto` (laid out only when
+  near the viewport). Accessibility scans must render them first (`e2e/axe.ts`). Desktop doesn't use
+  it: the layout cost is small there, and Lighthouse's axe misreads unrendered sections.
 - RTL: logical utilities only (`ms-`, `pe-`, `start-`, `end-`, `border-e`); directional icons flipped
   with `rtl:` variants.
 
@@ -77,7 +78,7 @@ All text combinations pass WCAG 2.1 AA; axe runs on every E2E build.
 | `LanguageSwitcher` | Full page load to the same page in the other language (canonical URLs, correct `lang`/`dir`)                                                                                                                |
 | `WhatsAppButton`   | Hidden until `NEXT_PUBLIC_WHATSAPP_NUMBER` is set                                                                                                                                                           |
 | `Swatch`           | CSS-gradient finish illustrations (no images or SVG filters, cheap to paint)                                                                                                                                |
-| `Reveal`           | CSS scroll-driven fade-up; content is visible without it (no JS, reduced motion, unsupported browsers)                                                                                                      |
+| `Reveal`           | CSS scroll-driven slide-up, movement only: fading would lower text contrast while it is on screen                                                                                                           |
 | `Wordmark`         | Typographic placeholder until the logo is supplied                                                                                                                                                          |
 
 ## Motion

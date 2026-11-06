@@ -1,8 +1,9 @@
 import { Amiri, Fraunces, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 
 // English: Fraunces (display) and Inter (text). Arabic: Amiri (display) and IBM Plex Sans Arabic
-// (text). Nothing is preloaded, so Arabic pages don't download English preloads and vice versa;
-// `display: swap` keeps text visible while fonts load.
+// (text). The Latin fonts are preloaded because every page needs them (the wordmark is always
+// Latin); arriving before first paint stops text re-wrapping when they swap in. The Arabic fonts
+// aren't, so English pages don't download them. `display: swap` keeps text visible while fonts load.
 
 export const fraunces = Fraunces({
   subsets: ["latin"],
@@ -10,14 +11,12 @@ export const fraunces = Fraunces({
   style: ["normal", "italic"],
   variable: "--font-fraunces",
   display: "swap",
-  preload: false,
 });
 
 export const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
-  preload: false,
 });
 
 export const amiri = Amiri({

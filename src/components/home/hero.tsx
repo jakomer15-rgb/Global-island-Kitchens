@@ -49,7 +49,8 @@ export function Hero({ text }: { text?: HeroText }) {
       />
 
       <div className="relative container-site pt-32 pb-16 lg:pb-24">
-        <p className="flex rise items-center gap-3 eyebrow text-walnut-soft">
+        {/* Two lines reserved on phones: it wraps once Inter loads, which would otherwise lift the hero. */}
+        <p className="flex rise items-center gap-3 eyebrow text-walnut-soft max-sm:min-h-[2lh]">
           <span aria-hidden className="h-px w-7 bg-oak" />
           {text?.eyebrow ?? t("eyebrow")}
         </p>

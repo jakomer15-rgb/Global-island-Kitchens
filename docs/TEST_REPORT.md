@@ -1,5 +1,27 @@
 # Test report
 
+## Agentic Browsing and accessibility (2026-11-07)
+
+Lighthouse 13.6, production build, nine pages (`/`, `/ar`, `/projects`, `/request-a-quote`, `/contact`,
+`/kitchens/wooden`, `/materials`, `/faq`, `/showroom`) on mobile and desktop: Accessibility 100 and
+no failed audits on all 18 runs. Prettier, typecheck, lint, 95 unit tests and the build pass. E2E was
+not run (local Postgres was stopped).
+
+| Issue                                                         | Fix                                                     |
+| ------------------------------------------------------------- | ------------------------------------------------------- |
+| Scroll reveal faded text, so it was low contrast on screen    | `reveal` moves content only; no opacity change          |
+| axe misread unrendered sections on desktop (97)               | `content-visibility` only below `lg`, where it pays off |
+| Logo link and language switch names lacked their visible text | Names now include it                                    |
+| Hero eyebrow wrapped when Inter loaded (mobile CLS 0.014)     | Two lines reserved on phones (mobile CLS 0)             |
+| Footer links on phones: 22 px safe target, 24 required        | More space between links                                |
+
+Fraunces and Inter are now preloaded, because the wordmark needs them on every page.
+
+Lighthouse's CLS audit fails locally with `NO_NAVSTART` on Chrome and Edge 156, so CLS is measured
+with PageSpeed Insights and a `layout-shift` observer. Remaining CLS (observer, slow 4G): home 0.0014 desktop;
+`/ar` 0.018 mobile, 0.0017 desktop. Agentic Browsing shows 3/3: the four WebMCP and ARD audits are not
+applicable, because the site registers no WebMCP tools.
+
 ## SEO review fixes (2026-11-05)
 
 Showroom days in contact details, FAQ, meta descriptions and structured data; link previews (1200x630
