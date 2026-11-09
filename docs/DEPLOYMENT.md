@@ -96,7 +96,11 @@ from the `main` branch of `jakomer15-rgb/Global-island-Kitchens`. Merging into `
 deploy: Vercel runs `scripts/vercel-build.mjs`, which applies pending migrations and the seed to the
 production database, then builds. Each step needs the owner's go-ahead.
 
-1. **Before:** check that last night's backup ran (GitHub → Actions → backup). The release adds three
+1. **Before:** take a restore point. The production database is on Neon (project "Global Island Kitchens",
+   Frankfurt, branch `production`): Neon console → Backup & Restore → **Create snapshot** (the free plan keeps
+   one snapshot, which never expires; delete the old one before the next release). Neon can also restore to
+   any moment in the last 6 hours. The nightly GitHub backup is not working yet: its `BACKUP_*` secrets and a
+   backup bucket were never set up (checked 2026-11-09). Snapshot taken before this release on 2026-11-09. The release adds three
    migrations, all additive (new tables `knowledge_entries`, `chat_conversations`, `chat_messages`,
    `lead_requirements`; new nullable/defaulted columns on `leads`, `file_assets`; a new lead source). Nothing
    existing is changed or deleted. The seed adds the website FAQs to the (empty) knowledge base.
