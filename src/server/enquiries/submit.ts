@@ -16,7 +16,8 @@ import type { DesignerProject } from "@/lib/designer";
  * reference the customer sees, e.g. GIK-Q-2026-00042.
  */
 
-type Prefix = "Q" | "C" | "M" | "W";
+/** Q quotation, C consultation, M message, W WhatsApp, A AI sales chat. */
+type Prefix = "Q" | "C" | "M" | "W" | "A";
 
 export async function nextReference(tx: Tx, prefix: Prefix, now = new Date()): Promise<string> {
   const [row] = await tx.$queryRaw<{ n: bigint }[]>`SELECT nextval('enquiry_reference_seq') AS n`;
@@ -66,7 +67,7 @@ export async function findOrCreateCustomer(tx: Tx, input: ContactInput) {
   });
 }
 
-async function recordConsent(
+export async function recordConsent(
   tx: Tx,
   customerId: string,
   input: { consentEmail: boolean; consentWhatsapp: boolean; email?: string; phone?: string },
@@ -99,7 +100,7 @@ function submittedDetails(
     .join("\n");
 }
 
-async function createLead(
+export async function createLead(
   tx: Tx,
   args: {
     prefix: Prefix;
@@ -125,7 +126,7 @@ async function createLead(
 }
 
 /** Runs a submission; on a rare race for a new customer's unique phone/email, retries once. */
-async function inTransaction<T>(db: Db, work: (tx: Tx) => Promise<T>): Promise<T> {
+export async function inTransaction<T>(db: Db, work: (tx: Tx) => Promise<T>): Promise<T> {
   try {
     return await db.$transaction(work);
   } catch (error) {

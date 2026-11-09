@@ -100,6 +100,19 @@ export const leadStatusTone: Record<string, Tone> = {
   lost: "bad",
 };
 
+const temperatureTone: Record<string, Tone> = { hot: "bad", warm: "warn", cold: "info" };
+
+/** HOT / WARM / COLD from the sales chat (or set by staff). */
+export function TemperatureBadge({ value, byStaff }: { value: string | null; byStaff?: boolean }) {
+  if (!value) return <span className="text-xs text-ink-muted">—</span>;
+  return (
+    <Badge tone={temperatureTone[value] ?? "neutral"}>
+      {value.toUpperCase()}
+      {byStaff === false && <span className="ms-1 font-normal opacity-70">· AI</span>}
+    </Badge>
+  );
+}
+
 export const consultationTone: Record<string, Tone> = {
   requested: "info",
   confirmed: "good",

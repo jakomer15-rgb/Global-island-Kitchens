@@ -21,6 +21,8 @@ const pages = [
   ["/admin", "Dashboard"],
   ["/admin/follow-ups", "Follow-ups"],
   ["/admin/leads", "Leads"],
+  ["/admin/ai-sales", "AI sales"],
+  ["/admin/ai-agent", "AI agent"],
   ["/admin/customers", "Customers"],
   ["/admin/consultations", "Consultations"],
   ["/admin/content", "Homepage and banner"],
@@ -40,8 +42,8 @@ test.describe("admin portal", () => {
   test.skip(({ isMobile }) => isMobile, "admin journeys run once, on desktop");
 
   test("every page opens for the owner without accessibility problems", async ({ page }) => {
-    // axe on 16 pages; slow when the whole suite runs in parallel
-    test.setTimeout(300_000);
+    // axe on 18 pages; slow when the whole suite runs in parallel
+    test.setTimeout(480_000);
     await signIn(page);
     for (const [path, heading] of pages) {
       await page.goto(path);
@@ -51,8 +53,9 @@ test.describe("admin portal", () => {
   });
 
   test("a new sales manager sees only the CRM", async ({ page, browser }) => {
-    // Two password hashes and several page loads; slow when the whole suite runs in parallel
-    test.setTimeout(90_000);
+    // Two password hashes and several page loads; slow when the whole suite runs in parallel, and the
+    // test database's staff list grows with every run
+    test.setTimeout(180_000);
     await signIn(page);
     await page.goto("/admin/staff");
     const email = `sales-${uid()}@example.test`;
@@ -62,7 +65,7 @@ test.describe("admin portal", () => {
     await form.getByLabel("Temporary password").fill("a sales password that is long");
     await form.getByLabel(/Sales & Project Manager/).check();
     await form.getByRole("button", { name: "Create account" }).click();
-    await expect(page.getByText(/Account created/)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/Account created/)).toBeVisible({ timeout: 90_000 });
     await expect(form.getByLabel("Email")).toHaveValue("");
 
     const other = await browser.newContext({

@@ -13,7 +13,9 @@ import {
   leadStatusTone,
   PageHeader,
   Panel,
+  TemperatureBadge,
 } from "@/components/admin/ui";
+import { requirementFields } from "@/server/chat/admin";
 import { CUID } from "@/server/admin/action";
 import { requireActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
@@ -34,10 +36,20 @@ import {
   changeStatusAction,
   completeFollowUpAction,
   logActivityAction,
+  saveRequirementsAction,
   scheduleFollowUpAction,
+  setTemperatureAction,
 } from "../actions";
 
 export const metadata: Metadata = { title: "Lead" };
+
+const languageName: Record<string, string> = {
+  en: "English",
+  ar: "Arabic",
+  hi: "Hindi",
+  ur: "Urdu",
+  other: "Other language",
+};
 
 type Wall = { label?: string; width?: number; height?: number; depth?: number };
 
@@ -204,6 +216,94 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
               </div>
             )}
           </Panel>
+
+          {(lead.requirements || lead.chats.length > 0) && (
+            <Panel title="Requirements">
+              {!lead.requirements?.editedByStaff && (
+                <p className="mb-3 text-xs text-ink-muted">
+                  Noted by the AI assistant from the chat. Check them with the customer; once you save changes
+                  here, the assistant no longer updates them.
+                </p>
+              )}
+              {canUpdate ? (
+                <ActionForm
+                  action={saveRequirementsAction.bind(null, lead.id)}
+                  submitLabel="Save requirements"
+                >
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {requirementFields.map(([key, title, max]) =>
+                      key === "notes" ? (
+                        <AdminTextarea
+                          key={key}
+                          label={title}
+                          name={key}
+                          rows={2}
+                          maxLength={max}
+                          defaultValue={lead.requirements?.[key] ?? ""}
+                          className="sm:col-span-2"
+                        />
+                      ) : (
+                        <AdminInput
+                          key={key}
+                          label={title}
+                          name={key}
+                          maxLength={max}
+                          defaultValue={lead.requirements?.[key] ?? ""}
+                        />
+                      ),
+                    )}
+                  </div>
+                </ActionForm>
+              ) : (
+                <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                  {requirementFields.map(([key, title]) => (
+                    <div key={key}>
+                      <dt className="text-ink-muted">{title}</dt>
+                      <dd>{lead.requirements?.[key] ?? "—"}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </Panel>
+          )}
+
+          {lead.chats.length > 0 && (
+            <Panel title="AI chat">
+              <ul className="space-y-4 text-sm">
+                {lead.chats.map((c) => (
+                  <li key={c.id} className="border-s-2 border-sand-deep ps-4">
+                    <p className="text-xs text-ink-muted">
+                      Started {fmtDateTime(c.startedAt)} · {c.messageCount} messages
+                      {c.language ? ` · ${languageName[c.language] ?? c.language}` : ""}{" "}
+                      <TemperatureBadge value={c.temperature} />
+                    </p>
+                    {c.summary && <p className="mt-1">{c.summary}</p>}
+                    {c.temperatureNote && <p className="mt-1 text-xs text-ink-muted">{c.temperatureNote}</p>}
+                    {c.files.length > 0 && (
+                      <p className="mt-1">
+                        Photos:{" "}
+                        {c.files.map((f, i) => (
+                          <span key={f.id}>
+                            {i > 0 && ", "}
+                            {canFiles ? (
+                              <a href={`/admin/files/${f.id}`} className="underline">
+                                {f.originalName}
+                              </a>
+                            ) : (
+                              f.originalName
+                            )}
+                          </span>
+                        ))}
+                      </p>
+                    )}
+                    <Link href={`/admin/ai-sales/chats/${c.id}`} className="mt-1 inline-block underline">
+                      Read the conversation
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          )}
 
           <Panel title="Communication history and notes">
             {canUpdate && (
@@ -431,6 +531,36 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
                   maxLength={300}
                 />
               </ActionForm>
+            </Panel>
+          )}
+
+          {(lead.temperature || lead.source === "website_chat" || canUpdate) && (
+            <Panel title="Rating (HOT / WARM / COLD)">
+              <p className="mb-3 flex items-center gap-2 text-sm">
+                <TemperatureBadge value={lead.temperature} byStaff={lead.temperatureByStaff} />
+                <span className="text-xs text-ink-muted">
+                  {lead.temperature
+                    ? lead.temperatureByStaff
+                      ? "Set by staff"
+                      : "Set by the AI assistant"
+                    : "Not rated yet"}
+                </span>
+              </p>
+              {canUpdate && (
+                <ActionForm action={setTemperatureAction.bind(null, lead.id)} submitLabel="Save rating">
+                  <AdminSelect
+                    label="Rating"
+                    name="temperature"
+                    defaultValue={lead.temperatureByStaff && lead.temperature ? lead.temperature : "ai"}
+                    options={[
+                      { value: "hot", label: "HOT: clear project, budget, buying soon" },
+                      { value: "warm", label: "WARM: interested, still comparing" },
+                      { value: "cold", label: "COLD: browsing, gathering information" },
+                      { value: "ai", label: "Let the AI assistant decide" },
+                    ]}
+                  />
+                </ActionForm>
+              )}
             </Panel>
           )}
 

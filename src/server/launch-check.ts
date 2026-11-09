@@ -94,6 +94,14 @@ export function checkEnvironment(e: EnvLike): Finding[] {
     add("warn", "n8n", "Set both N8N_WEBHOOK_URL and N8N_WEBHOOK_SECRET, or neither.");
   if (set("WHATSAPP_VERIFY_TOKEN") !== set("WHATSAPP_APP_SECRET"))
     add("warn", "WhatsApp", "Set both WHATSAPP_VERIFY_TOKEN and WHATSAPP_APP_SECRET, or neither.");
+  const alert = ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_LEAD_TEMPLATE"];
+  const alertSet = alert.filter(set).length;
+  if (alertSet > 0 && alertSet < alert.length)
+    add(
+      "warn",
+      "WhatsApp",
+      "Sales-chat WhatsApp alerts need WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_LEAD_TEMPLATE together.",
+    );
   return out;
 }
 
@@ -111,6 +119,8 @@ export interface DatabaseFacts {
   publishedMaterials: number;
   aiEnabled: boolean;
   aiKeySet: boolean;
+  /** The sales chat (Admin → AI agent). Optional so older callers keep working. */
+  chat?: { enabled: boolean; dailyLimit: number; notifyEmails: number; envNotifyEmails: boolean };
 }
 
 export function checkDatabase(f: DatabaseFacts): Finding[] {
@@ -140,6 +150,21 @@ export function checkDatabase(f: DatabaseFacts): Finding[] {
     add("warn", "Content", "No published materials: the décor library is empty.");
   if (f.aiEnabled && !f.aiKeySet)
     add("warn", "AI", "AI is switched on in Settings but no key is set, so it stays off.");
+  if (f.chat?.enabled) {
+    if (!f.aiKeySet)
+      add(
+        "warn",
+        "Sales chat",
+        "The chat is switched on but ANTHROPIC_API_KEY is not set, so it stays hidden.",
+      );
+    else add("ok", "Sales chat", `The chat is on, at most ${f.chat.dailyLimit} AI calls a day.`);
+    if (f.chat.notifyEmails === 0 && !f.chat.envNotifyEmails)
+      add(
+        "warn",
+        "Sales chat",
+        "Nobody gets chat lead emails: add addresses in Admin → AI agent (or NOTIFY_EMAILS).",
+      );
+  } else if (f.chat) add("ok", "Sales chat", "The chat is off (Admin → AI agent).");
   return out;
 }
 

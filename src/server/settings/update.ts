@@ -13,6 +13,7 @@ export const settingPermission: Record<SettingKey, Permission> = {
   seo: "content.manage",
   quotation: "settings.manage",
   ai: "settings.manage",
+  chatAgent: "chat.manage",
 };
 
 export async function readSetting<K extends SettingKey>(db: Db, actor: Actor, key: K): Promise<Settings[K]> {

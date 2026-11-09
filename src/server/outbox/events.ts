@@ -37,8 +37,28 @@ export interface WhatsAppReceived {
   newLead: boolean;
 }
 
+/**
+ * A visitor sent the sales chat's contact form. The sales-team email is built when it is sent, from
+ * the lead's latest requirements and rating (the AI reading finishes just after the form).
+ */
+export interface ChatLead {
+  leadId: string;
+  reference: string;
+  conversationId: string;
+  reason: "quotation" | "callback" | "showroom_visit" | "human";
+  /** false: the chat was added to the customer's open lead. */
+  newLead: boolean;
+  locale: "en" | "ar";
+  customer: { name: string; phone: string; email: string | null };
+  preferredContact: "whatsapp" | "call" | "email";
+  customerId: string;
+  consent: { email: boolean; whatsapp: boolean };
+  unsubscribeUrl: string | null;
+}
+
 export interface OutboxEvents {
   "enquiry.received": EnquiryReceived;
+  "chat.lead": ChatLead;
   "lead.status_changed": LeadStatusChanged;
   "quotation.sent": QuotationEvent;
   "quotation.approved": QuotationEvent;

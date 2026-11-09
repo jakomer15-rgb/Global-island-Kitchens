@@ -11,6 +11,31 @@ describe("what the AI provider is allowed to see", () => {
     expect(clean).not.toMatch(/Amal Test|3459|34597636|@example\.com/);
     expect(clean).toContain("kitchen");
   });
+
+  it("finds numbers in Arabic digits and common phone formats", () => {
+    for (const phone of [
+      "٣٤٥٩٧٦٣٦",
+      "۳۴۵۹۷۶۳۶",
+      "+973 3459 7636",
+      "3459-7636",
+      "(973) 34597636",
+      "00973-34597636",
+    ]) {
+      expect(redactContact(`call me ${phone} please`), phone).toBe("call me [number removed] please");
+    }
+  });
+
+  it("keeps measurements, budgets and quantities", () => {
+    for (const text of [
+      "The wall is 2.4 x 3.6 m",
+      "Budget 1500 - 2000 BD",
+      "Around 1,500 BHD",
+      "240 cm by 300 cm, 3 doors",
+      "الميزانية ٢٠٠٠ دينار",
+    ]) {
+      expect(redactContact(text)).not.toContain("[number removed]");
+    }
+  });
 });
 
 describe("assistant answers", () => {

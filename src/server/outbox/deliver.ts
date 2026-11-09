@@ -10,7 +10,7 @@ const kindLabel = {
   contact: { en: "message", ar: "رسالتكم" },
 } as const;
 
-async function sendEmail(e: Env, to: string[], subject: string, text: string): Promise<void> {
+export async function sendEmail(e: Env, to: string[], subject: string, text: string): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${e.RESEND_API_KEY}`, "content-type": "application/json" },

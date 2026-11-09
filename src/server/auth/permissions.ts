@@ -21,6 +21,8 @@ export const permissions = {
   "designer.manage": "Approve, reject or suspend designers and reply to their messages",
   "ai.use": "Ask the AI assistants for drafts (replies, summaries, blog posts)",
   "ai.review": "Review, edit, approve or reject AI drafts",
+  "chat.manage":
+    "Configure the AI sales chat: switch it on or off, its instructions and the knowledge base it answers from",
   "content.manage": "Edit homepage text, banner, SEO, testimonials, blog posts and website images",
   "materials.manage": "Manage the materials library (EGGER décors and painted MDF colours)",
   "portfolio.manage": "Edit portfolio projects and their photos",
@@ -74,6 +76,7 @@ export const roleDefinitions: {
       "designer.manage",
       "ai.use",
       "ai.review",
+      "chat.manage",
     ],
   },
   {

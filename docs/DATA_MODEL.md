@@ -156,6 +156,23 @@ Conventions:
 | `RateLimitBucket` | key, windowStart, count                                                                                                                                                         | PK (key, windowStart)                                                              |
 | `AiDraft`         | kind `lead_summary \| reply \| blog \| project_description \| caption`, sourceType, sourceId, model, prompt hash, output, status `draft \| approved \| discarded`, reviewedById | AI output is never published or sent without `approved`                            |
 | `WebhookEndpoint` | name, url, secret (encrypted), events[], active                                                                                                                                 | n8n targets                                                                        |
+| `KnowledgeEntry`  | kind `faq \| policy \| company \| product \| other`, titleEn, bodyEn, titleAr?, bodyAr?, published, sortOrder, updatedById                                                      | Sales chat knowledge base (2026-11-09). CHECK: title 3–200, body 3–3,000 chars     |
+
+The sales chat's settings are the `chatAgent` site setting: enabled, model (Sonnet 5.5 / Haiku 5.5 /
+Opus 5.5), owner instructions, welcome texts, daily message limit.
+
+### Sales chat conversations and leads (2026-11-09, migration `20261109140000_chat_leads`)
+
+| Model               | Key fields                                                                                                                                                                                                                                                                                 | Rules                                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ChatConversation`  | tokenHash (SHA-256 of the browser's token, unique), locale, language, leadId?, leadJoined (form matched an open lead it didn't start: its reading never changes that lead), customerId?, messageCount, temperature, temperatureNote, requirements (JSON), summary, analysedAt, token usage | No contact details: they reach the CRM only through the chat's contact form. CHECK: language in en/ar/hi/ur/other, counts ≥ 0, text lengths |
+| `ChatMessage`       | conversationId, role `user \| assistant \| event`, content, createdAt                                                                                                                                                                                                                      | Stored with phone numbers and emails removed. CHECK: 1–8,000 chars                                                                          |
+| `LeadRequirement`   | leadId (unique), productCategory, dimensions, designPreferences, materialPreferences, location, budget, timeline, notes, editedByStaff                                                                                                                                                     | Filled from chats; the AI never overwrites it once staff have edited it. CHECK: text lengths                                                |
+| `Lead` (added)      | temperature `hot \| warm \| cold`, temperatureByStaff; source `website_chat`; references `GIK-A-YYYY-NNNNN`                                                                                                                                                                                | The AI sets temperature only while `temperatureByStaff` is false                                                                            |
+| `FileAsset` (added) | chatConversationId                                                                                                                                                                                                                                                                         | Photos shared in the chat; kept by the clean-up of abandoned uploads                                                                        |
+
+A second contact form from the same conversation, or from a customer with an open lead (new, contacted,
+qualified or quoted) from the last 60 days, is added to that lead instead of creating a new one.
 
 ## Seed data (Phases 4–5)
 
@@ -163,6 +180,7 @@ Seeded (idempotent, never overwriting staff edits): permissions, system roles (n
 granted to existing roles only when introduced; the owner always has all), site settings from
 [BUSINESS_FACTS.md](BUSINESS_FACTS.md) (contact, hours, addresses), and the 21 portfolio projects
 from the company profile (created if missing), and the eight built-in product categories (from
-`src/content/categories.ts`, created if missing). Page copy stays in `src/content` and `src/messages`.
+`src/content/categories.ts`, created if missing), and the website FAQs as the first knowledge-base
+entries (only into an empty table). Page copy stays in `src/content` and `src/messages`.
 Not seeded: testimonials, blog posts, prices, pricing rules, photos, material décors (staff add and
 verify them).

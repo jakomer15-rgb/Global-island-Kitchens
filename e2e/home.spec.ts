@@ -26,6 +26,8 @@ for (const l of locales) {
     });
 
     test("only links to pages that exist", async ({ page, request }) => {
+      // Every link on the page, one request each; slow when the whole suite runs in parallel
+      test.setTimeout(120_000);
       await page.goto(l.path);
       const hrefs = await page
         .locator("a[href^='/']")

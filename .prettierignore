@@ -5,3 +5,5 @@ src/generated
 playwright-report
 test-results
 .claude
+# Search Console verification: must stay exactly as Google issued it
+public/google*.html

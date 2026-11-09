@@ -44,7 +44,12 @@ export async function fileDownloadUrl(
 ) {
   assertCan(actor, "file.read");
   const file = await db.fileAsset.findFirst({
-    where: { id: fileId, status: "verified", quotationRequestId: { not: null } },
+    // Customer uploads only: quotation-request files and photos shared in the sales chat.
+    where: {
+      id: fileId,
+      status: "verified",
+      OR: [{ quotationRequestId: { not: null } }, { chatConversationId: { not: null } }],
+    },
   });
   if (!file) throw new NotFoundError("File");
   await audit(db, {

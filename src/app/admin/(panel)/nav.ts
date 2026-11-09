@@ -17,6 +17,7 @@ const groups: {
     label: "CRM",
     items: [
       { href: "/admin/leads", label: "Leads", permission: "lead.read" },
+      { href: "/admin/ai-sales", label: "AI sales", permission: "lead.read" },
       { href: "/admin/customers", label: "Customers", permission: "customer.read" },
       { href: "/admin/consultations", label: "Consultations", permission: "consultation.read" },
       { href: "/admin/designers", label: "Designers", permission: "designer.read" },
@@ -49,6 +50,7 @@ const groups: {
   {
     label: "Administration",
     items: [
+      { href: "/admin/ai-agent", label: "AI agent", permission: "chat.manage" },
       { href: "/admin/ai", label: "AI drafts", permission: ["ai.use", "ai.review"] },
       { href: "/admin/settings", label: "Settings", permission: "settings.manage" },
       { href: "/admin/staff", label: "Staff", permission: "staff.manage" },

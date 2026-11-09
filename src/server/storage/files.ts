@@ -100,6 +100,8 @@ export async function sweepStaleUploads(db: Tx, storage: StorageDriver, now = ne
   const stale = await db.fileAsset.findMany({
     where: {
       quotationRequestId: null,
+      // Photos shared in the sales chat belong to that conversation.
+      chatConversationId: null,
       // Published website images (src/server/admin/media.ts) and generated quotation PDFs are kept.
       NOT: [{ visibility: "public", status: "verified" }, { kind: "quotation_pdf" }],
       createdAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) },

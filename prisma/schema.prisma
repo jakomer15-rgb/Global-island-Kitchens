@@ -73,6 +73,7 @@ model User {
   designerMessages   DesignerMessage[]
   aiDraftsRequested  AiDraft[]            @relation("AiRequester")
   aiDraftsReviewed   AiDraft[]            @relation("AiReviewer")
+  knowledgeEdited    KnowledgeEntry[]     @relation("KnowledgeEditor")
 
   @@map("users")
 }
@@ -209,6 +210,7 @@ model Customer {
   orders            Order[]
   projects          Project[]
   designerAccounts  DesignerAccount[]
+  chats             ChatConversation[]
 
   @@index([name])
   @@map("customers")
@@ -224,7 +226,17 @@ enum LeadSource {
   walk_in
   referral
   instagram
+  /// GIK Smart Assistant, the website's AI sales chat.
+  website_chat
   other
+}
+
+/// Owner's definitions (2026-11-09): hot = clear project, budget and intention to buy soon; warm =
+/// interested but still comparing designs or prices; cold = browsing or gathering information.
+enum LeadTemperature {
+  hot
+  warm
+  cold
 }
 
 enum LeadStatus {
@@ -237,24 +249,27 @@ enum LeadStatus {
 }
 
 model Lead {
-  id           String     @id @default(cuid())
+  id                 String           @id @default(cuid())
   /// Shown to the customer, e.g. GIK-Q-2026-00042 (sequence in migration).
-  reference    String     @unique
-  customerId   String     @map("customer_id")
-  source       LeadSource
+  reference          String           @unique
+  customerId         String           @map("customer_id")
+  source             LeadSource
   /// Product page key from src/config/routes.ts, when known.
-  category     String?
-  status       LeadStatus @default(new)
-  lostReason   String?    @map("lost_reason")
-  assignedToId String?    @map("assigned_to_id")
-  summary      String
-  locale       Locale     @default(en)
-  archivedAt   DateTime?  @map("archived_at") @db.Timestamptz(3)
-  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  category           String?
+  status             LeadStatus       @default(new)
+  lostReason         String?          @map("lost_reason")
+  assignedToId       String?          @map("assigned_to_id")
+  summary            String
+  locale             Locale           @default(en)
+  /// HOT / WARM / COLD: set by the sales chat's assistant, or by staff (then the assistant leaves it).
+  temperature        LeadTemperature?
+  temperatureByStaff Boolean          @default(false) @map("temperature_by_staff")
+  archivedAt         DateTime?        @map("archived_at") @db.Timestamptz(3)
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  customer         Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  assignedTo       User?             @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  customer         Customer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  assignedTo       User?              @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
   activities       LeadActivity[]
   followUps        FollowUp[]
   consultation     Consultation?
@@ -262,10 +277,34 @@ model Lead {
   quotations       Quotation[]
   projects         Project[]
   aiDrafts         AiDraft[]
+  requirements     LeadRequirement?
+  chats            ChatConversation[]
 
   @@index([status, createdAt])
   @@index([assignedToId])
+  @@index([temperature, createdAt])
   @@map("leads")
+}
+
+/// What the customer wants, one row per lead: filled in from a chat by the assistant and editable by
+/// staff (then the assistant no longer overwrites it). Free text: customers describe these loosely.
+model LeadRequirement {
+  id                  String   @id @default(cuid())
+  leadId              String   @unique @map("lead_id")
+  productCategory     String?  @map("product_category")
+  dimensions          String?
+  designPreferences   String?  @map("design_preferences")
+  materialPreferences String?  @map("material_preferences")
+  location            String?
+  budget              String?
+  timeline            String?
+  notes               String?
+  editedByStaff       Boolean  @default(false) @map("edited_by_staff")
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("lead_requirements")
 }
 
 enum ActivityKind {
@@ -467,9 +506,12 @@ model FileAsset {
   quotationRequestId String?        @map("quotation_request_id")
   /// Set for files a designer attached to a submitted project (also linked to its quotation request).
   designerProjectId  String?        @map("designer_project_id")
+  /// Set for reference photos a visitor shared in the sales chat.
+  chatConversationId String?        @map("chat_conversation_id")
   verifiedAt         DateTime?      @map("verified_at") @db.Timestamptz(3)
   createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
 
+  chatConversation ChatConversation?   @relation(fields: [chatConversationId], references: [id], onDelete: SetNull)
   quotationRequest QuotationRequest?   @relation(fields: [quotationRequestId], references: [id], onDelete: SetNull)
   designerProject  DesignerProject?    @relation(fields: [designerProjectId], references: [id], onDelete: SetNull)
   uploadedBy       User?               @relation("FileUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
@@ -483,6 +525,7 @@ model FileAsset {
   @@index([status, createdAt])
   @@index([quotationRequestId])
   @@index([designerProjectId])
+  @@index([chatConversationId])
   @@index([visibility, kind])
   @@map("file_assets")
 }
@@ -685,17 +728,17 @@ model Category {
 
 /// A product (in a products category) or a machine (in a factory category).
 model CatalogItem {
-  id            String    @id @default(cuid())
-  categoryId    String    @map("category_id")
-  nameEn        String    @map("name_en")
-  nameAr        String    @map("name_ar")
-  descriptionEn String?   @map("description_en")
-  descriptionAr String?   @map("description_ar")
-  imageFileId   String?   @map("image_file_id")
-  published     Boolean   @default(true)
-  sortOrder     Int       @default(0) @map("sort_order")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id            String   @id @default(cuid())
+  categoryId    String   @map("category_id")
+  nameEn        String   @map("name_en")
+  nameAr        String   @map("name_ar")
+  descriptionEn String?  @map("description_en")
+  descriptionAr String?  @map("description_ar")
+  imageFileId   String?  @map("image_file_id")
+  published     Boolean  @default(true)
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   category Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   image    FileAsset? @relation(fields: [imageFileId], references: [id], onDelete: SetNull)
@@ -1126,4 +1169,100 @@ model AiDraft {
   @@index([status, createdAt])
   @@index([leadId])
   @@map("ai_drafts")
+}
+
+// ─── AI sales agent (2026-11-09) ────────────────────────────────────────────
+
+enum KnowledgeKind {
+  faq
+  policy
+  company
+  product
+  other
+}
+
+/// What the sales chat may tell visitors, written by staff in Admin → AI agent. Together with the
+/// settings, product categories and published materials it is the assistant's only source of facts.
+/// English is required (the assistant translates); Arabic is optional. Lengths are checked in SQL.
+model KnowledgeEntry {
+  id          String        @id @default(cuid())
+  kind        KnowledgeKind @default(faq)
+  /// The question (FAQ) or the topic.
+  titleEn     String        @map("title_en")
+  bodyEn      String        @map("body_en")
+  titleAr     String?       @map("title_ar")
+  bodyAr      String?       @map("body_ar")
+  /// Unpublished entries are kept but not given to the assistant.
+  published   Boolean       @default(true)
+  sortOrder   Int           @default(0) @map("sort_order")
+  updatedById String?       @map("updated_by_id")
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  updatedBy User? @relation("KnowledgeEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([published, kind, sortOrder])
+  @@map("knowledge_entries")
+}
+
+/// One visitor's conversation with the sales chat. The browser holds a random token; only its hash is
+/// stored. Contact details typed into the chat are removed before saving; they reach the CRM only
+/// through the chat's contact form (then `leadId` / `customerId` are set).
+model ChatConversation {
+  id               String           @id @default(cuid())
+  tokenHash        String           @unique @map("token_hash")
+  locale           Locale           @default(en)
+  /// The visitor's language as the assistant judged it: en, ar, hi, ur or other.
+  language         String?
+  leadId           String?          @map("lead_id")
+  /// True when the contact form matched an open lead this chat didn't start (same phone or email,
+  /// not verified): the chat's reading then never changes that lead's rating or requirements.
+  leadJoined       Boolean          @default(false) @map("lead_joined")
+  customerId       String?          @map("customer_id")
+  ipHash           String?          @map("ip_hash")
+  messageCount     Int              @default(0) @map("message_count")
+  /// The assistant's reading of the conversation (src/server/chat/analysis.ts).
+  temperature      LeadTemperature?
+  temperatureNote  String?          @map("temperature_note")
+  /// { productCategory, dimensions, designPreferences, materialPreferences, location, budget, timeline }
+  requirements     Json?
+  summary          String?
+  analysedAt       DateTime?        @map("analysed_at") @db.Timestamptz(3)
+  model            String?
+  inputTokens      Int              @default(0) @map("input_tokens")
+  outputTokens     Int              @default(0) @map("output_tokens")
+  cacheReadTokens  Int              @default(0) @map("cache_read_tokens")
+  cacheWriteTokens Int              @default(0) @map("cache_write_tokens")
+  startedAt        DateTime         @default(now()) @map("started_at") @db.Timestamptz(3)
+  lastMessageAt    DateTime         @default(now()) @map("last_message_at") @db.Timestamptz(3)
+
+  lead     Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  messages ChatMessage[]
+  files    FileAsset[]
+
+  @@index([lastMessageAt])
+  @@index([leadId])
+  @@index([temperature, lastMessageAt])
+  @@map("chat_conversations")
+}
+
+enum ChatRole {
+  user
+  assistant
+  /// Something that happened in the chat (form sent, photo shared); not part of what the model reads.
+  event
+}
+
+model ChatMessage {
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  role           ChatRole
+  content        String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("chat_messages")
 }

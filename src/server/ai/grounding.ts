@@ -26,14 +26,26 @@ export const hardRules = [
 
 const contactLine = /^\s*(name|phone|mobile|email|e-mail)\s*:.*$/gim;
 const emailPattern = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
-const phonePattern = /\+?\d[\d\s().-]{6,}\d/g;
+/**
+ * A run of digits joined by single spaces, unspaced hyphens or brackets ("+973 3612 3456",
+ * "3612-3456", "(973) 36123456"). Spaced dashes, dots and commas end a run, so "1500 - 2000 BD",
+ * "2.4 x 3.6 m" and "1,500" stay separate numbers.
+ */
+const numberRun = /\+?\(?\d(?:[\d()]|-(?=\d)| (?=\(?\d))*/g;
+/** Bahrain numbers have 8 digits; anything shorter is a measurement, budget or quantity. */
+const PHONE_DIGITS = 8;
+
+/** Arabic-Indic (٠–٩) and Persian (۰–۹) digits as 0–9, so numbers written in Arabic are found too. */
+export function westernDigits(text: string): string {
+  return text.replace(/[٠-٩۰-۹]/g, (d) => String(d.charCodeAt(0) & 0xf));
+}
 
 /** Takes contact details out of text before it goes to the AI provider. */
 export function redactContact(text: string): string {
-  return text
+  return westernDigits(text)
     .replace(contactLine, "")
     .replace(emailPattern, "[email removed]")
-    .replace(phonePattern, "[number removed]")
+    .replace(numberRun, (run) => (run.replace(/\D/g, "").length >= PHONE_DIGITS ? "[number removed]" : run))
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

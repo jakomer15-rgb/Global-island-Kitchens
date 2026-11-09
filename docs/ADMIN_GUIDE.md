@@ -79,6 +79,54 @@ see. Suspending a designer signs them out at once.
 - **Settings**: phone numbers, email, WhatsApp number (digits with country code, for example 97334597636),
   addresses, opening hours, quotation terms and validity, and the AI switch. Saving updates the website.
 
+## AI sales (what the chat brings in)
+
+**AI sales** (under CRM) shows, for the period you pick:
+
+- **Conversations**, how many visitors **left their details**, **new leads** and how many were **won**.
+- **Leads by rating** (click one to see those leads) and **by status**.
+- **AI cost (estimate)** in BHD; Anthropic's invoice is the exact figure.
+- **Export leads to Excel**: pick source, rating, status and dates, then **Download CSV**. The file has phone
+  numbers and emails: keep it within the team. Every export is recorded.
+- **Conversations**: every chat, newest first. Filter by rating, by whether the visitor left details, or search
+  for words. Open one to read it, see the assistant's reading, photos and the lead.
+
+On a chat lead's page you also get:
+
+- **Requirements**: what the customer wants (product, dimensions, design, materials, location, budget,
+  timeline, notes). Correct them after talking to the customer; once you save, the assistant stops changing
+  them.
+- **Rating (HOT / WARM / COLD)**: set it yourself, or choose “Let the AI assistant decide”.
+- **AI chat**: the summary, photos and a link to the full conversation.
+
+Status, assignment, internal notes and follow-ups work as for every lead. **Leads** can also be filtered by
+rating.
+
+## AI agent (the website's sales chat)
+
+**AI agent** controls GIK Smart Assistant, the chat button on every page of the website.
+
+- **Show the chat on the website** switches it on or off at once.
+- **AI model**: Sonnet is the recommended balance; Haiku is cheapest; Opus costs about twice as much as Sonnet.
+- **Daily message limit**: after this many messages in a day, visitors see the team's phone and email instead.
+- **Extra instructions**: plain-English notes on tone or what to mention. They can't make the assistant give
+  prices or invent facts.
+- **Welcome message**: leave empty to keep the standard one.
+- **Email the sales team at**: one address per line. Every chat lead is emailed there straight away with the
+  customer's details, what they want, the rating and the chat summary.
+- **WhatsApp alerts to**: sales team numbers for a short alert per lead, once the company's WhatsApp
+  Business account is connected (until then nothing is sent).
+- **Knowledge base**: the questions and answers, policies and company information the assistant may use. Add an
+  entry when customers keep asking something; untick “The assistant may use this entry” to pause one. Write only
+  what is true and decided. If an answer isn't there, the assistant says the sales team will confirm.
+- **Leads from the chat** appear in **Leads** with the source “Website chat” and a reference starting
+  `GIK-A-`. The lead's first note shows what the visitor entered in the chat's form, and the assistant's
+  summary. HOT / WARM / COLD and the requirements (product, size, style, materials, area, budget, timeline)
+  are filled in by the assistant; once you change them yourself, it leaves them alone. (The full chat
+  dashboard comes in the next step.)
+- Contact details, opening hours, products and finishes come from **Settings**, **Manage categories** and
+  **Materials**; **Show everything the assistant knows** at the bottom shows exactly what it reads.
+
 ## AI drafts (only if the owner switched them on)
 
 Assistants write drafts: a reply to a customer, a lead summary, a blog post. Open **AI drafts** (or the lead

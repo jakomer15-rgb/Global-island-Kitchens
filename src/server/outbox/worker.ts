@@ -2,7 +2,9 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Db } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { confirmToCustomer, notifyStaff, postToN8n, type ChannelResult } from "./deliver";
-import type { EnquiryReceived, OutboxType } from "./events";
+import type { ChatLead, EnquiryReceived, OutboxType } from "./events";
+import { notifyChatLeadByEmail } from "@/server/chat/notify";
+import { alertSalesTeamOnWhatsApp } from "@/server/chat/whatsapp-alert";
 
 export const MAX_ATTEMPTS = 6;
 /** A claimed event not finished within this time is picked up again (the worker died). */
@@ -17,7 +19,7 @@ export type Delivery = (
  * Default delivery: each channel runs once; channels already "sent" on an earlier attempt are not
  * repeated when another channel fails and the event is retried.
  */
-export function defaultDelivery(e: Env, siteUrl: string): Delivery {
+export function defaultDelivery(e: Env, siteUrl: string, db?: Db): Delivery {
   return async (event, previous) => {
     const result: Record<string, ChannelResult> = { ...previous };
     const errors: string[] = [];
@@ -33,6 +35,12 @@ export function defaultDelivery(e: Env, siteUrl: string): Delivery {
       const payload = event.payload as EnquiryReceived;
       await run("staffEmail", () => notifyStaff(e, payload, siteUrl));
       await run("customerEmail", () => confirmToCustomer(e, payload));
+    }
+    // The sales chat: the team only (the visitor saw their reference in the chat).
+    if ((event.type as OutboxType) === "chat.lead" && db) {
+      const payload = event.payload as ChatLead;
+      await run("staffEmail", () => notifyChatLeadByEmail(db, e, payload, siteUrl));
+      await run("staffWhatsApp", () => alertSalesTeamOnWhatsApp(db, e, payload));
     }
     await run("n8n", () => postToN8n(e, event.type, event.id, event.payload));
     if (errors.length) throw new DeliveryError(errors.join("; "), result);
@@ -60,7 +68,7 @@ const backoff = (attempts: number) => attempts * attempts * 60 * 1000;
  */
 export async function processOutbox(db: Db, deliver?: Delivery, limit = 20) {
   const delivery =
-    deliver ?? defaultDelivery(readEnv(), process.env.NEXT_PUBLIC_SITE_URL ?? readEnv().BETTER_AUTH_URL);
+    deliver ?? defaultDelivery(readEnv(), process.env.NEXT_PUBLIC_SITE_URL ?? readEnv().BETTER_AUTH_URL, db);
   const now = new Date();
   const staleBefore = new Date(now.getTime() - LOCK_TIMEOUT_MS);
 

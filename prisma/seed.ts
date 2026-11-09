@@ -11,6 +11,7 @@ import { permissions, roleDefinitions } from "../src/server/auth/permissions";
 import { settingDefaults } from "../src/lib/site-settings";
 import { projects } from "../src/content/projects";
 import { builtInCategories } from "../src/content/categories";
+import { faqs } from "../src/content/faq";
 
 const db = createPrismaClient();
 
@@ -122,8 +123,25 @@ async function main() {
     categories++;
   }
 
+  // The sales chat's knowledge base starts with the website's approved FAQs, loaded only into an
+  // empty table so entries staff edit or delete stay that way.
+  let knowledge = 0;
+  if ((await db.knowledgeEntry.count()) === 0) {
+    const result = await db.knowledgeEntry.createMany({
+      data: faqs.map((f, i) => ({
+        kind: "faq" as const,
+        titleEn: f.question.en,
+        bodyEn: f.answer.en,
+        titleAr: f.question.ar,
+        bodyAr: f.answer.ar,
+        sortOrder: i,
+      })),
+    });
+    knowledge = result.count;
+  }
+
   console.log(
-    `Seeded ${Object.keys(permissions).length} permissions (${newKeys.size} new), ${roleDefinitions.length} roles, ${Object.keys(settingDefaults).length} settings, ${created} new portfolio projects, ${categories} new product categories.`,
+    `Seeded ${Object.keys(permissions).length} permissions (${newKeys.size} new), ${roleDefinitions.length} roles, ${Object.keys(settingDefaults).length} settings, ${created} new portfolio projects, ${categories} new product categories, ${knowledge} knowledge entries.`,
   );
 }
 

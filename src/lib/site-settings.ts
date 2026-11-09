@@ -20,6 +20,10 @@ const optionalText = (max: number) =>
     .transform((v) => v || null)
     .nullable();
 
+/** Models the owner may pick for the sales chat (Admin → AI agent). Sonnet is the approved default. */
+export const chatModels = ["claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5"] as const;
+export type ChatModel = (typeof chatModels)[number];
+
 export const settingSchemas = {
   contact: z.object({
     /** The first number is the main one (header, call buttons). */
@@ -100,6 +104,36 @@ export const settingSchemas = {
     /** Public "furniture assistant" page: visitors type a question that is processed by the AI provider. */
     furnitureAssistant: z.boolean(),
   }),
+  /**
+   * The "GIK Smart Assistant" sales chat on every public page (Admin → AI agent). Its own switch,
+   * separate from the drafting assistants: visitors' chat messages go to the AI provider, which the
+   * owner approved on 2026-11-09. Also needs ANTHROPIC_API_KEY on the server.
+   */
+  chatAgent: z.object({
+    enabled: z.boolean(),
+    model: z.enum(chatModels).default("claude-sonnet-5-5"),
+    /** Extra instructions and personality notes from the owner, added to the built-in rules. */
+    instructions: optionalText(4000).default(null),
+    /** Replace the built-in welcome message (empty keeps the owner's original text). */
+    welcomeEn: optionalText(800).default(null),
+    welcomeAr: optionalText(800).default(null),
+    /** Ceiling on chat messages answered per day across the whole site (cost control). */
+    dailyMessageLimit: z.number().int().min(20).max(20000).default(1500),
+    /** Sales team addresses emailed for every chat lead. Empty uses NOTIFY_EMAILS from the server. */
+    notifyEmails: z
+      .array(z.string().trim().toLowerCase().email("Enter valid email addresses, one per line."))
+      .max(10, "At most 10 addresses.")
+      .default([]),
+    /** Sales team WhatsApp numbers (international digits) for new-lead alerts, once WhatsApp is set up. */
+    notifyWhatsApp: z
+      .array(
+        z
+          .string()
+          .regex(/^[1-9]\d{6,14}$/, "Enter WhatsApp numbers with the country code, e.g. 97334597636."),
+      )
+      .max(5, "At most 5 numbers.")
+      .default([]),
+  }),
   seo: z.object({
     titleEn: optionalText(60),
     descriptionEn: optionalText(160),
@@ -143,6 +177,16 @@ export const settingDefaults: Settings = {
   },
   seo: { titleEn: null, descriptionEn: null, titleAr: null, descriptionAr: null },
   ai: { enabled: false, leadAssistant: true, contentAssistant: true, furnitureAssistant: false },
+  chatAgent: {
+    enabled: false,
+    model: "claude-sonnet-5-5",
+    instructions: null,
+    welcomeEn: null,
+    welcomeAr: null,
+    dailyMessageLimit: 1500,
+    notifyEmails: [],
+    notifyWhatsApp: [],
+  },
   quotation: {
     vatEnabled: false,
     vatRateBasisPoints: 1000,

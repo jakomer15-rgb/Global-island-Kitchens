@@ -3,8 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionState } from "@/lib/admin/action-state";
-import { CUID, parseForm, runAction } from "@/server/admin/action";
+import { CUID, formText, parseForm, runAction } from "@/server/admin/action";
 import { requireActor } from "@/server/auth/session";
+import {
+  requirementFields,
+  saveLeadRequirements,
+  setLeadTemperature,
+  type RequirementInput,
+} from "@/server/chat/admin";
 import {
   assignLead,
   changeLeadStatus,
@@ -112,6 +118,44 @@ export async function scheduleFollowUpAction(
   );
   revalidatePath(`/admin/leads/${leadId}`);
   revalidatePath("/admin/follow-ups");
+  return result;
+}
+
+export async function setTemperatureAction(
+  leadId: string,
+  _: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actor = await requireActor("lead.update");
+  const parsed = parseForm(z.object({ temperature: z.enum(["hot", "warm", "cold", "ai"]) }), formData);
+  if (!parsed.ok || !id.safeParse(leadId).success)
+    return parsed.ok ? { error: "Invalid lead." } : parsed.state;
+  const temperature = parsed.data.temperature === "ai" ? null : parsed.data.temperature;
+  const result = await runAction(
+    () => setLeadTemperature(db, actor, { leadId, temperature }),
+    temperature ? "Rating saved." : "The AI assistant will rate this lead again from its next reading.",
+  );
+  revalidatePath(`/admin/leads/${leadId}`);
+  return result;
+}
+
+export async function saveRequirementsAction(
+  leadId: string,
+  _: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actor = await requireActor("lead.update");
+  const parsed = parseForm(
+    z.object(Object.fromEntries(requirementFields.map(([key, , max]) => [key, formText(max)]))),
+    formData,
+  );
+  if (!parsed.ok || !id.safeParse(leadId).success)
+    return parsed.ok ? { error: "Invalid lead." } : parsed.state;
+  const result = await runAction(
+    () => saveLeadRequirements(db, actor, leadId, parsed.data as RequirementInput),
+    "Requirements saved. The AI assistant won't change them now.",
+  );
+  revalidatePath(`/admin/leads/${leadId}`);
   return result;
 }
 
