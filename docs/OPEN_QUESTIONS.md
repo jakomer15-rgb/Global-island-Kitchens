@@ -133,7 +133,9 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
     the Arabic version of the owner's welcome message).
 72. **Chat logo:** the chat window uses the interim cabinet-door mark (as the site icon) until the
     company's logo files are supplied (#1).
-73. **Privacy policy wording for the chat** (owner's wording, `src/content/legal.ts`): that chat messages are
+73. ✅ **Answered 2026-11-10:** the owner approved the section "The GIK Smart Assistant (website chat)" in
+    `src/content/legal.ts` (English and Arabic; the Arabic still needs a fluent review, and the legal adviser's
+    review of the whole policy is item 34). Original question: **Privacy policy wording for the chat**: that chat messages are
     stored and sent to Anthropic to write the replies (phone numbers and emails removed first), that an AI
     reads the conversation to note the visitor's requirements, and that details sent through the chat's
     contact form go to the sales team. Needed before the chat is switched on publicly.

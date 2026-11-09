@@ -21,6 +21,7 @@ export interface LegalDoc {
 }
 
 const updated: L = { en: "Last updated: 25 October 2026", ar: "آخر تحديث: 25 أكتوبر 2026" };
+const privacyUpdated: L = { en: "Last updated: 10 November 2026", ar: "آخر تحديث: 10 نوفمبر 2026" };
 
 export const privacy: LegalDoc = {
   metaTitle: { en: "Privacy Policy", ar: "سياسة الخصوصية" },
@@ -29,7 +30,7 @@ export const privacy: LegalDoc = {
     ar: "كيف تتعامل Global Island Kitchens W.L.L مع المعلومات الشخصية على هذا الموقع وعند تواصلكم معنا.",
   },
   title: { en: "Privacy policy", ar: "سياسة الخصوصية" },
-  updated,
+  updated: privacyUpdated,
   sections: [
     {
       heading: { en: "Who we are", ar: "من نحن" },
@@ -69,12 +70,38 @@ export const privacy: LegalDoc = {
           ar: "لا نرسل الأخبار والعروض إلا إذا اخترتم ذلك للقناة المعنية (البريد الإلكتروني أو واتساب). ويمكنكم الانسحاب في أي وقت بالتواصل معنا، وستتضمن كل رسالة تسويقية طريقة لإلغاء الاشتراك.",
         },
         {
-          en: "Your information is stored securely with our hosting, database, file-storage and email providers, who process it on our behalf. Uploaded files are private and only our authorised staff can open them.",
-          ar: "تُخزَّن معلوماتكم بأمان لدى مزوّدي الاستضافة وقاعدة البيانات وتخزين الملفات والبريد الإلكتروني الذين يعالجونها نيابةً عنا. الملفات المرفوعة خاصة ولا يفتحها إلا موظفونا المخوّلون.",
+          en: "Your information is stored securely with our hosting, database, file-storage and email providers, and the AI provider for the website chat, who process it on our behalf. Uploaded files are private and only our authorised staff can open them.",
+          ar: "تُخزَّن معلوماتكم بأمان لدى مزوّدي الاستضافة وقاعدة البيانات وتخزين الملفات والبريد الإلكتروني، ومزوّد الذكاء الاصطناعي لمحادثة الموقع، الذين يعالجونها نيابةً عنا. الملفات المرفوعة خاصة ولا يفتحها إلا موظفونا المخوّلون.",
         },
         {
           en: "We keep enquiry records for as long as needed to handle your enquiry and any project that follows, and as required by law.",
           ar: "نحتفظ بسجلات الطلبات للمدة اللازمة لمعالجة طلبكم وأي مشروع يليه، ووفق ما يقتضيه القانون.",
+        },
+      ],
+    },
+    {
+      // Approved by the owner on 2026-11-10 (OPEN_QUESTIONS 73). Matches src/server/chat: contact
+      // details removed before the provider, the contact form goes to the CRM only, sessionStorage.
+      heading: {
+        en: "The GIK Smart Assistant (website chat)",
+        ar: "مساعد GIK الذكي (محادثة الموقع)",
+      },
+      body: [
+        {
+          en: "Our website has a chat assistant, the GIK Smart Assistant. It is an AI system, not a person. Its answers are general information; prices, measurements and delivery dates are always confirmed by our team.",
+          ar: "يتضمن موقعنا مساعد محادثة، هو مساعد GIK الذكي. وهو نظام ذكاء اصطناعي وليس شخصًا. إجاباته معلومات عامة، ويؤكد فريقنا دائمًا الأسعار والمقاسات ومواعيد التسليم.",
+        },
+        {
+          en: "To answer you, the text you type in the chat is sent to our AI provider, Anthropic (which makes the Claude AI models). Before that, our system automatically removes phone numbers and email addresses from your messages. Anthropic processes the text on our behalf, on servers that may be outside Bahrain. Under its commercial terms, it does not use it to train its AI models. Please do not type sensitive information such as ID numbers or payment details.",
+          ar: "للرد عليكم، يُرسَل النص الذي تكتبونه في المحادثة إلى مزوّد الذكاء الاصطناعي لدينا، Anthropic (الشركة المطوّرة لنماذج Claude). وقبل ذلك يحذف نظامنا تلقائيًا أرقام الهواتف وعناوين البريد الإلكتروني من رسائلكم. تعالج Anthropic النص نيابةً عنا على خوادم قد تكون خارج البحرين، ولا تستخدمه بموجب شروطها التجارية لتدريب نماذجها. يُرجى عدم كتابة معلومات حساسة مثل أرقام الهوية أو بيانات الدفع.",
+        },
+        {
+          en: "If you choose to leave your details using the form inside the chat, your name, phone number, email and any photos come only to us. They are never sent to the AI provider. We save your conversation (without contact details) so our team can follow up. The assistant also writes a short summary of what you are looking for, which our staff can review and change.",
+          ar: "إذا اخترتم ترك بياناتكم عبر النموذج داخل المحادثة، فإن اسمكم ورقم هاتفكم وبريدكم الإلكتروني وأي صور تصل إلينا فقط، ولا تُرسَل أبدًا إلى مزوّد الذكاء الاصطناعي. ونحفظ محادثتكم (دون بيانات التواصل) ليتابع فريقنا طلبكم. كما يكتب المساعد ملخصًا قصيرًا لما تبحثون عنه، يمكن لموظفينا مراجعته وتعديله.",
+        },
+        {
+          en: 'The chat keeps your conversation in your browser only while the tab is open; it is removed when you close the tab. It does not use cookies. We keep chat records like our other enquiry records (see "How we use it").',
+          ar: 'تحتفظ المحادثة بمحتواها في متصفحكم فقط ما دامت علامة التبويب مفتوحة، وتُحذف عند إغلاقها، ولا تستخدم ملفات تعريف الارتباط (كوكيز). ونحتفظ بسجلات المحادثات مثل سجلات الطلبات الأخرى (انظروا "كيف نستخدمها").',
         },
       ],
     },
