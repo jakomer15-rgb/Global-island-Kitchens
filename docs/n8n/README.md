@@ -11,17 +11,42 @@ Every event is a `POST` with a JSON body `{ "id": "<event id>", "type": "<type>"
 Events are written in the same database transaction as the change and delivered by the outbox job with
 retries, so the same `id` can arrive more than once: make workflows safe to repeat.
 
-| `type`                | When                                                                       | `payload`                                                                                                                      |
-| --------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `enquiry.received`    | A quote request, consultation, contact message or designer project arrives | `kind`, `reference`, `leadId`, `locale`, `customer` (name, phone, email), `summary`, `customerId`, `consent`, `unsubscribeUrl` |
-| `lead.status_changed` | Staff change a lead's status                                               | `leadId`, `reference`, `from`, `to`                                                                                            |
-| `quotation.sent`      | A quotation revision is locked as sent                                     | `quotationId`, `number`, `revision`, `totalFils` (1 BHD = 1000 fils)                                                           |
-| `quotation.approved`  | Staff record the customer's approval                                       | same as `quotation.sent`                                                                                                       |
-| `designer.registered` | A designer registers                                                       | `designerId`, `profession`                                                                                                     |
-| `whatsapp.received`   | A customer's WhatsApp message is logged                                    | `leadId`, `reference`, `newLead`                                                                                               |
+| `type`                | When                                                                       | `payload`                                                                                                                                                              |
+| --------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enquiry.received`    | A quote request, consultation, contact message or designer project arrives | `kind`, `reference`, `leadId`, `locale`, `customer` (name, phone, email), `summary`, `customerId`, `consent`, `unsubscribeUrl`                                         |
+| `lead.status_changed` | Staff change a lead's status                                               | `leadId`, `reference`, `from`, `to`                                                                                                                                    |
+| `quotation.sent`      | A quotation revision is locked as sent                                     | `quotationId`, `number`, `revision`, `totalFils` (1 BHD = 1000 fils)                                                                                                   |
+| `quotation.approved`  | Staff record the customer's approval                                       | same as `quotation.sent`                                                                                                                                               |
+| `designer.registered` | A designer registers                                                       | `designerId`, `profession`                                                                                                                                             |
+| `whatsapp.received`   | A customer's WhatsApp message is logged                                    | `leadId`, `reference`, `newLead`                                                                                                                                       |
+| `chat.lead`           | A visitor sends the sales chat's contact form                              | `leadId`, `reference`, `conversationId`, `reason`, `newLead`, `locale`, `customer` (name, phone, email), `preferredContact`, `customerId`, `consent`, `unsubscribeUrl` |
 
-Only `enquiry.received` carries contact details (the customer asked to be contacted). The others carry
-references and statuses; look the lead up in the admin.
+Only `enquiry.received` and `chat.lead` carry contact details (the customer asked to be contacted). The
+others carry references and statuses; look the lead up in the admin.
+
+`chat.lead` is also delivered by the platform itself: an email to the sales team (Admin → AI agent →
+“Email the sales team at”, or `NOTIFY_EMAILS`) and, once set up, a WhatsApp alert to staff numbers. n8n
+doesn't need to repeat those.
+
+## Automated sales follow-ups (design, not built)
+
+What the owner asked for, and how to build it safely when the accounts exist. Nothing here runs today.
+
+1. **Trigger:** `chat.lead` (and `enquiry.received`). n8n waits, then asks the platform for the lead's current
+   status before doing anything (a status check endpoint is to be added with the first workflow; until then,
+   look the lead up by `reference` in the admin).
+2. **Staff reminders first (no consent needed: internal):** if a lead is still `new` after, say, 4 working
+   hours, remind the assigned salesperson (or the sales manager) by email or WhatsApp.
+3. **Customer follow-up only with consent:** a message to the customer is sent only when
+   `consent.whatsapp` (or `consent.email`) is true, using the `02-consent-gate` check, at most once or twice,
+   and stops as soon as staff change the lead's status or the customer replies.
+4. **WhatsApp rules:** first contact uses a Meta-approved template (utility, not marketing, unless the customer
+   agreed to marketing); the customer can reply STOP; a reply arrives through `/api/webhooks/whatsapp` and is
+   logged on the lead.
+5. **Email rules:** every non-reply email includes `unsubscribeUrl`.
+6. **Never:** prices, promises of dates, or anything the AI wrote without staff review.
+
+The owner approves each workflow and its wording before it is switched on (AGENTS.md, rule 7).
 
 ## Verify every request
 

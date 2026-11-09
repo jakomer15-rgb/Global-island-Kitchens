@@ -17,6 +17,13 @@ const lines = (formData: FormData, name: string) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
+/** One entry per line or comma, empty ones dropped. */
+const list = (formData: FormData, name: string) =>
+  str(formData, name)
+    .split(/[\r\n,;]+/)
+    .map((v) => v.trim())
+    .filter(Boolean);
+
 /** Form fields → the stored shape of each setting (validated by its schema in updateSetting). */
 const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
   contact: (f) => ({
@@ -46,6 +53,16 @@ const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
     contentAssistant: f.get("contentAssistant") === "on",
     furnitureAssistant: f.get("furnitureAssistant") === "on",
   }),
+  chatAgent: (f) => ({
+    enabled: f.get("enabled") === "on",
+    model: str(f, "model"),
+    instructions: str(f, "instructions"),
+    welcomeEn: str(f, "welcomeEn"),
+    welcomeAr: str(f, "welcomeAr"),
+    dailyMessageLimit: Number(str(f, "dailyMessageLimit")),
+    notifyEmails: list(f, "notifyEmails"),
+    notifyWhatsApp: list(f, "notifyWhatsApp").map((n) => n.replace(/\D/g, "")),
+  }),
   quotation: (f) => {
     const rate = Number(str(f, "vatRate").replace("%", ""));
     const days = str(f, "validityDays");
@@ -64,7 +81,8 @@ const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
 function fieldErrors(error: ZodError): ActionState {
   const out: Record<string, string> = {};
   for (const issue of error.issues) {
-    const field = issue.path.join(".");
+    // A bad entry in a list ("notifyEmails.2") is shown on the list's field.
+    const field = issue.path.join(".").replace(/^(notifyEmails|notifyWhatsApp)\.\d+$/, "$1");
     out[field.startsWith("phones") ? "phones" : field] ??= field.startsWith("phones")
       ? "Enter valid phone numbers (at least one)."
       : issue.message;
@@ -89,6 +107,12 @@ export async function saveSettingAction(
   );
   // Contact details, banner and SEO appear on every public page.
   if (result.ok) revalidatePath("/[locale]", "layout");
-  revalidatePath(settingPermission[key] === "settings.manage" ? "/admin/settings" : "/admin/content");
+  revalidatePath(
+    key === "chatAgent"
+      ? "/admin/ai-agent"
+      : settingPermission[key] === "settings.manage"
+        ? "/admin/settings"
+        : "/admin/content",
+  );
   return result;
 }

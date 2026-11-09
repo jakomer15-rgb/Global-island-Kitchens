@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { fontVariables } from "@/app/fonts";
+import { ChatLauncher } from "@/components/chat/chat-launcher";
 import { AnnouncementBanner } from "@/components/site/announcement-banner";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
@@ -12,9 +13,11 @@ import { company } from "@/config/company";
 import { siteUrl } from "@/config/site";
 import { htmlLang, localeDirection, routing } from "@/i18n/routing";
 import { socialImage } from "@/lib/seo";
+import { aiConfigured } from "@/server/ai/provider";
 import { getCatalog } from "@/server/content/catalog";
 import { getBlogPosts } from "@/server/content/public";
 import { getSiteSettings } from "@/server/settings/site";
+import { getStorage } from "@/server/storage/driver";
 import "../globals.css";
 
 function pick<T extends Record<string, unknown>>(obj: T, keys: (keyof T)[]) {
@@ -53,7 +56,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const [{ contact, locations, banner }, posts, catalog] = await Promise.all([
+  const [{ contact, locations, banner, chatAgent }, posts, catalog] = await Promise.all([
     getSiteSettings(),
     getBlogPosts(),
     getCatalog(),
@@ -61,6 +64,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const bannerText = banner.enabled ? (locale === "ar" ? banner.textAr : banner.textEn) : null;
   // Product categories from the admin, in the order staff set.
   const productLinks = catalog.products.map((c) => ({ href: c.href!, label: c.name[locale] }));
+  // The sales chat appears only when the owner switched it on and an AI provider is configured.
+  const showChat = chatAgent.enabled && aiConfigured();
 
   return (
     <html lang={htmlLang[locale]} dir={localeDirection[locale]} className={fontVariables}>
@@ -80,6 +85,20 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
             showBlog={posts.length > 0}
           />
           <WhatsAppButton number={contact.whatsappNumber} />
+          {showChat && (
+            <ChatLauncher
+              locale={locale}
+              contact={{
+                phones: contact.phones,
+                email: contact.email,
+                whatsappNumber: contact.whatsappNumber,
+              }}
+              hours={locale === "ar" ? locations.hoursAr : locations.hoursEn}
+              stacked={Boolean(contact.whatsappNumber)}
+              welcome={locale === "ar" ? chatAgent.welcomeAr : chatAgent.welcomeEn}
+              uploads={getStorage() !== null}
+            />
+          )}
         </NextIntlClientProvider>
       </body>
     </html>

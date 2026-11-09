@@ -61,25 +61,26 @@ All text combinations pass WCAG 2.1 AA; axe runs on every E2E build.
 
 ## Components
 
-| Component          | Notes                                                                                                                                                                                                       |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Button` (shadcn)  | Square, small tracked capitals. Variants `primary`, `accent`, `light`, `outline`, `outlineLight`, `link`; sizes `md`, `lg`, `icon`; min 44 px tall                                                          |
-| `SiteHeader`       | `HeaderShell`: transparent with light text over the home hero, solid ivory once scrolled (and on every other page); products menu, main links, phone (xl+), language switch, "Request a quote", mobile menu |
-| `DesktopNav`       | Products menu as a WAI disclosure with a photo panel (mounted only while open); drawn underline on hover and the active link                                                                                |
-| `SiteFooter`       | Espresso: large wordmark and quote/consultation buttons, then addresses, product and company links, contact                                                                                                 |
-| Home `Hero`        | Full-height kitchen photo under a dark gradient; headline left, intro and buttons right, key facts along the foot                                                                                           |
-| Home `Products`    | Dark four-column tile grid (4:5): photo or finish illustration, name and text over a gradient at the foot; zoom on hover                                                                                    |
-| `MobileNav`        | Native `<dialog>` with `showModal()`: focus trap, inert background, Escape to close; no library                                                                                                             |
-| `PageHero`         | Breadcrumbs (with BreadcrumbList JSON-LD), eyebrow, `h1`, intro — every inner page                                                                                                                          |
-| `ContactDetails`   | Valid `dl` of phones, email, Instagram, showroom, hours, head office                                                                                                                                        |
-| `ContactActions`   | Email (optionally pre-filled) and call buttons                                                                                                                                                              |
-| `CtaBand`          | Centred closing call to action on espresso with faint vertical rules                                                                                                                                        |
-| `ProjectCard`      | Photo-first card (sand panel with the name when a project has no photo); `variant` `lead` / `fill` for the homepage gallery                                                                                 |
-| `LanguageSwitcher` | Full page load to the same page in the other language (canonical URLs, correct `lang`/`dir`)                                                                                                                |
-| `WhatsAppButton`   | Hidden until `NEXT_PUBLIC_WHATSAPP_NUMBER` is set                                                                                                                                                           |
-| `Swatch`           | CSS-gradient finish illustrations (no images or SVG filters, cheap to paint)                                                                                                                                |
-| `Reveal`           | CSS scroll-driven slide-up, movement only: fading would lower text contrast while it is on screen                                                                                                           |
-| `Wordmark`         | Typographic placeholder until the logo is supplied                                                                                                                                                          |
+| Component          | Notes                                                                                                                                                                                                          |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button` (shadcn)  | Square, small tracked capitals. Variants `primary`, `accent`, `light`, `outline`, `outlineLight`, `link`; sizes `md`, `lg`, `icon`; min 44 px tall                                                             |
+| `SiteHeader`       | `HeaderShell`: transparent with light text over the home hero, solid ivory once scrolled (and on every other page); products menu, main links, phone (xl+), language switch, "Request a quote", mobile menu    |
+| `DesktopNav`       | Products menu as a WAI disclosure with a photo panel (mounted only while open); drawn underline on hover and the active link                                                                                   |
+| `SiteFooter`       | Espresso: large wordmark and quote/consultation buttons, then addresses, product and company links, contact                                                                                                    |
+| Home `Hero`        | Full-height kitchen photo under a dark gradient; headline left, intro and buttons right, key facts along the foot                                                                                              |
+| Home `Products`    | Dark four-column tile grid (4:5): photo or finish illustration, name and text over a gradient at the foot; zoom on hover                                                                                       |
+| `MobileNav`        | Native `<dialog>` with `showModal()`: focus trap, inert background, Escape to close; no library                                                                                                                |
+| `PageHero`         | Breadcrumbs (with BreadcrumbList JSON-LD), eyebrow, `h1`, intro — every inner page                                                                                                                             |
+| `ContactDetails`   | Valid `dl` of phones, email, Instagram, showroom, hours, head office                                                                                                                                           |
+| `ContactActions`   | Email (optionally pre-filled) and call buttons                                                                                                                                                                 |
+| `CtaBand`          | Centred closing call to action on espresso with faint vertical rules                                                                                                                                           |
+| `ProjectCard`      | Photo-first card (sand panel with the name when a project has no photo); `variant` `lead` / `fill` for the homepage gallery                                                                                    |
+| `LanguageSwitcher` | Full page load to the same page in the other language (canonical URLs, correct `lang`/`dir`)                                                                                                                   |
+| `WhatsAppButton`   | Hidden until `NEXT_PUBLIC_WHATSAPP_NUMBER` is set                                                                                                                                                              |
+| `ChatLauncher`     | GIK Smart Assistant: espresso round button with a brass ring, above the WhatsApp button (bottom-end). Window code loads on first open; 24 rem card on desktop, full screen below 640 px; only when switched on |
+| `Swatch`           | CSS-gradient finish illustrations (no images or SVG filters, cheap to paint)                                                                                                                                   |
+| `Reveal`           | CSS scroll-driven slide-up, movement only: fading would lower text contrast while it is on screen                                                                                                              |
+| `Wordmark`         | Typographic placeholder until the logo is supplied                                                                                                                                                             |
 
 ## Motion
 

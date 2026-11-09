@@ -3,6 +3,7 @@
 // Exit code 1 when anything fails. Run it on the production environment before the first deploy and
 // after every change to variables or migrations. It never changes anything.
 import { existsSync, readdirSync } from "node:fs";
+import { parseSetting } from "../src/lib/site-settings";
 import { allPermissions } from "../src/server/auth/permissions";
 import { createPrismaClient } from "../src/server/db/client";
 import {
@@ -58,6 +59,15 @@ async function databaseFacts(): Promise<DatabaseFacts> {
       ),
       publishedMaterials: await db.material.count({ where: { published: true, verifiedAt: { not: null } } }),
       aiEnabled: Boolean((settings.ai as { enabled?: boolean } | undefined)?.enabled),
+      chat: (() => {
+        const chat = parseSetting("chatAgent", settings.chatAgent);
+        return {
+          enabled: chat.enabled,
+          dailyLimit: chat.dailyMessageLimit,
+          notifyEmails: chat.notifyEmails.length,
+          envNotifyEmails: Boolean(process.env.NOTIFY_EMAILS?.trim()),
+        };
+      })(),
     };
   } catch {
     return base;

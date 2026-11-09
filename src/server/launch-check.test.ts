@@ -108,4 +108,17 @@ describe("launch check: database", () => {
     expect(hasFailures(warnings)).toBe(false);
     expect(warnings.filter((f) => f.level === "warn")).toHaveLength(3);
   });
+  it("warns when the sales chat is on without a key or anyone to email", () => {
+    const chat = { enabled: true, dailyLimit: 1500, notifyEmails: 0, envNotifyEmails: false };
+    const warnings = checkDatabase({ ...facts, chat }).filter((f) => f.level === "warn");
+    expect(warnings.map((f) => f.message).join(" ")).toMatch(
+      /ANTHROPIC_API_KEY.*Nobody gets chat lead emails/,
+    );
+    expect(
+      checkDatabase({ ...facts, aiKeySet: true, chat: { ...chat, notifyEmails: 2 } }).filter(
+        (f) => f.level === "warn",
+      ),
+    ).toEqual([]);
+    expect(levels(checkDatabase({ ...facts, chat: { ...chat, enabled: false } }))).toEqual([]);
+  });
 });

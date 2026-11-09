@@ -61,8 +61,63 @@ furniture assistant. **Get the owner's approval and add this to the privacy poli
 Limits: 30 drafts an hour per staff member; the public assistant allows 5 questions an hour per visitor and 200 a
 day for the whole site. `AI_PROVIDER=mock` and `AI_MOCK_FOR_E2E` exist only for automated tests; never set them.
 
+**Sales chat (GIK Smart Assistant).** Needs the same `ANTHROPIC_API_KEY`, then **Admin → AI agent →
+Show the chat on the website** (approved by the owner on 2026-11-09). Visitors' messages go to Anthropic with
+phone numbers and email addresses removed. The model is chosen there (default Claude Sonnet 5.5, `effort: low`,
+server-side refusal fallback on Sonnet and Opus, instructions and knowledge cached). Limits: 40 messages an
+hour and 150 a day per visitor, 1,000 characters a message, the last 30 messages / 12,000 characters read per
+reply, and the daily limit set on that page (default 1,500 AI calls, background readings included) for the
+whole site; also set a monthly spending limit in the Anthropic console. To add the key on Vercel: Project → Settings → Environment
+Variables → `ANTHROPIC_API_KEY` (Production), then redeploy.
+
+**Sales-team emails for chat leads.** Each chat contact form emails the sales team: customer, requirements,
+rating, chat summary and links to the lead and conversation. Needs `RESEND_API_KEY` and `EMAIL_FROM` (Resend:
+create an account, verify the sending domain under Domains, create an API key, add both on Vercel), and the
+team's addresses in **Admin → AI agent → Email the sales team at** (or `NOTIFY_EMAILS`). Without them the
+outbox records the email as `not_configured` and nothing is sent. Sent right after the form (and the AI
+reading); the daily scheduled job retries failures.
+
+**WhatsApp alerts to the sales team (prepared, not tested against Meta).** Set `WHATSAPP_ACCESS_TOKEN`
+(a permanent system-user token), `WHATSAPP_PHONE_NUMBER_ID` (the sending number's id in the WhatsApp Business
+account), `WHATSAPP_LEAD_TEMPLATE` (an approved **utility** template with four body parameters: rating,
+reference, what they want, customer name and phone — suggested text in `src/server/chat/whatsapp-alert.ts`),
+optionally `WHATSAPP_TEMPLATE_LANGUAGE` (default `en`) and `WHATSAPP_GRAPH_VERSION` (default `v21.0`; use the
+version Meta's dashboard shows). Then enter staff numbers in Admin → AI agent. Each staff member must have
+messaged the business number or agreed to receive alerts. Send one test lead and check it arrives before
+relying on it.
+
 WhatsApp inbound: set `WHATSAPP_VERIFY_TOKEN` and `WHATSAPP_APP_SECRET`, then register
 `https://<domain>/api/webhooks/whatsapp` in the Meta app. n8n: see [n8n/README.md](n8n/README.md).
+
+## Releasing the AI sales agent (Phase 9)
+
+The live site (https://global-island-kitchens.vercel.app, Vercel project `global-island-kitchens`) is built
+from the `main` branch of `jakomer15-rgb/Global-island-Kitchens`. Merging into `main` is the production
+deploy: Vercel runs `scripts/vercel-build.mjs`, which applies pending migrations and the seed to the
+production database, then builds. Each step needs the owner's go-ahead.
+
+1. **Before:** check that last night's backup ran (GitHub → Actions → backup). The release adds three
+   migrations, all additive (new tables `knowledge_entries`, `chat_conversations`, `chat_messages`,
+   `lead_requirements`; new nullable/defaulted columns on `leads`, `file_assets`; a new lead source). Nothing
+   existing is changed or deleted. The seed adds the website FAQs to the (empty) knowledge base.
+2. **Release the code:** commit, push `fresh-start`, open a pull request into `main`, check the Vercel preview
+   and the CI run, then merge. The chat stays **hidden**: it appears only when the key is set **and** the switch
+   in Admin → AI agent is on. Check `/api/health`, the home page in English and Arabic, and Admin → AI sales and
+   Admin → AI agent open.
+3. **Owner, outside the code:** in the Anthropic console create an API key for this site and a monthly spend
+   limit; in Vercel → Settings → Environment Variables add `ANTHROPIC_API_KEY` (Production only), then Redeploy.
+   Optional now or later: `RESEND_API_KEY` and `EMAIL_FROM` for lead emails (step "Sales-team emails" above).
+4. **Privacy policy:** add the chat wording (OPEN_QUESTIONS 73) before visitors can use it.
+5. **Switch on:** Admin → AI agent: sales-team email addresses, check the welcome texts and daily limit, tick
+   **Show the chat on the website**, save. Test from a phone: a question in English, one in Arabic, a request
+   for a price (it must refuse to give one), then send the contact form; the lead appears in Admin → Leads and
+   AI sales, and the email arrives if email is set up. Delete nothing: mark the test lead "lost" with a note.
+6. **Watch the first week:** Admin → AI sales (conversations, cost estimate), the Anthropic console (spend),
+   Vercel logs (errors starting "Sales chat provider failed").
+
+**To undo:** untick **Show the chat on the website** (the button disappears at once; nothing is deleted). To
+undo the code too: Vercel → Deployments → the previous production deployment → Instant Rollback. The new tables
+stay and the older code ignores them, so no database change is needed.
 
 ## Quotation PDFs
 
@@ -149,6 +204,8 @@ Done by a person, with the owner:
 - [ ] Quotation terms and validity entered; VAT status confirmed (OPEN_QUESTIONS 48-50)
 - [ ] Fluent Arabic review of all Arabic text (OPEN_QUESTIONS 47, 53, 61, 68)
 - [ ] Privacy policy and terms checked by the owner (and updated if AI or automation is switched on)
+- [ ] Sales chat, if switched on: the steps in "Releasing the AI sales agent" above, with test conversations in English
+      and Arabic and one contact form
 - [ ] A test enquiry in English and Arabic arrives in Admin and by email; the cron returns 200
 - [ ] Upload a photo and a drawing; download it as staff; a quotation PDF is created in English and Arabic
 - [ ] `/api/health` monitored; error logs searchable; alerts go to a named person

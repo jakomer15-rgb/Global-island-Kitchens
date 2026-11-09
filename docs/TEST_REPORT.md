@@ -1,5 +1,115 @@
 # Test report
 
+## AI sales agent, Phase 8: testing and security fixes (2026-11-09)
+
+**Automated checks:** lint, typecheck and production build pass; 116 unit tests and 95 DB tests pass.
+Full Playwright run against the production build: 234 passed, 64 skipped (mobile duplicates and specs
+that need their own server), 2 failed on time only (homepage link checks hit every link, including
+products earlier test runs left in the test database; they pass on their own, 12/12, and now have a
+2-minute limit). The two admin failures from the first Phase 8 run (all admin pages with axe; creating a
+sales manager) were time limits too: 18 pages instead of 16, and 900 test staff accounts on the staff
+page. They pass now. `e2e/chat.spec.ts` against a test-AI server (port 3300): 3/3 passed (full journey,
+Arabic on a phone with axe, refusals).
+
+**Security review (security-qa, read-only):** no high findings. Five medium findings, all fixed and tested:
+
+1. The server trusted the conversation the browser sent, so a visitor could invent earlier assistant
+   replies (for example a price). Now the AI reads the history saved on the server; "assistant" messages
+   from the browser are kept only when they are one of the window's own cards (`isChatCardText`).
+2. Cost limits counted requests, not size. Now: every visitor message, earlier ones too, is at most
+   1,000 characters; the AI reads at most 30 messages / 12,000 characters; 150 messages per visitor per
+   day as well as 40 per hour; background readings count against the site's daily ceiling.
+3. Someone who knew a customer's phone number could join that customer's open lead, see its reference
+   and change its rating, requirements and consent. Now such a chat is marked `lead_joined` (migration
+   `20261109160000_chat_lead_joined`): no reference is shown, its reading never changes the lead,
+   consent is not recorded for an existing customer (the ticked boxes go in the note), and the note says
+   the details are not verified.
+4. Phone numbers written in Arabic or Persian digits weren't hidden from the AI, and measurement or
+   budget ranges were. Now digits are normalised and only runs of 8 or more digits are removed.
+5. An impossible date in the CSV export (2026-02-31) caused a server error. It is now ignored.
+
+Lower findings left open (in `docs/OPEN_QUESTIONS.md`): token usage of a reply the visitor abandons isn't
+counted; WhatsApp alerts to several numbers can repeat on retry; no retention period yet for anonymous
+chats; knowledge-base text is trusted as written by staff.
+
+**Not tested:** a live Claude conversation (no API key in `.env.local` yet), real email, real WhatsApp.
+
+## AI sales agent, Phase 7: notifications (2026-11-09)
+
+Lint, typecheck, 112 unit tests, 94 DB tests (new: `src/server/chat/notify.db.test.ts`, 9 tests) and the
+production build pass. Covered: the contact form queues `chat.lead` with the customer's consent; the sales-team
+email has the customer, phone, WhatsApp link, requirements, rating, language, summary and links, and its subject
+names the rating, reference, product and area; recipients come from Admin → AI agent, else `NOTIFY_EMAILS`;
+nothing is sent without a mail provider or recipients; the outbox never repeats a sent channel; returning-customer
+wording; WhatsApp alerts off until configured, one template message per staff number with the expected request,
+a refusal reported without Meta's text, parameters kept on one line. Tests use fake senders: no email, WhatsApp
+or n8n request leaves the machine (one test first reached Resend with a fake key and was corrected).
+
+In the dev server: Admin → AI agent shows the two notification fields; an invalid address is refused with a
+message; valid addresses save (test addresses removed afterwards). **Not tested:** a real email (no Resend
+account) or WhatsApp message (no WhatsApp Business account).
+
+## AI sales agent, Phase 6: admin dashboard (2026-11-09)
+
+Lint, typecheck, 112 unit tests, 85 DB tests (new: `src/server/chat/admin.db.test.ts`, 10 tests) and the
+production build pass. Covered: conversation list filters (rating, contact, words, lead reference); conversation
+and figures readable only with `lead.read` (a content editor is refused); figures (conversations, contact,
+leads by rating, won, cost); leads list rating filter; staff rating sticks against the AI and can be handed
+back; staff requirements stick and are audited; CSV cells can't become formulas, quoting, byte-order mark,
+Bahrain time, readable phone numbers; export needs `customer.read` and is audited; chat photos downloadable
+with `file.read`; per-model cost estimate.
+
+In the dev server (local test account and test lead): AI sales page with figures, rating and status panels,
+export form and conversation list; conversation page with transcript, form event, lead and reading; lead page
+with Requirements and Rating panels; saving HOT shows “Set by staff”; the CSV downloads with the byte-order
+mark (EF BB BF), Bahrain time and `="+973…"` phone; Leads filtered by HOT shows the Rating column. The page
+label “Chats without a lead” was wrong (it counted all chats) and was corrected.
+
+## AI sales agent, Phase 5: lead capture (2026-11-09)
+
+Lint, typecheck, 112 unit tests, 75 DB tests (new: `src/server/chat/leads.db.test.ts`, 11 tests) and the
+production build pass. Covered: conversations saved and continued by token (hash only stored), contact details
+removed from stored messages, unknown tokens start a new conversation, the form request passed to the window,
+analysis every second visitor message and stored, contact form → `website_chat` lead `GIK-A-…` with consent,
+requirements, HOT and category, no duplicates (same conversation; same customer's open lead; a won lead is not
+reused), staff-set temperature and requirements kept, a quick-options-only conversation saved in the same
+transaction, photos attached and kept by the clean-up and not attachable twice, form field rules.
+
+In the dev server with the test model (both local only, reverted): typed message → form offered in the chat;
+empty form shows the field messages; a sent form shows the reference (`GIK-A-2026-00002`) and created the
+lead, customer, WhatsApp consent, requirements and WARM reading, with the form event (no details) in the
+transcript. Arabic on a 375 px screen: “Talk to our sales team → Request a callback” opens the form at its
+title, right to left. **Not tested:** a photo upload from the browser (covered by DB tests and the existing
+quotation-form upload), and any of this with the real Claude model (no API key on this machine).
+
+## AI sales agent, Phase 4: Claude and knowledge base (2026-11-09)
+
+Lint, typecheck, 112 unit tests and 64 DB tests (new: `src/server/chat/chat.test.ts`,
+`chat.db.test.ts`) and the production build pass. Covered: the rules in the instructions, owner instructions
+placed after the rules, identical instructions for every visitor (cache), contact details removed before the
+provider, unpublished entries left out, knowledge editing limited to `chat.manage` and audited, database
+length checks, switch off → no provider call, declined and failed replies, per-visitor and site-wide limits,
+only this site's paths turned into links.
+
+In the dev server (test provider, local test account `chat-check@example.test`, both local only): AI agent page
+renders; saving settings, adding and deleting a knowledge entry work; the entry appears in “Show everything the
+assistant knows” (about 4,000 characters in total); `/api/chat` streams and reports a declined reply.
+**Not yet tested: a real conversation with Claude** (no API key on this machine).
+
+## AI sales agent, Phase 3: chat window (2026-11-09)
+
+Lint, typecheck, 105 unit tests (10 new in `src/lib/chat.test.ts`), 56 DB tests and the production
+build pass. `format:check` flags only `public/google545b6df8824f7faf.html` (Search Console file, not
+part of this change). E2E and Lighthouse were not run for this step.
+
+Checked by hand in the dev server with the switch on and `AI_PROVIDER=mock` (both reverted
+afterwards): desktop 1280×800 and mobile 375×812, English and Arabic (RTL, button bottom-left);
+welcome, notice, each kind of quick option (product, quotation, showroom with the Settings hours,
+sales team), typed message → typing indicator → streamed reply, links close the full-screen window on
+mobile and the conversation is kept across pages, Escape/close returns focus to the button. With the
+switch off the button is not rendered and `POST /api/chat` answers 503 `aiOff`; an empty conversation
+gets 400 and a cross-origin request 403.
+
 ## Agentic Browsing and accessibility (2026-11-07)
 
 Lighthouse 13.6, production build, nine pages (`/`, `/ar`, `/projects`, `/request-a-quote`, `/contact`,

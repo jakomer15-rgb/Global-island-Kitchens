@@ -15,6 +15,21 @@ export function sameOrigin(request: Request): boolean {
   }
 }
 
+/**
+ * Reads a JSON body of at most `maxBytes`. Returns null for a body that is too large or not JSON
+ * (the caller's schema check then refuses it).
+ */
+export async function readJsonBody(request: Request, maxBytes: number): Promise<unknown> {
+  if (Number(request.headers.get("content-length") ?? 0) > maxBytes) return null;
+  const text = await request.text().catch(() => "");
+  if (text.length > maxBytes) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,

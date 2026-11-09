@@ -126,3 +126,31 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
 66. **Automation accounts:** n8n hosting, the email sending account and the WhatsApp Business account and templates. Until they exist, no workflow sends anything.
 67. **Marketing consent wording:** the tick-boxes on the forms say email and WhatsApp may be used to contact the customer; confirm they cover marketing, or keep automation to replies only.
 68. **Arabic review** of `src/content/assistant.ts` (unsubscribe page and furniture assistant).
+
+## Added for the AI sales agent (2026-11-09)
+
+71. **Arabic review** of `src/content/chat.ts` (the GIK Smart Assistant chat window, its contact form, and
+    the Arabic version of the owner's welcome message).
+72. **Chat logo:** the chat window uses the interim cabinet-door mark (as the site icon) until the
+    company's logo files are supplied (#1).
+73. **Privacy policy wording for the chat** (owner's wording, `src/content/legal.ts`): that chat messages are
+    stored and sent to Anthropic to write the replies (phone numbers and emails removed first), that an AI
+    reads the conversation to note the visitor's requirements, and that details sent through the chat's
+    contact form go to the sales team. Needed before the chat is switched on publicly.
+74. **How long to keep chats** where the visitor left no contact details (e.g. delete after 90 days).
+    Nothing is deleted automatically yet; chats linked to a lead stay with the lead.
+75. **Cost of the background reading:** each conversation is read (for requirements and HOT / WARM / COLD)
+    every second visitor message with the chat's own model, adding roughly a third to the chat's cost.
+    Claude Haiku would make that step almost free; it's the owner's choice.
+76. **Email account for notifications:** a Resend account (or another provider) with the company's sending
+    domain verified, and the sales team's addresses. Until then chat leads are only in the admin.
+77. **Confirmation email to the chat visitor:** the chat shows the reference on screen; an email
+    confirmation (as the website forms send) is not built for the chat. Add it only if the owner wants it, with
+    approved wording.
+78. **WhatsApp Business:** which number, who owns the Meta account, and an approved utility template for
+    staff alerts (four parameters, see `src/server/chat/whatsapp-alert.ts`). Customer follow-ups need separate
+    approved templates and the design in `docs/n8n/README.md`.
+79. **Smaller security items left open (Phase 8 review):** the tokens of a reply the visitor abandons
+    mid-way aren't added to the cost figures; a WhatsApp alert to several staff numbers can be repeated
+    when one number fails and the job retries; knowledge-base and catalogue text is trusted as staff
+    wrote it (only staff with `chat.manage` can edit it). None blocks launch; fix before heavy use.

@@ -1,4 +1,10 @@
-import type { ActivityKind, LeadSource, LeadStatus, Prisma } from "@/generated/prisma/client";
+import type {
+  ActivityKind,
+  LeadSource,
+  LeadStatus,
+  LeadTemperature,
+  Prisma,
+} from "@/generated/prisma/client";
 import type { Db } from "@/server/db/client";
 import { audit } from "@/server/audit";
 import { enqueue } from "@/server/outbox/events";
@@ -17,6 +23,7 @@ export const leadSources: LeadSource[] = [
   "walk_in",
   "referral",
   "instagram",
+  "website_chat",
   "other",
 ];
 /** Kinds staff can log by hand (status changes and assignments are logged automatically). */
@@ -27,6 +34,8 @@ export interface LeadFilters {
   source?: LeadSource;
   /** User id, or "none" for unassigned. */
   assignedTo?: string;
+  /** HOT / WARM / COLD, or "none" for leads without a rating. */
+  temperature?: LeadTemperature | "none";
   q?: string;
   page?: number;
 }
@@ -38,6 +47,11 @@ export async function listLeads(db: Db, actor: Actor, filters: LeadFilters) {
     archivedAt: null,
     ...(filters.status ? { status: filters.status } : {}),
     ...(filters.source ? { source: filters.source } : {}),
+    ...(filters.temperature === "none"
+      ? { temperature: null }
+      : filters.temperature
+        ? { temperature: filters.temperature }
+        : {}),
     ...(filters.assignedTo === "none"
       ? { assignedToId: null }
       : filters.assignedTo
@@ -88,6 +102,23 @@ export async function getLead(db: Db, actor: Actor, id: string) {
       consultation: true,
       quotationRequest: {
         include: {
+          files: {
+            where: { status: "verified" },
+            select: { id: true, originalName: true, sizeBytes: true, mimeType: true },
+          },
+        },
+      },
+      requirements: true,
+      chats: {
+        orderBy: { startedAt: "desc" },
+        select: {
+          id: true,
+          startedAt: true,
+          messageCount: true,
+          language: true,
+          temperature: true,
+          temperatureNote: true,
+          summary: true,
           files: {
             where: { status: "verified" },
             select: { id: true, originalName: true, sizeBytes: true, mimeType: true },

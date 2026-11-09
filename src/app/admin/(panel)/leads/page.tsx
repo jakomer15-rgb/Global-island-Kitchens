@@ -14,6 +14,7 @@ import {
   Pagination,
   Table,
   Td,
+  TemperatureBadge,
   Th,
 } from "@/components/admin/ui";
 import { requireActor } from "@/server/auth/session";
@@ -33,6 +34,7 @@ const filtersSchema = z.object({
     .optional()
     .catch(undefined),
   assignedTo: z.string().max(40).optional().catch(undefined),
+  temperature: z.enum(["hot", "warm", "cold", "none"]).optional().catch(undefined),
   q: z.string().max(100).optional().catch(undefined),
   page: z.coerce.number().int().positive().optional().catch(undefined),
 });
@@ -80,6 +82,15 @@ export default async function LeadsPage({ searchParams }: PageProps<"/admin/lead
             ))}
           </select>
         </FilterField>
+        <FilterField label="Rating">
+          <select name="temperature" defaultValue={filters.temperature ?? ""} className={adminInput}>
+            <option value="">Any</option>
+            <option value="hot">HOT</option>
+            <option value="warm">WARM</option>
+            <option value="cold">COLD</option>
+            <option value="none">Not rated</option>
+          </select>
+        </FilterField>
         <FilterField label="Assigned to">
           <select name="assignedTo" defaultValue={filters.assignedTo ?? ""} className={adminInput}>
             <option value="">Anyone</option>
@@ -105,6 +116,7 @@ export default async function LeadsPage({ searchParams }: PageProps<"/admin/lead
                 <Th>Customer</Th>
                 <Th>Summary</Th>
                 <Th>Status</Th>
+                <Th>Rating</Th>
                 <Th>Assigned</Th>
                 <Th>Next follow-up</Th>
                 <Th>Received</Th>
@@ -133,6 +145,9 @@ export default async function LeadsPage({ searchParams }: PageProps<"/admin/lead
                   </Td>
                   <Td>
                     <Badge tone={leadStatusTone[l.status]}>{label(l.status)}</Badge>
+                  </Td>
+                  <Td>
+                    <TemperatureBadge value={l.temperature} />
                   </Td>
                   <Td>{l.assignedTo?.name ?? <span className="text-ink-muted">—</span>}</Td>
                   <Td>

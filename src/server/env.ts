@@ -48,6 +48,35 @@ const schema = z
     // WhatsApp Business Cloud API webhook (inbound messages are logged on the lead; nothing is sent).
     WHATSAPP_VERIFY_TOKEN: z.preprocess((v) => v || undefined, z.string().min(16).optional()),
     WHATSAPP_APP_SECRET: z.preprocess((v) => v || undefined, z.string().min(16).optional()),
+    /**
+     * WhatsApp Business Cloud API, outbound alerts to the sales team only (src/server/chat/whatsapp-alert.ts).
+     * Off until all three are set and staff numbers are entered in Admin → AI agent. Prepared, not yet
+     * tested against Meta: needs the owner's WhatsApp Business account and an approved template.
+     */
+    WHATSAPP_ACCESS_TOKEN: z.preprocess((v) => v || undefined, z.string().min(20).optional()),
+    WHATSAPP_PHONE_NUMBER_ID: z.preprocess(
+      (v) => v || undefined,
+      z
+        .string()
+        .regex(/^\d{5,30}$/)
+        .optional(),
+    ),
+    /** Name of the approved "utility" template for new-lead alerts, with 4 body parameters (see DEPLOYMENT). */
+    WHATSAPP_LEAD_TEMPLATE: z.preprocess(
+      (v) => v || undefined,
+      z
+        .string()
+        .regex(/^[a-z0-9_]{1,512}$/)
+        .optional(),
+    ),
+    WHATSAPP_TEMPLATE_LANGUAGE: z.preprocess((v) => v || undefined, z.string().default("en")),
+    WHATSAPP_GRAPH_VERSION: z.preprocess(
+      (v) => v || undefined,
+      z
+        .string()
+        .regex(/^v\d+\.\d+$/)
+        .default("v21.0"),
+    ),
   })
   .refine((e) => !(e.NODE_ENV === "production" && e.AI_PROVIDER === "mock" && !e.AI_MOCK_FOR_E2E), {
     message: "AI_PROVIDER=mock is for tests only",
