@@ -30,6 +30,10 @@ export const permissions = {
   "settings.manage": "Change contact details, opening hours and the WhatsApp number",
   "staff.manage": "Create staff accounts and change roles",
   "audit.read": "View the audit log",
+  "automation.read":
+    "Open the AI Business Automation Centre: overview, approvals queue, integration status and delivery log",
+  "integrations.manage":
+    "Test connections to outside services (Claude, email, storage, WhatsApp) and retry failed deliveries",
 } as const;
 
 export type Permission = keyof typeof permissions;
@@ -77,6 +81,7 @@ export const roleDefinitions: {
       "ai.use",
       "ai.review",
       "chat.manage",
+      "automation.read",
     ],
   },
   {

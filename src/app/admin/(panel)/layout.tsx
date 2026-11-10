@@ -4,14 +4,15 @@ import { requireActor } from "@/server/auth/session";
 import { unreadNotificationCount } from "@/server/crm/dashboard";
 import { db } from "@/server/db";
 import { signOutAction } from "../actions";
+import { getCentreLang } from "./automation/lang";
 import { adminNav } from "./nav";
 
 export default async function AdminPanelLayout({ children }: LayoutProps<"/admin">) {
   const actor = await requireActor();
-  const unread = await unreadNotificationCount(db, actor);
+  const [unread, lang] = await Promise.all([unreadNotificationCount(db, actor), getCentreLang()]);
   return (
     <AdminShell
-      nav={adminNav(actor.permissions)}
+      nav={adminNav(actor.permissions, lang)}
       userName={actor.name}
       unread={unread}
       signOut={

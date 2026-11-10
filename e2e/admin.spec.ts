@@ -36,6 +36,10 @@ const pages = [
   ["/admin/staff/roles", "Roles and permissions"],
   ["/admin/audit", "Audit log"],
   ["/admin/notifications", "Notifications"],
+  ["/admin/automation", "Overview"],
+  ["/admin/automation/approvals", "Approvals"],
+  ["/admin/automation/integrations", "Integrations"],
+  ["/admin/automation/logs", "System log"],
 ] as const;
 
 test.describe("admin portal", () => {
@@ -50,6 +54,19 @@ test.describe("admin portal", () => {
       await expect(page.getByRole("heading", { level: 1, name: heading }), path).toBeVisible();
       expect(await seriousViolations(page), path).toEqual([]);
     }
+  });
+
+  test("the Automation Centre switches to Arabic, right to left, and back", async ({ page }) => {
+    await signIn(page);
+    await page.goto("/admin/automation/integrations");
+    await page.getByRole("button", { name: /العربية/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "الربط والتكامل" })).toBeVisible();
+    await expect(page.locator('main [dir="rtl"][lang="ar"]').first()).toBeVisible();
+    // Honest status: the test environment has no email key, so email is never shown as connected.
+    await expect(page.getByText("البريد الإلكتروني (Resend)")).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+    await page.getByRole("button", { name: /English/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Integrations" })).toBeVisible();
   });
 
   test("a new sales manager sees only the CRM", async ({ page, browser }) => {

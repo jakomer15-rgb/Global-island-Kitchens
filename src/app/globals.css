@@ -81,6 +81,19 @@
     line-height: 1.85;
   }
 
+  /* Admin Automation Centre in Arabic: the admin page itself stays lang="en", so swap the type tokens on the part shown in Arabic. */
+  .centre-ar {
+    --font-display: var(--font-amiri), "Times New Roman", serif;
+    --font-sans: var(--font-plex-arabic), "Segoe UI", Tahoma, sans-serif;
+    font-family: var(--font-sans);
+    line-height: 1.85;
+  }
+
+  .centre-ar .font-display {
+    line-height: 1.45;
+    letter-spacing: 0;
+  }
+
   /*
    * On phones and tablets, sections after the first are laid out only when scrolled near (content
    * and accessibility tree are unaffected), which is where the long page's layout cost matters. The

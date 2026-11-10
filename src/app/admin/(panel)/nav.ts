@@ -1,10 +1,13 @@
 import type { NavGroup } from "@/components/admin/shell";
+import { centreText, type CentreLang } from "@/content/automation-centre";
 import type { Permission } from "@/server/auth/permissions";
+
+type Label = string | { en: string; ar: string };
 
 /** Admin navigation; each item shows only for staff with its permission (or any of several). */
 const groups: {
-  label: string;
-  items: { href: string; label: string; permission: Permission | Permission[] }[];
+  label: Label;
+  items: { href: string; label: Label; permission: Permission | Permission[]; exact?: boolean }[];
 }[] = [
   {
     label: "Overview",
@@ -14,10 +17,30 @@ const groups: {
     ],
   },
   {
+    // Labels follow the language chosen inside the Centre; the other groups stay English for now.
+    label: centreText.navGroup,
+    items: [
+      {
+        href: "/admin/automation",
+        label: centreText.nav.overview,
+        permission: "automation.read",
+        exact: true,
+      },
+      { href: "/admin/automation/approvals", label: centreText.nav.approvals, permission: "automation.read" },
+      { href: "/admin/ai-sales", label: centreText.agents.sales.name, permission: "lead.read" },
+      { href: "/admin/ai-agent", label: centreText.modules.knowledge, permission: "chat.manage" },
+      {
+        href: "/admin/automation/integrations",
+        label: centreText.nav.integrations,
+        permission: "automation.read",
+      },
+      { href: "/admin/automation/logs", label: centreText.nav.logs, permission: "automation.read" },
+    ],
+  },
+  {
     label: "CRM",
     items: [
       { href: "/admin/leads", label: "Leads", permission: "lead.read" },
-      { href: "/admin/ai-sales", label: "AI sales", permission: "lead.read" },
       { href: "/admin/customers", label: "Customers", permission: "customer.read" },
       { href: "/admin/consultations", label: "Consultations", permission: "consultation.read" },
       { href: "/admin/designers", label: "Designers", permission: "designer.read" },
@@ -50,7 +73,6 @@ const groups: {
   {
     label: "Administration",
     items: [
-      { href: "/admin/ai-agent", label: "AI agent", permission: "chat.manage" },
       { href: "/admin/ai", label: "AI drafts", permission: ["ai.use", "ai.review"] },
       { href: "/admin/settings", label: "Settings", permission: "settings.manage" },
       { href: "/admin/staff", label: "Staff", permission: "staff.manage" },
@@ -59,13 +81,17 @@ const groups: {
   },
 ];
 
-export function adminNav(permissions: ReadonlySet<Permission>): NavGroup[] {
+const text = (l: Label, lang: CentreLang) => (typeof l === "string" ? l : l[lang]);
+
+export function adminNav(permissions: ReadonlySet<Permission>, lang: CentreLang = "en"): NavGroup[] {
   return groups
     .map((g) => ({
-      label: g.label,
+      label: text(g.label, lang),
+      // Arabic labels need the right direction even inside the English sidebar.
+      lang: typeof g.label === "string" ? undefined : lang,
       items: g.items
         .filter((i) => [i.permission].flat().some((p) => permissions.has(p)))
-        .map(({ href, label }) => ({ href, label })),
+        .map(({ href, label, exact }) => ({ href, label: text(label, lang), exact })),
     }))
     .filter((g) => g.items.length > 0);
 }

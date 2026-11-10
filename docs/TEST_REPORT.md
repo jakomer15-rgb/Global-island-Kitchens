@@ -1,5 +1,20 @@
 # Test report
 
+## AI Business Automation Centre, Stage 2 (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 134 passed, including 17 new in `src/server/automation/automation.test.ts` (status
+  rules, connection tests against fake Anthropic, Resend, R2 and Meta answers, Bahrain day boundary,
+  admin menu).
+- Database (`npm run test:db`): 106 passed, including 11 new in `automation.db.test.ts` (permissions,
+  stored and audited tests, changed key shows untested, rate limit, retry, payloads hidden, approval queue).
+- E2E (`npx playwright test e2e/admin.spec.ts`, production build): 7 passed, 7 skipped by design (admin
+  journeys run on desktop only). The four Centre pages pass axe; Arabic switch tested.
+- Browser check (dev, local data): overview figures match the existing dashboard; Arabic right-to-left
+  on desktop and at 375 px wide with no sideways scrolling; no console errors.
+- Not tested: a real "Test connection" against live services (no keys locally). Run it in production
+  once the keys are in Vercel.
+
 ## AI sales agent, Phase 8: testing and security fixes (2026-11-09)
 
 **Automated checks:** lint, typecheck and production build pass; 116 unit tests and 95 DB tests pass.

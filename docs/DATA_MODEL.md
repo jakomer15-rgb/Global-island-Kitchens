@@ -174,6 +174,17 @@ Opus 5.5), owner instructions, welcome texts, daily message limit.
 A second contact form from the same conversation, or from a customer with an open lead (new, contacted,
 qualified or quoted) from the last 60 days, is added to that lead instead of creating a new one.
 
+### AI Business Automation Centre (2026-11-11, migration `20261111120000_automation_centre`)
+
+| Model              | Key fields                                                                                           | Rules                                                                                                                                                                                                      |
+| ------------------ | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IntegrationCheck` | integration (key), ok, message (written by the app), configHash, durationMs, checkedById?, createdAt | One row per "Test connection". `configHash` is an HMAC of the settings tested (never the keys), so changing a key shows the service as untested again. CHECK: key `^[a-z0-9_]{2,40}$`, message 1–300 chars |
+
+Permissions added: `automation.read` (owner, general manager, sales manager) and `integrations.manage`
+(owner, general manager). The Centre's figures, approval queue and delivery log are read from the
+existing tables (`leads`, `follow_ups`, `quotations`, `orders`, `ai_drafts`, `designer_accounts`,
+`outbox_events`); payloads of outbox events are never shown.
+
 ## Seed data (Phases 4–5)
 
 Seeded (idempotent, never overwriting staff edits): permissions, system roles (new permissions are

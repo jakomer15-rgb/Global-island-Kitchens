@@ -74,6 +74,7 @@ model User {
   aiDraftsRequested  AiDraft[]            @relation("AiRequester")
   aiDraftsReviewed   AiDraft[]            @relation("AiReviewer")
   knowledgeEdited    KnowledgeEntry[]     @relation("KnowledgeEditor")
+  integrationChecks  IntegrationCheck[]   @relation("IntegrationChecker")
 
   @@map("users")
 }
@@ -1265,4 +1266,27 @@ model ChatMessage {
 
   @@index([conversationId, createdAt])
   @@map("chat_messages")
+}
+
+// ─── AI Business Automation Centre (Stage 2, 2026-11-11) ────────────────────
+
+/// One "Test connection" run in Admin → Automation Centre → Integrations (each run is also in the audit
+/// log). `configHash` is a keyed hash of the settings tested, so a changed key shows as untested; keys
+/// themselves are never stored. `message` is written by the app (provider bodies are never kept).
+model IntegrationCheck {
+  id          String   @id @default(cuid())
+  /// Integration key from src/server/automation/integrations.ts, e.g. "anthropic".
+  integration String
+  ok          Boolean
+  message     String
+  configHash  String   @map("config_hash")
+  durationMs  Int      @map("duration_ms")
+  checkedById String?  @map("checked_by_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  checkedBy User? @relation("IntegrationChecker", fields: [checkedById], references: [id], onDelete: SetNull)
+
+  @@index([integration, createdAt])
+  @@index([createdAt])
+  @@map("integration_checks")
 }

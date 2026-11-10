@@ -12,6 +12,31 @@ permissions).
 2. Open **Notifications** (in the top bar) for leads and messages assigned to you.
 3. The **Dashboard** shows new leads, follow-ups due, open quotations and sales figures.
 
+## AI Business Automation Centre
+
+The **Automation Centre** group in the menu (owner, general manager, sales manager). The button at the
+top right switches the Centre between English and Arabic; the rest of the admin stays English for now.
+
+- **Overview:** today's enquiries, leads not yet contacted, overdue follow-ups, HOT / WARM / COLD open
+  leads, quotations awaiting an answer, approvals waiting and failed deliveries. Every number is counted
+  from the database when the page opens. The four AI agents and the 14 areas of the Centre are listed:
+  areas not built yet say which stage builds them.
+- **Approvals:** everything waiting for a person's decision (AI drafts, designer registrations). **Review**
+  opens the item's own screen; nothing is sent or published from this list.
+- **AI Sales Agent** and **Company knowledge base:** the existing AI sales and AI agent screens.
+- **Integrations:** each outside service (Claude, email, file storage, WhatsApp, n8n, the scheduled job,
+  and the planned Meta, LinkedIn, Google Places, Canva and TikTok) with its real status. The keys
+  themselves are never shown, and each test is recorded in the audit log.
+  - _Awaiting credentials_: its keys aren't set in Vercel yet.
+  - _Set, not tested_: keys are set; press **Test connection** (owner and general manager).
+  - _Connected_: the last test with the keys in use now succeeded. Changing a key in Vercel shows it as
+    untested again.
+  - _Error_: the last test failed; the message says why (for example "rejected the API key").
+  - _Planned_: built in a later stage.
+- **System log:** every automated email, WhatsApp alert and n8n event with its result per channel. A
+  delivery that kept failing shows **Retry** (owner and general manager): channels that already worked are
+  not repeated. Customer details are not shown here.
+
 ## Enquiries (Leads)
 
 Every quote request, consultation booking, contact message, designer project and WhatsApp message becomes a
