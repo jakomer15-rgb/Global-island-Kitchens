@@ -1,5 +1,22 @@
 # Test report
 
+## CRM and pipeline, Stage 3 (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 140 passed, including 6 new in `src/lib/lead-score.test.ts`.
+- Database (`npm run test:db`): 115 passed, including 9 new in `src/server/crm/crm.db.test.ts`: score
+  triggers (rating, stage, requirements, quotation-request measurements and area, cleared when won), the
+  database score equal to the staff breakdown for every stage and rating, last contact and next follow-up
+  triggers, filters and score sort, pipeline grouping, export columns, duplicate finder, merge (moves,
+  consent copy, archive, permission, later enquiries follow the merge, chained merges).
+- E2E (`npx playwright test e2e/admin.spec.ts e2e/designers.spec.ts`, production build): 11 passed,
+  11 skipped by design (desktop-only journeys). Pipeline board and duplicates pages pass axe; filter, sort
+  and CSV download tested; the designer journey uses the renamed "Stage" field.
+- Browser check (dev, local data): existing leads got scores from the migration (the local HOT chat
+  lead: 50 = HOT 40 + product 5 + location 5, matching its breakdown); pipeline board, customers list and
+  duplicates page render; no app errors.
+- Not tested: merging on real production data (none local), a large number of leads on the board.
+
 ## AI Business Automation Centre, Stage 2 (2026-11-11)
 
 - `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.

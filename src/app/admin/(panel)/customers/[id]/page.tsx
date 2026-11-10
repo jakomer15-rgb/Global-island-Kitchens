@@ -3,14 +3,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/admin/action-form";
 import { AdminInput, AdminSelect, AdminTextarea } from "@/components/admin/fields";
-import { Badge, fmtDateTime, label, leadStatusTone, PageHeader, Panel } from "@/components/admin/ui";
+import {
+  Badge,
+  fmtDateTime,
+  label,
+  leadStatusTone,
+  PageHeader,
+  Panel,
+  ScoreBadge,
+} from "@/components/admin/ui";
 import { CUID } from "@/server/admin/action";
 import { requireActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
-import { customerTypes, getCustomer } from "@/server/crm/customers";
+import { customerTypes, duplicatesOf, getCustomer } from "@/server/crm/customers";
+import { leadStatusNames } from "@/server/crm/leads";
 import { db } from "@/server/db";
 import { NotFoundError } from "@/server/errors";
-import { consentAction, updateCustomerAction } from "../actions";
+import { consentAction, mergeCustomerAction, updateCustomerAction } from "../actions";
 
 export const metadata: Metadata = { title: "Customer" };
 
@@ -26,6 +35,7 @@ export default async function CustomerPage({ params }: PageProps<"/admin/custome
     throw e;
   }
   const canEdit = can(actor, "customer.update");
+  const duplicates = await duplicatesOf(db, actor, c.id);
   const consentText = (r: (typeof c.currentConsent)["email"]) =>
     r
       ? `${r.granted ? "Yes" : "No"} · ${fmtDateTime(r.recordedAt)} (${r.source.startsWith("staff:") ? "recorded by staff" : r.source})`
@@ -63,6 +73,12 @@ export default async function CustomerPage({ params }: PageProps<"/admin/custome
                   defaultValue={c.type}
                   options={customerTypes.map((t) => ({ value: t, label: label(t) }))}
                 />
+                <AdminInput
+                  label="Location (area or town)"
+                  name="location"
+                  defaultValue={c.location ?? ""}
+                  maxLength={120}
+                />
                 <AdminSelect
                   label="Preferred language"
                   name="preferredLanguage"
@@ -89,6 +105,14 @@ export default async function CustomerPage({ params }: PageProps<"/admin/custome
               <div>
                 <dt className="text-ink-muted">Email</dt>
                 <dd>{c.email ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-ink-muted">Company</dt>
+                <dd>{c.company ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-ink-muted">Location</dt>
+                <dd>{c.location ?? "—"}</dd>
               </div>
               <div className="sm:col-span-2">
                 <dt className="text-ink-muted">Notes</dt>
@@ -148,15 +172,83 @@ export default async function CustomerPage({ params }: PageProps<"/admin/custome
                   ) : (
                     <span className="font-mono text-xs">{l.reference}</span>
                   )}{" "}
-                  <Badge tone={leadStatusTone[l.status]}>{label(l.status)}</Badge>
+                  <Badge tone={leadStatusTone[l.status]}>{leadStatusNames[l.status]}</Badge>{" "}
+                  <ScoreBadge value={l.score} />
                   <span className="block">{l.summary}</span>
-                  <span className="text-xs text-ink-muted">{fmtDateTime(l.createdAt)}</span>
+                  <span className="text-xs text-ink-muted">
+                    Received {fmtDateTime(l.createdAt)}
+                    {l.lastContactAt && ` · last contact ${fmtDateTime(l.lastContactAt)}`}
+                    {l.nextFollowUpAt && ` · follow-up ${fmtDateTime(l.nextFollowUpAt)}`}
+                  </span>
                 </li>
               ))}
+              {c.leads.length === 0 && <li className="py-2 text-ink-muted">No leads.</li>}
             </ul>
           </Panel>
         </div>
       </div>
+
+      {(duplicates.length > 0 || c.mergedFrom.length > 0) && (
+        <section id="duplicates" className="mt-6 scroll-mt-24">
+          <Panel title="Duplicates">
+            {duplicates.length > 0 && (
+              <>
+                <p className="text-sm">
+                  These customers have the same name. If one is the same person, merge it into this record:
+                  its leads, quotations, orders, projects and chats move here, its consent history is copied,
+                  and it is archived. New enquiries from its phone or email will arrive here. This can&apos;t
+                  be undone from the admin.
+                </p>
+                <ul className="mt-4 divide-y divide-line text-sm">
+                  {duplicates.map((d) => (
+                    <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                      <span>
+                        <Link href={`/admin/customers/${d.id}`} className="font-medium underline">
+                          {d.name}
+                        </Link>{" "}
+                        <span dir="ltr">{d.phone}</span> {d.email}
+                        <span className="block text-xs text-ink-muted">
+                          {label(d.type)}
+                          {d.location ? ` · ${d.location}` : ""} · {d._count.leads} lead(s) · since{" "}
+                          {fmtDateTime(d.createdAt)}
+                        </span>
+                      </span>
+                      {canEdit && (
+                        <ActionForm
+                          action={mergeCustomerAction.bind(null, c.id, d.id)}
+                          submitLabel="Merge into this record"
+                          pendingLabel="Merging…"
+                          variant="outline"
+                          confirm={`Merge ${d.name} (${d.phone ?? d.email}) into ${c.name}? Their leads and history move to this record and the other record is archived. This can't be undone from the admin.`}
+                          inline
+                        />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {c.mergedFrom.length > 0 && (
+              <div className={duplicates.length > 0 ? "mt-6 border-t border-line pt-4" : undefined}>
+                <h3 className="text-sm font-medium">Merged into this record</h3>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {c.mergedFrom.map((m) => (
+                    <li key={m.id}>
+                      {m.name} · <span dir="ltr">{m.phone}</span> {m.email}
+                      {m.archivedAt && (
+                        <span className="text-xs text-ink-muted"> · merged {fmtDateTime(m.archivedAt)}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs text-ink-muted">
+                  Enquiries from these phone numbers and emails arrive on this record.
+                </p>
+              </div>
+            )}
+          </Panel>
+        </section>
+      )}
     </>
   );
 }

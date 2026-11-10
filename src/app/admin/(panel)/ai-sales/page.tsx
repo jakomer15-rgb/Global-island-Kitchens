@@ -22,7 +22,7 @@ import {
 import { requireActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
 import { chatStats, listChats } from "@/server/chat/admin";
-import { leadSources, leadStatuses } from "@/server/crm/leads";
+import { leadSources, leadStatuses, leadStatusNames } from "@/server/crm/leads";
 import { db } from "@/server/db";
 
 export const metadata: Metadata = { title: "AI sales" };
@@ -145,7 +145,7 @@ export default async function AiSalesPage({ searchParams }: PageProps<"/admin/ai
             {leadStatuses.map((s) => (
               <li key={s} className="flex items-center justify-between">
                 <Link href={leadsLink({ status: s })} className="hover:underline">
-                  <Badge tone={leadStatusTone[s]}>{label(s)}</Badge>
+                  <Badge tone={leadStatusTone[s]}>{leadStatusNames[s]}</Badge>
                 </Link>
                 <span className="tabular-nums">{stats.byLeadStatus[s] ?? 0}</span>
               </li>
@@ -197,7 +197,7 @@ export default async function AiSalesPage({ searchParams }: PageProps<"/admin/ai
                 <option value="">Any</option>
                 {leadStatuses.map((s) => (
                   <option key={s} value={s}>
-                    {label(s)}
+                    {leadStatusNames[s]}
                   </option>
                 ))}
               </select>

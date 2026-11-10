@@ -145,8 +145,8 @@ test.describe("designer portal", () => {
     await expect(designer.getByText("Tight budget")).toHaveCount(0);
 
     // Progress follows the lead
-    await staff.getByLabel("Status", { exact: true }).selectOption("quoted");
-    await staff.getByRole("button", { name: "Update status" }).click();
+    await staff.getByLabel("Stage", { exact: true }).selectOption("quoted");
+    await staff.getByRole("button", { name: "Update stage" }).click();
     await expect(staff.getByText(/Status (updated|changed)|quoted/i).first()).toBeVisible();
     await designer.goto(projectUrl);
     await expect(designer.getByText("Quotation prepared")).toBeVisible();

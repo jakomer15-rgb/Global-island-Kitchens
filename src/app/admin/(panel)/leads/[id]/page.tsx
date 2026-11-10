@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { bahrainDate } from "@/lib/admin/time";
+import { bahrainDate, isPast } from "@/lib/admin/time";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/admin/action-form";
 import { AdminInput, AdminSelect, AdminTextarea } from "@/components/admin/fields";
@@ -13,14 +13,16 @@ import {
   leadStatusTone,
   PageHeader,
   Panel,
+  ScoreBadge,
   TemperatureBadge,
 } from "@/components/admin/ui";
+import { leadScoreParts } from "@/lib/lead-score";
 import { requirementFields } from "@/server/chat/admin";
 import { CUID } from "@/server/admin/action";
 import { requireActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
 import { categoryLabel } from "@/server/enquiries/submit";
-import { getLead, leadStatuses, loggableKinds } from "@/server/crm/leads";
+import { getLead, leadStatuses, leadStatusNames, loggableKinds } from "@/server/crm/leads";
 import { assignableStaff } from "@/server/crm/shared";
 import { db } from "@/server/db";
 import { NotFoundError } from "@/server/errors";
@@ -97,6 +99,14 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
   const history = lead.activities.filter((a) => a.kind !== "message");
   // Bahrain time for the datetime-local default (tomorrow 10:00).
   const tomorrow = bahrainDate(1);
+  const scoreParts = leadScoreParts({
+    status: lead.status,
+    temperature: lead.temperature,
+    category: lead.category,
+    requirements: lead.requirements,
+    measured: Array.isArray(qr?.measurements) && qr.measurements.length > 0,
+    area: qr?.area ?? null,
+  });
 
   return (
     <>
@@ -111,7 +121,8 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
           <>
             {label(lead.source)} · received {fmtDateTime(lead.createdAt)} ·{" "}
             {lead.locale === "ar" ? "Arabic" : "English"}{" "}
-            <Badge tone={leadStatusTone[lead.status]}>{label(lead.status)}</Badge>
+            <Badge tone={leadStatusTone[lead.status]}>{leadStatusNames[lead.status]}</Badge>{" "}
+            <ScoreBadge value={lead.score} />
           </>
         }
       />
@@ -217,9 +228,15 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
             )}
           </Panel>
 
-          {(lead.requirements || lead.chats.length > 0) && (
+          {(lead.requirements || lead.chats.length > 0 || canUpdate) && (
             <Panel title="Requirements">
-              {!lead.requirements?.editedByStaff && (
+              {!lead.requirements && lead.chats.length === 0 && (
+                <p className="mb-3 text-xs text-ink-muted">
+                  What the customer wants: product, dimensions, budget, location and timeline. Each one you
+                  fill in raises the lead score.
+                </p>
+              )}
+              {!lead.requirements?.editedByStaff && (lead.requirements || lead.chats.length > 0) && (
                 <p className="mb-3 text-xs text-ink-muted">
                   Noted by the AI assistant from the chat. Check them with the customer; once you save changes
                   here, the assistant no longer updates them.
@@ -515,14 +532,67 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
             <p className="mt-1 text-xs text-ink-muted">{label(lead.customer.type)}</p>
           </Panel>
 
+          <Panel title="Lead score">
+            {scoreParts ? (
+              <>
+                <p className="flex items-baseline gap-2">
+                  <span className="font-display text-4xl tabular-nums">{lead.score ?? 0}</span>
+                  <span className="text-sm text-ink-muted">out of 100</span>
+                </p>
+                <ul className="mt-3 space-y-1 text-sm">
+                  {scoreParts.map((p) => (
+                    <li key={p.key} className="flex justify-between gap-3">
+                      <span className={p.points ? undefined : "text-ink-muted"}>{p.label}</span>
+                      <span className="tabular-nums">
+                        {p.points} / {p.max}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-ink-muted">
+                  Worked out from what is known, not by the AI: the rating, the pipeline stage and the
+                  requirements filled in.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-ink-muted">
+                No score: this lead is {leadStatusNames[lead.status].toLowerCase()}.
+              </p>
+            )}
+            <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-3 text-sm">
+              <div>
+                <dt className="text-ink-muted">Last contact</dt>
+                <dd>{lead.lastContactAt ? fmtDateTime(lead.lastContactAt) : "Never"}</dd>
+              </div>
+              <div>
+                <dt className="text-ink-muted">Next follow-up</dt>
+                <dd
+                  className={
+                    lead.nextFollowUpAt && isPast(lead.nextFollowUpAt)
+                      ? "font-medium text-red-800"
+                      : undefined
+                  }
+                >
+                  {lead.nextFollowUpAt ? fmtDateTime(lead.nextFollowUpAt) : "None"}
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-2 text-xs text-ink-muted">
+              Last contact updates when you log a call, email, WhatsApp message or meeting below.
+            </p>
+          </Panel>
+
           {canUpdate && (
-            <Panel title="Status">
-              <ActionForm action={changeStatusAction.bind(null, lead.id)} submitLabel="Update status">
+            <Panel title="Pipeline stage">
+              <ActionForm action={changeStatusAction.bind(null, lead.id)} submitLabel="Update stage">
                 <AdminSelect
-                  label="Status"
+                  label="Stage"
                   name="status"
                   defaultValue={lead.status}
-                  options={leadStatuses.map((s) => ({ value: s, label: label(s) }))}
+                  options={leadStatuses.map((s, i) => ({
+                    value: s,
+                    label: `${i + 1}. ${leadStatusNames[s]}`,
+                  }))}
                 />
                 <AdminInput
                   label="Reason (required when lost)"

@@ -199,10 +199,17 @@ model Customer {
   company           String?
   preferredLanguage Locale       @default(en) @map("preferred_language")
   notes             String?
+  /// Area or town, e.g. "Riffa" (staff enter it; up to 120 characters).
+  location          String?
+  /// Set when staff merged this duplicate into another record (it is then archived). New enquiries
+  /// matching its phone or email go to that record.
+  mergedIntoId      String?      @map("merged_into_id")
   archivedAt        DateTime?    @map("archived_at") @db.Timestamptz(3)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  mergedInto        Customer?          @relation("CustomerMerge", fields: [mergedIntoId], references: [id], onDelete: SetNull)
+  mergedFrom        Customer[]         @relation("CustomerMerge")
   leads             Lead[]
   consultations     Consultation[]
   quotationRequests QuotationRequest[]
@@ -214,6 +221,7 @@ model Customer {
   chats             ChatConversation[]
 
   @@index([name])
+  @@index([mergedIntoId])
   @@map("customers")
 }
 
@@ -240,11 +248,16 @@ enum LeadTemperature {
   cold
 }
 
+/// The owner's pipeline (2026-11-11): New Inquiry → Contacted → Qualified → Site Visit → Measurement →
+/// Quotation (`quoted`) → Negotiation → Won / Lost.
 enum LeadStatus {
   new
   contacted
   qualified
+  site_visit
+  measurement
   quoted
+  negotiation
   won
   lost
 }
@@ -265,6 +278,13 @@ model Lead {
   /// HOT / WARM / COLD: set by the sales chat's assistant, or by staff (then the assistant leaves it).
   temperature        LeadTemperature?
   temperatureByStaff Boolean          @default(false) @map("temperature_by_staff")
+  /// 0–100, kept by the database (function lead_score, triggers); null once won or lost. Never written
+  /// by the app. Breakdown: src/lib/lead-score.ts.
+  score              Int?
+  /// Latest call, email, WhatsApp message or meeting on the lead (trigger on lead_activities).
+  lastContactAt      DateTime?        @map("last_contact_at") @db.Timestamptz(3)
+  /// Earliest open follow-up (trigger on follow_ups).
+  nextFollowUpAt     DateTime?        @map("next_follow_up_at") @db.Timestamptz(3)
   archivedAt         DateTime?        @map("archived_at") @db.Timestamptz(3)
   createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -284,6 +304,9 @@ model Lead {
   @@index([status, createdAt])
   @@index([assignedToId])
   @@index([temperature, createdAt])
+  @@index([score])
+  @@index([nextFollowUpAt])
+  @@index([lastContactAt])
   @@map("leads")
 }
 

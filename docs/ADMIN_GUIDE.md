@@ -42,12 +42,29 @@ top right switches the Centre between English and Arabic; the rest of the admin 
 Every quote request, consultation booking, contact message, designer project and WhatsApp message becomes a
 **lead** with a reference such as `GIK-Q-2026-00042`.
 
-- **Work a lead:** open it from **Leads**. Change its **status** (new, contacted, qualified, quoted, won, lost;
-  "lost" needs a reason), **assign** it to a colleague, **log** calls and messages in the history, and
-  **schedule a follow-up**. Follow-ups due appear under **Follow-ups** and on the dashboard.
+- **Work a lead:** open it from **Leads**. Move it along the **pipeline stage**: New inquiry → Contacted →
+  Qualified → Site visit → Measurement → Quotation → Negotiation → Won / Lost ("Lost" needs a reason).
+  **Assign** it to a colleague, **log** calls, emails, WhatsApp messages and meetings in the history, and
+  **schedule a follow-up**. Fill in the **Requirements** (product, dimensions, budget, location, timeline).
+- **Lead score (0–100):** worked out automatically from the HOT / WARM / COLD rating, the pipeline stage and
+  the requirements known; the lead page shows how each part adds up. Won and lost leads have no score.
+- **Last contact** updates by itself when a call, email, WhatsApp message or meeting is logged; **next
+  follow-up** is the earliest follow-up not yet done.
+- **The leads list** searches name, phone, email, reference and area, filters by stage, rating, minimum
+  score, source, product, customer type, assignee, follow-up (overdue, today, this week, none) and dates,
+  sorts by newest, oldest, score, next follow-up, recent contact or longest without contact, and **exports to
+  Excel** with the same filters (needs access to customers; every export is in the audit log).
+- **Pipeline board** (button on the leads list): one column per stage with its count and its leads, highest
+  score first. Overdue follow-ups show in red.
 - **Files** the customer uploaded (photos, drawings) download from the lead page; each download is recorded.
-- **Customers** keeps one record per person, with the consent they gave. Editing a customer never changes
-  what the customer typed on a lead.
+- **Customers** keeps one record per person, with the consent they gave, their type and location. Editing a
+  customer never changes what the customer typed on a lead. The list searches, filters by type, sorts and
+  exports to Excel (including each customer's current email and WhatsApp consent).
+- **Duplicates:** the same phone or email always joins one record. **Possible duplicates** (on the customers
+  list) shows customers with the same name but different details. On the record to keep, **Merge into this
+  record** moves the other's leads, quotations, orders, projects and chats over, copies its consent history
+  and archives it; enquiries from its phone or email then arrive on the kept record. A merge can't be undone
+  from the admin, so check first.
 - **Consultations** lists showroom, site-visit and online bookings: confirm, complete or cancel them.
 
 ## Quotations, orders and projects

@@ -4,6 +4,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { normalisePhone } from "@/lib/phone";
 import { audit } from "@/server/audit";
 import type { Db, Tx } from "@/server/db/client";
+import { findCustomerByContact } from "@/server/crm/customer-match";
 import { notify } from "@/server/crm/shared";
 import { nextReference } from "@/server/enquiries/submit";
 import { enqueue } from "@/server/outbox/events";
@@ -109,11 +110,9 @@ export async function ingestWhatsApp(db: Db, message: InboundWhatsApp): Promise<
     await db.$transaction(async (tx) => {
       if (await tx.leadActivity.findUnique({ where: { externalId: message.id }, select: { id: true } }))
         throw new DuplicateMessage();
+      // Any record with this number (phones are unique), following a merge to the record it went into.
       const customer =
-        (await tx.customer.findFirst({
-          where: { phone, archivedAt: null },
-          orderBy: { createdAt: "asc" },
-        })) ??
+        (await findCustomerByContact(tx, { phone })) ??
         (await tx.customer.create({
           data: { name: message.name || phone, phone, type: "homeowner", preferredLanguage: "en" },
         }));

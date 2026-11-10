@@ -24,7 +24,15 @@ export const reasonLabel: Record<ContactReason, string> = {
 const contactLabel = { whatsapp: "WhatsApp", call: "Phone call", email: "Email" } as const;
 
 /** Leads still being worked: a new chat from the same customer joins them. */
-const OPEN_STATUSES = ["new", "contacted", "qualified", "quoted"] as const;
+const OPEN_STATUSES = [
+  "new",
+  "contacted",
+  "qualified",
+  "site_visit",
+  "measurement",
+  "quoted",
+  "negotiation",
+] as const;
 const REUSE_WINDOW_MS = 60 * 24 * 60 * 60 * 1000;
 
 export async function submitChatContact(

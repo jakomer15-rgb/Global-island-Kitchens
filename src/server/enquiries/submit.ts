@@ -2,6 +2,7 @@ import { Prisma, type CustomerType, type LeadSource } from "@/generated/prisma/c
 import type { Db, Tx } from "@/server/db/client";
 import { audit } from "@/server/audit";
 import { consentFields } from "@/server/consent";
+import { findCustomerByContact } from "@/server/crm/customer-match";
 import { enqueue } from "@/server/outbox/events";
 import { attachUploads } from "@/server/storage/files";
 import { products } from "@/content/products";
@@ -46,15 +47,7 @@ interface ContactInput {
  * customer record: what the visitor typed is kept on the lead's activity instead.
  */
 export async function findOrCreateCustomer(tx: Tx, input: ContactInput) {
-  const match = await tx.customer.findFirst({
-    where: {
-      OR: [
-        ...(input.phone ? [{ phone: input.phone }] : []),
-        ...(input.email ? [{ email: input.email }] : []),
-      ],
-    },
-    orderBy: { createdAt: "asc" },
-  });
+  const match = await findCustomerByContact(tx, input);
   if (match) return match;
   return tx.customer.create({
     data: {

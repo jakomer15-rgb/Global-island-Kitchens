@@ -174,6 +174,21 @@ Opus 5.5), owner instructions, welcome texts, daily message limit.
 A second contact form from the same conversation, or from a customer with an open lead (new, contacted,
 qualified or quoted) from the last 60 days, is added to that lead instead of creating a new one.
 
+### CRM and pipeline (Stage 3, 2026-11-11, migrations `20261111140000_pipeline_stages` and `20261111140100_crm_fields`)
+
+| Change                  | Detail                                                                                                                                                                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LeadStatus` (added)    | `site_visit`, `measurement` (after `qualified`), `negotiation` (after `quoted`). Shown as New inquiry → Contacted → Qualified → Site visit → Measurement → Quotation → Negotiation → Won / Lost                                                    |
+| `Lead.score`            | 0–100 or null (won / lost). Kept by the DB: function `lead_score`, trigger `leads_score` (on status, temperature, category) and triggers on `lead_requirements` and `quotation_requests`. The app never writes it. Mirror: `src/lib/lead-score.ts` |
+| `Lead.lastContactAt`    | Latest `lead_activities` row of kind call, email, whatsapp or meeting (trigger)                                                                                                                                                                    |
+| `Lead.nextFollowUpAt`   | Earliest open `follow_ups.due_at` (trigger on insert, update, delete)                                                                                                                                                                              |
+| `Customer.location`     | Area or town, ≤ 120 chars                                                                                                                                                                                                                          |
+| `Customer.mergedIntoId` | Set when staff merge a duplicate (CHECK: only on archived records, never itself). The duplicate keeps its unique phone / email; `findCustomerByContact` follows it to the kept record                                                              |
+
+Score: HOT 40, WARM 25, COLD 10; stage contacted 5, qualified 10, site visit 15, measurement 20, quotation 20,
+negotiation 25; product 5, dimensions 10 (or quotation-request measurements), budget 10, timeline 10, location 5
+(or quotation-request area); capped at 100.
+
 ### AI Business Automation Centre (2026-11-11, migration `20261111120000_automation_centre`)
 
 | Model              | Key fields                                                                                           | Rules                                                                                                                                                                                                      |

@@ -36,6 +36,8 @@ const pages = [
   ["/admin/staff/roles", "Roles and permissions"],
   ["/admin/audit", "Audit log"],
   ["/admin/notifications", "Notifications"],
+  ["/admin/leads/pipeline", "Sales pipeline"],
+  ["/admin/customers/duplicates", "Possible duplicate customers"],
   ["/admin/automation", "Overview"],
   ["/admin/automation/approvals", "Approvals"],
   ["/admin/automation/integrations", "Integrations"],
@@ -192,6 +194,33 @@ test.describe("admin portal", () => {
     await page.getByLabel("Details").fill(note);
     await page.getByRole("button", { name: "Add to history" }).click();
     await expect(page.getByText(note)).toBeVisible();
+    // Score panel and the new pipeline stages.
+    await expect(page.getByRole("heading", { name: "Lead score" })).toBeVisible();
+    await expect(page.getByLabel("Stage", { exact: true }).locator("option")).toHaveText([
+      "1. New inquiry",
+      "2. Contacted",
+      "3. Qualified",
+      "4. Site visit",
+      "5. Measurement",
+      "6. Quotation",
+      "7. Negotiation",
+      "8. Won",
+      "9. Lost",
+    ]);
+  });
+
+  test("leads can be filtered, sorted and exported", async ({ page }) => {
+    await signIn(page);
+    await page.goto("/admin/leads?sort=score&stage=open");
+    await expect(page.getByLabel("Sort by")).toHaveValue("score");
+    const download = page.waitForEvent("download");
+    await page.getByRole("link", { name: "Export to Excel (CSV)" }).click();
+    const file = await download;
+    expect(file.suggestedFilename()).toMatch(/^gik-leads-\d{4}-\d{2}-\d{2}\.csv$/);
+    await page.goto("/admin/leads/pipeline");
+    await expect(
+      page.getByRole("region", { name: /Pipeline stages/ }).getByRole("heading", { name: /Site visit/ }),
+    ).toBeVisible();
   });
 });
 
