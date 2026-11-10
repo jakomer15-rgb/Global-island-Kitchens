@@ -174,6 +174,18 @@ Opus 5.5), owner instructions, welcome texts, daily message limit.
 A second contact form from the same conversation, or from a customer with an open lead (new, contacted,
 qualified or quoted) from the last 60 days, is added to that lead instead of creating a new one.
 
+### AI Sales Agent (Stage 4, 2026-11-11, migration `20261111160000_sales_agent`)
+
+| Model / change             | Key fields                                                                                                                                                                                                               | Rules                                                                                                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Lead.handoverRequestedAt` | When a chat visitor asked for a person or a callback                                                                                                                                                                     | Shown as waiting while `lastContactAt` is empty or older                                                                                                                                                |
+| `KnowledgeDocument`        | title, kind (brochure, catalogue, product, company, policy, pricing, other), status draft/published, fileName, mimeType, sizeBytes, text, extractedWith, truncated                                                       | CHECK title 2–200, text ≤ 200,000 chars, `publishedAt` set exactly when published. The file isn't stored                                                                                                |
+| `KnowledgeChunk`           | documentId, ordinal, content, `tsv` (generated `to_tsvector('simple', content)`, GIN index)                                                                                                                              | Rebuilt on publish and on edits of a published document; deleted on unpublish. The chat never receives `pricing` documents                                                                              |
+| `CustomerMessage`          | leadId, customerId, channel (email; whatsapp reserved), subject, body, language, status (pending_approval, approved, sent, failed, rejected, cancelled), origin (staff, ai, auto_follow_up), decidedBy/At, sentAt, error | CHECK: email needs a subject; decided statuses need a decider or time; `sentAt` exactly when sent. Trigger: a sent message can't be updated or deleted. Consent checked when written, approved and sent |
+
+Permission added: `outreach.approve` (owner, general manager by default). Setting added: `salesFollowUp`
+(autoDraft off, afterDays 4). Outbox event added: `customer.message` (messageId, leadId).
+
 ### CRM and pipeline (Stage 3, 2026-11-11, migrations `20261111140000_pipeline_stages` and `20261111140100_crm_fields`)
 
 | Change                  | Detail                                                                                                                                                                                                                                             |

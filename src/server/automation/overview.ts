@@ -36,6 +36,7 @@ export async function centreOverview(db: Db, actor: Actor, now = new Date()) {
     followUpsOverdue,
     followUpsToday,
     chats7,
+    handoversWaiting,
     quotationsCreated30,
     quotationsAwaiting,
     quotationsApproved30,
@@ -62,6 +63,16 @@ export async function centreOverview(db: Db, actor: Actor, now = new Date()) {
         })
       : none,
     leads ? db.chatConversation.count({ where: { startedAt: { gte: since7 } } }) : none,
+    // Chat visitors who asked for a person and haven't been contacted since.
+    leads
+      ? db.$queryRaw<{ n: bigint }[]>`
+          SELECT count(*) AS n FROM "leads"
+          WHERE "archived_at" IS NULL AND "handover_requested_at" IS NOT NULL
+            AND "status" NOT IN ('won', 'lost')
+            AND ("last_contact_at" IS NULL OR "last_contact_at" < "handover_requested_at")`.then((r) =>
+          Number(r[0]?.n ?? 0),
+        )
+      : none,
     quotes ? db.quotation.count({ where: { createdAt: { gte: since30 } } }) : none,
     quotes ? db.quotation.count({ where: { status: "sent" } }) : none,
     quotes ? db.quotationRevision.count({ where: { approvedAt: { gte: since30 } } }) : none,
@@ -95,6 +106,7 @@ export async function centreOverview(db: Db, actor: Actor, now = new Date()) {
     followUpsOverdue,
     followUpsToday,
     chats7,
+    handoversWaiting,
     quotationsCreated30,
     quotationsAwaiting,
     quotationsApproved30,
@@ -108,7 +120,7 @@ export async function centreOverview(db: Db, actor: Actor, now = new Date()) {
 }
 
 export type ApprovalItem = {
-  kind: "ai_draft" | "designer";
+  kind: "ai_draft" | "designer" | "customer_message";
   id: string;
   /** Short description: draft type and lead reference, or the designer's name. */
   title: string;
@@ -125,6 +137,25 @@ export async function approvalQueue(db: Db, actor: Actor, limit = 100) {
   assertCan(actor, "automation.read");
   const showDrafts = can(actor, "ai.review");
   const showDesigners = can(actor, "designer.manage");
+  const showMessages = can(actor, "outreach.approve");
+  const pendingMessage = { status: "pending_approval" as const, lead: { archivedAt: null } };
+  const [messages, messageCount] = await Promise.all([
+    showMessages
+      ? db.customerMessage.findMany({
+          where: pendingMessage,
+          orderBy: { createdAt: "asc" },
+          take: limit,
+          select: {
+            id: true,
+            subject: true,
+            origin: true,
+            createdAt: true,
+            lead: { select: { id: true, reference: true } },
+          },
+        })
+      : Promise.resolve([]),
+    showMessages ? db.customerMessage.count({ where: pendingMessage }) : Promise.resolve(0),
+  ]);
   const [drafts, draftCount, designers, designerCount] = await Promise.all([
     showDrafts
       ? db.aiDraft.findMany({
@@ -178,11 +209,23 @@ export async function approvalQueue(db: Db, actor: Actor, limit = 100) {
       createdAt: d.createdAt,
       href: `/admin/designers/${d.id}`,
     })),
+    ...messages.map((m) => ({
+      kind: "customer_message" as const,
+      id: m.id,
+      title: m.subject ?? "",
+      detail: `${m.lead.reference}${m.origin === "staff" ? "" : " · AI draft"}`,
+      createdAt: m.createdAt,
+      href: `/admin/leads/${m.lead.id}#messages`,
+    })),
   ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
   return {
     items: items.slice(0, limit),
-    counts: { ai_draft: showDrafts ? draftCount : null, designer: showDesigners ? designerCount : null },
-    total: draftCount + designerCount,
+    counts: {
+      customer_message: showMessages ? messageCount : null,
+      ai_draft: showDrafts ? draftCount : null,
+      designer: showDesigners ? designerCount : null,
+    },
+    total: draftCount + designerCount + messageCount,
   };
 }

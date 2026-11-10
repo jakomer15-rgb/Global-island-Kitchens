@@ -168,6 +168,22 @@ rating.
   dashboard comes in the next step.)
 - Contact details, opening hours, products and finishes come from **Settings**, **Manage categories** and
   **Materials**; **Show everything the assistant knows** at the bottom shows exactly what it reads.
+- **Documents**: **Upload a document** (PDF, JPG, PNG, WebP or a text file, up to 4 MB; save Word files as PDF).
+  The text is read straight away (Claude reads PDFs and images). Check it on the next page, correct anything
+  misread, remove anything the chat must not say, then **Publish**. For every visitor message the chat searches
+  the published documents and answers from matching passages. **Pricing** documents are kept but never given
+  to the chat.
+- **Talk to a person**: when a visitor asks for a person or a callback in the chat's form, everyone who assigns
+  leads gets a notification, a follow-up due within two hours is added, and the lead shows a red notice until
+  someone logs a call, email, WhatsApp message or meeting. The Automation Centre overview counts them.
+- **Messages to the customer** (on each lead): write an email, or let the AI draft one. It waits until the
+  owner or general manager (or anyone given “Approve messages to customers” in Roles) approves it; they can edit
+  it first. It is sent only to customers with an email address who agreed to email, with a greeting, the team
+  signature and an unsubscribe link, and is logged in the lead's history. Email sending must be set up
+  (Resend) first.
+- **Follow-ups for customers who stopped replying** (owner and general manager): when switched on, the daily
+  job drafts a follow-up email for open leads with no contact for the chosen number of days. The drafts wait
+  on the lead and in Automation Centre → Approvals; nothing is sent automatically.
 
 ## AI drafts (only if the owner switched them on)
 

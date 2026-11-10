@@ -21,6 +21,9 @@ retries, so the same `id` can arrive more than once: make workflows safe to repe
 | `whatsapp.received`   | A customer's WhatsApp message is logged                                    | `leadId`, `reference`, `newLead`                                                                                                                                       |
 | `chat.lead`           | A visitor sends the sales chat's contact form                              | `leadId`, `reference`, `conversationId`, `reason`, `newLead`, `locale`, `customer` (name, phone, email), `preferredContact`, `customerId`, `consent`, `unsubscribeUrl` |
 
+`customer.message` (`messageId`, `leadId`) is sent when staff approve a message to a customer; the platform
+emails it itself (consent checked again), so n8n only needs it for reporting.
+
 Only `enquiry.received` and `chat.lead` carry contact details (the customer asked to be contacted). The
 others carry references and statuses; look the lead up in the admin.
 

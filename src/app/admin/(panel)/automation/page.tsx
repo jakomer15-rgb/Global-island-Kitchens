@@ -75,6 +75,14 @@ export default async function AutomationOverviewPage() {
         {o.notContacted !== null && (
           <StatCard label={tr(T.notContacted, lang)} value={o.notContacted} href="/admin/leads?status=new" />
         )}
+        {o.handoversWaiting !== null && (
+          <StatCard
+            label={tr(T.handovers, lang)}
+            value={o.handoversWaiting}
+            hint={tr(T.handoversHint, lang)}
+            href="/admin/leads?source=website_chat&sort=stale"
+          />
+        )}
         {o.followUpsOverdue !== null && (
           <StatCard
             label={tr(T.followUpsOverdue, lang)}

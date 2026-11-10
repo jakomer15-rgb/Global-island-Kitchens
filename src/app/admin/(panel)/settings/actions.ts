@@ -63,6 +63,10 @@ const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
     notifyEmails: list(f, "notifyEmails"),
     notifyWhatsApp: list(f, "notifyWhatsApp").map((n) => n.replace(/\D/g, "")),
   }),
+  salesFollowUp: (f) => ({
+    autoDraft: f.get("autoDraft") === "on",
+    afterDays: Number(str(f, "afterDays")),
+  }),
   quotation: (f) => {
     const rate = Number(str(f, "vatRate").replace("%", ""));
     const days = str(f, "validityDays");
@@ -108,7 +112,7 @@ export async function saveSettingAction(
   // Contact details, banner and SEO appear on every public page.
   if (result.ok) revalidatePath("/[locale]", "layout");
   revalidatePath(
-    key === "chatAgent"
+    key === "chatAgent" || key === "salesFollowUp"
       ? "/admin/ai-agent"
       : settingPermission[key] === "settings.manage"
         ? "/admin/settings"

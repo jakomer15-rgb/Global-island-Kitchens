@@ -32,6 +32,8 @@ export const permissions = {
   "audit.read": "View the audit log",
   "automation.read":
     "Open the AI Business Automation Centre: overview, approvals queue, integration status and delivery log",
+  "outreach.approve":
+    "Approve or reject messages to customers (written by staff or drafted by the AI) so they are sent, and switch automatic follow-up drafts on or off",
   "integrations.manage":
     "Test connections to outside services (Claude, email, storage, WhatsApp) and retry failed deliveries",
 } as const;

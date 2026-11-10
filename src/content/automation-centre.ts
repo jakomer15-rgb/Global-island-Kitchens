@@ -31,6 +31,8 @@ export const centreText = {
     last7: t("last 7 days", "آخر 7 أيام"),
     last30: t("last 30 days", "آخر 30 يومًا"),
     notContacted: t("New, not contacted", "جديدة لم يُتواصل معها"),
+    handovers: t("Asked for a person", "طلبوا التحدث مع موظف"),
+    handoversHint: t("chat visitors not yet contacted", "زوار المحادثة لم يُتواصل معهم بعد"),
     openByRating: t("Open leads by rating", "العملاء المحتملون المفتوحون حسب التصنيف"),
     unrated: t("not rated", "غير مصنّف"),
     followUpsOverdue: t("Follow-ups overdue", "متابعات متأخرة"),
@@ -119,6 +121,7 @@ export const centreText = {
     waiting: t("Waiting since", "بانتظار منذ"),
     review: t("Review", "مراجعة"),
     kinds: {
+      customer_message: t("Message to a customer", "رسالة إلى عميل"),
       ai_draft: t("AI draft", "مسودة ذكاء اصطناعي"),
       designer: t("Designer registration", "تسجيل مصمم"),
     },
@@ -128,8 +131,8 @@ export const centreText = {
       blog_post: t("Blog post", "مقال مدونة"),
     } as Record<string, Text>,
     later: t(
-      "Later stages add outbound campaigns, customer follow-ups and social media posts to this queue.",
-      "ستضيف المراحل القادمة الحملات الخارجية ومتابعات العملاء ومنشورات وسائل التواصل إلى هذه القائمة.",
+      "Later stages add outbound campaigns and social media posts to this queue.",
+      "ستضيف المراحل القادمة الحملات الخارجية ومنشورات وسائل التواصل إلى هذه القائمة.",
     ),
   },
   integrations: {

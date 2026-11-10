@@ -134,6 +134,15 @@ export const settingSchemas = {
       .max(5, "At most 5 numbers.")
       .default([]),
   }),
+  /**
+   * Follow-ups to customers who stopped replying (Stage 4, Admin → AI agent). When on, the daily job
+   * asks the AI to draft a follow-up for open leads with no contact for `afterDays` days and email
+   * consent on record. Drafts wait for approval; nothing is sent automatically. Off by default.
+   */
+  salesFollowUp: z.object({
+    autoDraft: z.boolean().default(false),
+    afterDays: z.number().int().min(2).max(60).default(4),
+  }),
   seo: z.object({
     titleEn: optionalText(60),
     descriptionEn: optionalText(160),
@@ -187,6 +196,7 @@ export const settingDefaults: Settings = {
     notifyEmails: [],
     notifyWhatsApp: [],
   },
+  salesFollowUp: { autoDraft: false, afterDays: 4 },
   quotation: {
     vatEnabled: false,
     vatRateBasisPoints: 1000,

@@ -75,6 +75,10 @@ model User {
   aiDraftsReviewed   AiDraft[]            @relation("AiReviewer")
   knowledgeEdited    KnowledgeEntry[]     @relation("KnowledgeEditor")
   integrationChecks  IntegrationCheck[]   @relation("IntegrationChecker")
+  documentsCreated   KnowledgeDocument[]  @relation("DocumentCreator")
+  documentsUpdated   KnowledgeDocument[]  @relation("DocumentEditor")
+  messagesWritten    CustomerMessage[]    @relation("MessageAuthor")
+  messagesDecided    CustomerMessage[]    @relation("MessageDecider")
 
   @@map("users")
 }
@@ -219,6 +223,7 @@ model Customer {
   projects          Project[]
   designerAccounts  DesignerAccount[]
   chats             ChatConversation[]
+  messages          CustomerMessage[]
 
   @@index([name])
   @@index([mergedIntoId])
@@ -263,31 +268,34 @@ enum LeadStatus {
 }
 
 model Lead {
-  id                 String           @id @default(cuid())
+  id                  String           @id @default(cuid())
   /// Shown to the customer, e.g. GIK-Q-2026-00042 (sequence in migration).
-  reference          String           @unique
-  customerId         String           @map("customer_id")
-  source             LeadSource
+  reference           String           @unique
+  customerId          String           @map("customer_id")
+  source              LeadSource
   /// Product page key from src/config/routes.ts, when known.
-  category           String?
-  status             LeadStatus       @default(new)
-  lostReason         String?          @map("lost_reason")
-  assignedToId       String?          @map("assigned_to_id")
-  summary            String
-  locale             Locale           @default(en)
+  category            String?
+  status              LeadStatus       @default(new)
+  lostReason          String?          @map("lost_reason")
+  assignedToId        String?          @map("assigned_to_id")
+  summary             String
+  locale              Locale           @default(en)
   /// HOT / WARM / COLD: set by the sales chat's assistant, or by staff (then the assistant leaves it).
-  temperature        LeadTemperature?
-  temperatureByStaff Boolean          @default(false) @map("temperature_by_staff")
+  temperature         LeadTemperature?
+  temperatureByStaff  Boolean          @default(false) @map("temperature_by_staff")
   /// 0–100, kept by the database (function lead_score, triggers); null once won or lost. Never written
   /// by the app. Breakdown: src/lib/lead-score.ts.
-  score              Int?
+  score               Int?
   /// Latest call, email, WhatsApp message or meeting on the lead (trigger on lead_activities).
-  lastContactAt      DateTime?        @map("last_contact_at") @db.Timestamptz(3)
+  lastContactAt       DateTime?        @map("last_contact_at") @db.Timestamptz(3)
   /// Earliest open follow-up (trigger on follow_ups).
-  nextFollowUpAt     DateTime?        @map("next_follow_up_at") @db.Timestamptz(3)
-  archivedAt         DateTime?        @map("archived_at") @db.Timestamptz(3)
-  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  nextFollowUpAt      DateTime?        @map("next_follow_up_at") @db.Timestamptz(3)
+  /// When a chat visitor asked to talk to a person or for a callback (Stage 4). Shown as waiting until
+  /// a contact is logged after it.
+  handoverRequestedAt DateTime?        @map("handover_requested_at") @db.Timestamptz(3)
+  archivedAt          DateTime?        @map("archived_at") @db.Timestamptz(3)
+  createdAt           DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   customer         Customer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
   assignedTo       User?              @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
@@ -299,6 +307,7 @@ model Lead {
   projects         Project[]
   aiDrafts         AiDraft[]
   requirements     LeadRequirement?
+  messages         CustomerMessage[]
   chats            ChatConversation[]
 
   @@index([status, createdAt])
@@ -307,6 +316,7 @@ model Lead {
   @@index([score])
   @@index([nextFollowUpAt])
   @@index([lastContactAt])
+  @@index([handoverRequestedAt])
   @@map("leads")
 }
 
@@ -1312,4 +1322,115 @@ model IntegrationCheck {
   @@index([integration, createdAt])
   @@index([createdAt])
   @@map("integration_checks")
+}
+
+// ─── AI Sales Agent (Stage 4, 2026-11-11) ───────────────────────────────────
+
+enum KnowledgeDocKind {
+  brochure
+  catalogue
+  product
+  company
+  policy
+  /// Kept for quotations later; never given to the chat (it may not quote prices).
+  pricing
+  other
+}
+
+enum KnowledgeDocStatus {
+  draft
+  published
+}
+
+/// A document staff upload to the knowledge base (PDF, image or text). Its text is read when it is
+/// uploaded (by Claude for PDFs and images) and checked by staff before it is published; only
+/// published documents (never pricing) are searched by the chat. The file itself is not kept.
+model KnowledgeDocument {
+  id            String             @id @default(cuid())
+  title         String
+  kind          KnowledgeDocKind   @default(other)
+  status        KnowledgeDocStatus @default(draft)
+  fileName      String             @map("file_name")
+  mimeType      String             @map("mime_type")
+  sizeBytes     Int                @map("size_bytes")
+  text          String
+  /// "text" for plain-text files, otherwise the model that read it.
+  extractedWith String             @map("extracted_with")
+  /// The reading stopped at its length limit: the end of the document may be missing.
+  truncated     Boolean            @default(false)
+  createdById   String?            @map("created_by_id")
+  updatedById   String?            @map("updated_by_id")
+  publishedAt   DateTime?          @map("published_at") @db.Timestamptz(3)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  createdBy User?            @relation("DocumentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?            @relation("DocumentEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+  chunks    KnowledgeChunk[]
+
+  @@index([status, kind])
+  @@map("knowledge_documents")
+}
+
+/// A passage of a published document, searched with Postgres full-text search (`tsv`, generated).
+model KnowledgeChunk {
+  id         String                   @id @default(cuid())
+  documentId String                   @map("document_id")
+  ordinal    Int
+  content    String
+  /// GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED (migration SQL; Prisma can't express it).
+  tsv        Unsupported("tsvector")? @default(dbgenerated("to_tsvector('simple'::regconfig, content)"))
+
+  document KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, ordinal])
+  @@index([tsv], type: Gin)
+  @@map("knowledge_chunks")
+}
+
+enum MessageChannel {
+  email
+  whatsapp
+}
+
+enum CustomerMessageStatus {
+  pending_approval
+  approved
+  sent
+  failed
+  rejected
+  cancelled
+}
+
+/// A message to a customer, written by staff or drafted by the AI. Nothing is sent until someone with
+/// `outreach.approve` approves it, and only to customers whose consent for that channel is on record.
+/// A sent message can't be changed (trigger).
+model CustomerMessage {
+  id           String                @id @default(cuid())
+  leadId       String                @map("lead_id")
+  customerId   String                @map("customer_id")
+  channel      MessageChannel        @default(email)
+  subject      String?
+  body         String
+  language     Locale                @default(en)
+  status       CustomerMessageStatus @default(pending_approval)
+  /// staff | ai | auto_follow_up
+  origin       String
+  createdById  String?               @map("created_by_id")
+  decidedById  String?               @map("decided_by_id")
+  decidedAt    DateTime?             @map("decided_at") @db.Timestamptz(3)
+  decisionNote String?               @map("decision_note")
+  sentAt       DateTime?             @map("sent_at") @db.Timestamptz(3)
+  error        String?
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdBy User?    @relation("MessageAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  decidedBy User?    @relation("MessageDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([leadId])
+  @@map("customer_messages")
 }

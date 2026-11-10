@@ -56,7 +56,14 @@ export interface ChatLead {
   unsubscribeUrl: string | null;
 }
 
+/** An approved message to a customer (Stage 4). The message itself stays in customer_messages. */
+export interface CustomerMessageApproved {
+  messageId: string;
+  leadId: string;
+}
+
 export interface OutboxEvents {
+  "customer.message": CustomerMessageApproved;
   "enquiry.received": EnquiryReceived;
   "chat.lead": ChatLead;
   "lead.status_changed": LeadStatusChanged;

@@ -38,6 +38,7 @@ const pages = [
   ["/admin/notifications", "Notifications"],
   ["/admin/leads/pipeline", "Sales pipeline"],
   ["/admin/customers/duplicates", "Possible duplicate customers"],
+  ["/admin/ai-agent/documents/new", "Upload a document"],
   ["/admin/automation", "Overview"],
   ["/admin/automation/approvals", "Approvals"],
   ["/admin/automation/integrations", "Integrations"],
@@ -207,6 +208,25 @@ test.describe("admin portal", () => {
       "8. Won",
       "9. Lost",
     ]);
+  });
+
+  test("a text document is uploaded, checked and published for the chat", async ({ page }) => {
+    await signIn(page);
+    await page.goto("/admin/ai-agent/documents/new");
+    const title = `E2E brochure ${uid()}`;
+    await page.getByLabel("Title").fill(title);
+    await page.getByLabel("File").setInputFiles({
+      name: "brochure.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("Sliding wardrobes in EGGER décors.\n\nHinged wardrobes in painted MDF."),
+    });
+    await page.getByRole("button", { name: "Upload and read" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByLabel("Text")).toHaveValue(/Sliding wardrobes/);
+    await expect(page.getByText("Draft: not used by the chat")).toBeVisible();
+    await page.getByRole("button", { name: "Publish" }).click();
+    await expect(page.getByText(/Published\. The chat uses it/)).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
   });
 
   test("leads can be filtered, sorted and exported", async ({ page }) => {

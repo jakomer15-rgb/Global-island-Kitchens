@@ -2,7 +2,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Db } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { confirmToCustomer, notifyStaff, postToN8n, type ChannelResult } from "./deliver";
-import type { ChatLead, EnquiryReceived, OutboxType } from "./events";
+import type { ChatLead, CustomerMessageApproved, EnquiryReceived, OutboxType } from "./events";
+import { sendCustomerMessage } from "@/server/outreach/messages";
 import { notifyChatLeadByEmail } from "@/server/chat/notify";
 import { alertSalesTeamOnWhatsApp } from "@/server/chat/whatsapp-alert";
 
@@ -41,6 +42,11 @@ export function defaultDelivery(e: Env, siteUrl: string, db?: Db): Delivery {
       const payload = event.payload as ChatLead;
       await run("staffEmail", () => notifyChatLeadByEmail(db, e, payload, siteUrl));
       await run("staffWhatsApp", () => alertSalesTeamOnWhatsApp(db, e, payload));
+    }
+    // An approved message to a customer: sent by email (consent checked again at sending time).
+    if ((event.type as OutboxType) === "customer.message" && db) {
+      const payload = event.payload as CustomerMessageApproved;
+      await run("customerEmail", () => sendCustomerMessage(db, e, payload.messageId));
     }
     await run("n8n", () => postToN8n(e, event.type, event.id, event.payload));
     if (errors.length) throw new DeliveryError(errors.join("; "), result);

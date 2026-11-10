@@ -1,5 +1,25 @@
 # Test report
 
+## AI Sales Agent, Stage 4 part A (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 149 passed, including 9 new in `src/server/outreach/sales-agent.test.ts` (document file
+  types, passage splitting, search words can't alter the query, text and PDF reading with a fake Claude answer,
+  truncation flag, excerpts added to the chat turn with tags neutralised, email greeting and unsubscribe link).
+- Database (`npm run test:db`): 123 passed, including 8 new in `sales-agent.db.test.ts`: hand-over (flag,
+  2-hour follow-up, notifications only to staff who assign leads, Centre count); documents searched only when
+  published, never pricing, edits and unpublishing applied, permission; messages need an email and consent,
+  approval needs `outreach.approve` and email set up, approved message queued once, sent with greeting and
+  unsubscribe link, logged on the lead, sent message immutable (trigger), not sent after an unsubscribe,
+  reject and cancel, AI draft waits for approval, automatic drafts off by default and once per stale lead.
+- E2E (production build): admin and designer specs 12 passed (new: text document upload → check → publish,
+  axe on the upload page). Chat specs run with `E2E_AI_MOCK=1 AI_PROVIDER=mock AI_MOCK_FOR_E2E=1`: chat and
+  AI-UI specs passed. `automation.spec.ts` "AI stays off" failed once in that same mock run (the quotation
+  page was cached by the build while the mock AI was on) and passed after a fresh build without the mock.
+- Browser check (dev): AI agent page shows Documents and the follow-up setting; the lead page's message
+  panel explains why a lead can't be emailed (no address).
+- Not tested: reading a real PDF with Claude, real email sending through Resend (no keys locally).
+
 ## CRM and pipeline, Stage 3 (2026-11-11)
 
 - `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.

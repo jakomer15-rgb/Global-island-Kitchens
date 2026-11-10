@@ -19,7 +19,7 @@ export class AiError extends Error {
 
 export interface AiRequest {
   /** Names the job (lead_reply, lead_summary, blog_post, furniture); the mock provider answers per task. */
-  task: "lead_reply" | "lead_summary" | "blog_post" | "furniture";
+  task: "lead_reply" | "lead_summary" | "blog_post" | "furniture" | "customer_message";
   system: string;
   user: string;
   maxTokens: number;
@@ -50,6 +50,11 @@ const mockAnswers: Record<AiRequest["task"], object> = {
     excerptAr: "خطوات بسيطة للحفاظ على مظهر أبواب MDF المطلية.",
     bodyEn: `Wipe painted MDF with a soft damp cloth.\n\n## Avoid\n\n- Abrasive cleaners\n- Standing water\n\n${"Dry the surface after cleaning. ".repeat(8)}`,
     bodyAr: `امسحوا السطح بقطعة قماش ناعمة ورطبة.\n\n## تجنبوا\n\n- المنظفات الخشنة\n- المياه الراكدة\n\n${"جففوا السطح بعد التنظيف. ".repeat(8)}`,
+  },
+  customer_message: {
+    language: "en",
+    subject: "Your enquiry with Global Island Kitchens",
+    body: "We wanted to check whether you had a chance to look at the next steps for your project. If it helps, we can arrange a showroom visit or a call at a time that suits you.",
   },
   furniture: {
     answer: "A fitted kitchen in EGGER melamine or painted MDF suits this. Our team can confirm the details.",

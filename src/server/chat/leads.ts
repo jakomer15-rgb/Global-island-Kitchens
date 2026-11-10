@@ -7,6 +7,7 @@ import { createLead, findOrCreateCustomer, inTransaction, recordConsent } from "
 import { RuleError } from "@/server/errors";
 import { applyAnalysisToLead, storedAnalysis } from "./analysis";
 import { saveVisitorTurn } from "./conversation";
+import { HANDOVER_REASONS, requestHandover } from "./handover";
 
 /**
  * The sales chat's contact form → the CRM. One transaction: customer (found by phone, then email),
@@ -147,6 +148,9 @@ export async function submitChatContact(
           .join("\n"),
       },
     });
+    // "Talk to a person" / "call me back": the team is alerted and a follow-up is due within two hours.
+    if ((HANDOVER_REASONS as readonly string[]).includes(input.reason))
+      await requestHandover(tx, lead, input.reason, now);
     // Consent is recorded only for a customer this form created.
     if (!knownCustomer) await recordConsent(tx, customer.id, input, "website_chat", ctx.ipHash);
     // Sales-team email (and WhatsApp alert, once set up) and the n8n event, delivered by the outbox.
