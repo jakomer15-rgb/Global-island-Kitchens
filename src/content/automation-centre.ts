@@ -88,6 +88,10 @@ export const centreText = {
         "English and Arabic posts, captions and reel scripts, a content calendar, approval and publishing through official APIs.",
         "منشورات وتعليقات ونصوص فيديو بالعربية والإنجليزية، وتقويم محتوى، وموافقة ونشر عبر الواجهات الرسمية.",
       ),
+      live: t("Working: calendar, approval and publishing", "يعمل: التقويم والموافقة والنشر"),
+      calendar: t("Calendar", "التقويم"),
+      plan: t("Plan with AI", "التخطيط بالذكاء الاصطناعي"),
+      performance: t("Performance", "الأداء"),
     },
     analytics: {
       name: t("AI Business Analytics Agent", "وكيل تحليلات الأعمال"),
@@ -129,16 +133,13 @@ export const centreText = {
       campaign: t("Marketing campaign", "حملة تسويقية"),
       ai_draft: t("AI draft", "مسودة ذكاء اصطناعي"),
       designer: t("Designer registration", "تسجيل مصمم"),
+      social_post: t("Social media post", "منشور على وسائل التواصل"),
     },
     draftKinds: {
       lead_reply: t("Reply to a lead", "رد على عميل محتمل"),
       lead_summary: t("Lead summary", "ملخص عميل محتمل"),
       blog_post: t("Blog post", "مقال مدونة"),
     } as Record<string, Text>,
-    later: t(
-      "Social media posts are added to this queue in a later stage.",
-      "ستُضاف منشورات وسائل التواصل إلى هذه القائمة في مرحلة لاحقة.",
-    ),
   },
   integrations: {
     description: t(
@@ -260,15 +261,15 @@ export const centreText = {
     meta: {
       name: t("Meta: Facebook and Instagram", "Meta: فيسبوك وإنستغرام"),
       purpose: t(
-        "Instagram and Messenger conversations, and publishing approved posts. Needs a Meta Business account and Meta's app review.",
-        "محادثات إنستغرام وماسنجر ونشر المنشورات المعتمدة. يحتاج حساب Meta للأعمال ومراجعة Meta للتطبيق.",
+        "Publishes approved posts to the Facebook Page and Instagram, and reads their likes, comments and shares. Instagram and Messenger conversations come later (Stage 4, part B).",
+        "ينشر المنشورات المعتمدة على صفحة فيسبوك وإنستغرام ويقرأ الإعجابات والتعليقات والمشاركات. محادثات إنستغرام وماسنجر لاحقًا (المرحلة 4، الجزء الثاني).",
       ),
     },
     linkedin: {
       name: t("LinkedIn company page", "صفحة الشركة على لينكدإن"),
       purpose: t(
-        "Publishing approved posts to the company page. Needs LinkedIn's approval for company-page access.",
-        "نشر المنشورات المعتمدة على صفحة الشركة. يحتاج موافقة لينكدإن على الوصول لصفحات الشركات.",
+        "Publishing approved posts to the company page. Needs LinkedIn's approval for company-page access; until then LinkedIn posts are prepared here and posted by hand.",
+        "نشر المنشورات المعتمدة على صفحة الشركة. يحتاج موافقة لينكدإن على الوصول لصفحات الشركات؛ وحتى ذلك تُجهّز منشورات لينكدإن هنا وتُنشر يدويًا.",
       ),
     },
     google_places: {
@@ -281,15 +282,15 @@ export const centreText = {
     canva: {
       name: t("Canva", "Canva"),
       purpose: t(
-        "Opening designs for promotional images and bringing finished images back. Filling templates automatically needs Canva Enterprise.",
-        "فتح التصاميم للصور الترويجية وإعادة الصور الجاهزة. تعبئة القوالب تلقائيًا تحتاج Canva Enterprise.",
+        "Opening designs for promotional images and bringing finished images back. Needs an app registered with Canva (filling templates automatically needs Canva Enterprise); meanwhile each post has an image brief to use in Canva.",
+        "فتح التصاميم للصور الترويجية وإعادة الصور الجاهزة. يحتاج تطبيقًا مسجلًا لدى Canva (تعبئة القوالب تلقائيًا تحتاج Canva Enterprise)؛ وحتى ذلك لكل منشور وصف للصورة يُستخدم في Canva.",
       ),
     },
     tiktok: {
       name: t("TikTok", "تيك توك"),
       purpose: t(
-        "Publishing approved videos (future integration).",
-        "نشر الفيديوهات المعتمدة (تكامل مستقبلي).",
+        "Publishing approved videos (future integration). Until then TikTok posts are prepared here and posted by hand.",
+        "نشر الفيديوهات المعتمدة (تكامل مستقبلي). وحتى ذلك تُجهّز منشورات تيك توك هنا وتُنشر يدويًا.",
       ),
     },
   },

@@ -7,6 +7,7 @@ import { env as readEnv, type Env } from "@/server/env";
 import { RuleError } from "@/server/errors";
 import { rateLimit } from "@/server/rate-limit";
 import { placesRequest } from "@/server/marketing/places";
+import { MetaError, testMeta } from "@/server/social/meta";
 
 /**
  * Outside services the platform uses, and their real connection status (Automation Centre →
@@ -185,8 +186,22 @@ export const integrations: readonly IntegrationDef[] = [
     values: (e) => [e.N8N_WEBHOOK_URL, e.N8N_WEBHOOK_SECRET],
   },
   { key: "cron", envVars: ["CRON_SECRET"], values: (e) => [e.CRON_SECRET] },
-  { key: "meta", envVars: [], plannedStage: 4 },
-  { key: "linkedin", envVars: [], plannedStage: 6 },
+  {
+    key: "meta",
+    envVars: ["META_PAGE_ID", "META_PAGE_ACCESS_TOKEN", "META_INSTAGRAM_ACCOUNT_ID"],
+    // The Instagram id is optional (Facebook only without it); "none" keeps it in the settings hash.
+    values: (e) => [e.META_PAGE_ID, e.META_PAGE_ACCESS_TOKEN, e.META_INSTAGRAM_ACCOUNT_ID ?? "none"],
+    async test(e, f) {
+      try {
+        return await testMeta(e, f);
+      } catch (error) {
+        if (error instanceof MetaError) throw new IntegrationTestError(error.message);
+        throw error;
+      }
+    },
+  },
+  // Company-page posting needs LinkedIn's approval (Community Management API); built once it is granted.
+  { key: "linkedin", envVars: [], plannedStage: "future" },
   {
     key: "google_places",
     envVars: ["GOOGLE_PLACES_API_KEY"],
@@ -204,7 +219,8 @@ export const integrations: readonly IntegrationDef[] = [
       return "API key accepted; Places search works.";
     },
   },
-  { key: "canva", envVars: [], plannedStage: 6 },
+  // Canva Connect needs an app registered with Canva; image briefs are written for it meanwhile.
+  { key: "canva", envVars: [], plannedStage: "future" },
   { key: "tiktok", envVars: [], plannedStage: "future" },
 ];
 

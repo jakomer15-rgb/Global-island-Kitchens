@@ -83,6 +83,9 @@ model User {
   prospectsCreated   Prospect[]           @relation("ProspectCreator")
   campaignsCreated   Campaign[]           @relation("CampaignCreator")
   campaignsDecided   Campaign[]           @relation("CampaignDecider")
+  socialPostsCreated SocialPost[]         @relation("SocialPostCreator")
+  socialPostsDecided SocialPost[]         @relation("SocialPostDecider")
+  socialCampaigns    SocialCampaign[]     @relation("SocialCampaignCreator")
 
   @@map("users")
 }
@@ -562,6 +565,7 @@ model FileAsset {
   categories       Category[]
   catalogItems     CatalogItem[]
   quotationPdfs    QuotationRevision[]
+  socialPosts      SocialPost[]
 
   @@index([status, createdAt])
   @@index([quotationRequestId])
@@ -1596,4 +1600,138 @@ model CampaignMessage {
   @@index([status])
   @@index([prospectId])
   @@map("campaign_messages")
+}
+
+// ───────────────────────────── Social media (Stage 6) ─────────────────────────────
+
+enum SocialPlatform {
+  instagram
+  facebook
+  linkedin
+  tiktok
+}
+
+enum SocialPostType {
+  image
+  text
+  reel
+  story
+}
+
+enum SocialPostStatus {
+  draft
+  pending_approval
+  approved
+  scheduled
+  published
+  failed
+}
+
+/// Which captions go out: English, Arabic, or both (Arabic first, then English).
+enum SocialLanguage {
+  en
+  ar
+  both
+}
+
+enum SocialTargetStatus {
+  /// Waiting to be published through the platform's API.
+  pending
+  published
+  failed
+  /// No publishing connection for this platform or post type: staff post it by hand and mark it.
+  manual
+}
+
+/// A group of posts with one aim (a promotion, a season, a launch).
+model SocialCampaign {
+  id          String    @id @default(cuid())
+  name        String
+  objective   String?
+  startsOn    DateTime? @map("starts_on") @db.Date
+  endsOn      DateTime? @map("ends_on") @db.Date
+  createdById String?   @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  createdBy User?        @relation("SocialCampaignCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  posts     SocialPost[]
+
+  @@index([createdAt])
+  @@map("social_campaigns")
+}
+
+/// A social media post: written by staff or drafted by the AI, approved by `social.publish`, then
+/// published through the official APIs (or posted by hand where there is no connection). While approved,
+/// scheduled, published or failed its content can't change (trigger); editing sends it back to draft.
+model SocialPost {
+  id                String           @id @default(cuid())
+  /// Internal name or topic, e.g. "Handleless kitchen in Riffa".
+  title             String
+  /// What the post is about (for the AI and the approver).
+  brief             String?
+  type              SocialPostType   @default(image)
+  platforms         SocialPlatform[]
+  language          SocialLanguage   @default(both)
+  captionEn         String?          @map("caption_en")
+  captionAr         String?          @map("caption_ar")
+  /// Without the "#".
+  hashtags          String[]         @default([])
+  /// Reel or video script.
+  script            String?
+  /// Brief for a designer (or Canva) to make the promotional image.
+  imageBrief        String?          @map("image_brief")
+  /// A published website image (portfolio photo with usage permission, or a website image).
+  imageFileId       String?          @map("image_file_id")
+  /// Photos suggested for the post (file ids), from the published portfolio.
+  suggestedImageIds String[]         @default([]) @map("suggested_image_ids")
+  /// Day and time planned in the calendar; for a scheduled post, when it is published.
+  plannedAt         DateTime?        @map("planned_at") @db.Timestamptz(3)
+  status            SocialPostStatus @default(draft)
+  campaignId        String?          @map("campaign_id")
+  createdById       String?          @map("created_by_id")
+  submittedAt       DateTime?        @map("submitted_at") @db.Timestamptz(3)
+  decidedById       String?          @map("decided_by_id")
+  approvedAt        DateTime?        @map("approved_at") @db.Timestamptz(3)
+  decisionNote      String?          @map("decision_note")
+  publishedAt       DateTime?        @map("published_at") @db.Timestamptz(3)
+  lastError         String?          @map("last_error")
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  image     FileAsset?         @relation(fields: [imageFileId], references: [id], onDelete: Restrict)
+  campaign  SocialCampaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdBy User?              @relation("SocialPostCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  decidedBy User?              @relation("SocialPostDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  targets   SocialPostTarget[]
+
+  @@index([plannedAt])
+  @@index([status, plannedAt])
+  @@index([campaignId])
+  @@map("social_posts")
+}
+
+/// One platform of an approved post: its publishing result and engagement figures.
+model SocialPostTarget {
+  id          String             @id @default(cuid())
+  postId      String             @map("post_id")
+  platform    SocialPlatform
+  status      SocialTargetStatus @default(pending)
+  /// The platform's id for the published post.
+  externalId  String?            @map("external_id")
+  permalink   String?
+  error       String?
+  publishedAt DateTime?          @map("published_at") @db.Timestamptz(3)
+  likes       Int?
+  comments    Int?
+  shares      Int?
+  metricsAt   DateTime?          @map("metrics_at") @db.Timestamptz(3)
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  post SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, platform])
+  @@index([status, publishedAt])
+  @@map("social_post_targets")
 }

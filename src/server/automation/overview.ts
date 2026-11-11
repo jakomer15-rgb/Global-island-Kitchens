@@ -120,7 +120,7 @@ export async function centreOverview(db: Db, actor: Actor, now = new Date()) {
 }
 
 export type ApprovalItem = {
-  kind: "ai_draft" | "designer" | "customer_message" | "campaign";
+  kind: "ai_draft" | "designer" | "customer_message" | "campaign" | "social_post";
   id: string;
   /** Short description: draft type and lead reference, or the designer's name. */
   title: string;
@@ -131,14 +131,33 @@ export type ApprovalItem = {
 
 /**
  * Everything waiting for a person's decision, from the tables that hold it. Each kind appears only for
- * staff who may decide it. Later stages add their own kinds (outbound campaigns, social posts).
+ * staff who may decide it.
  */
 export async function approvalQueue(db: Db, actor: Actor, limit = 100) {
   assertCan(actor, "automation.read");
   const showDrafts = can(actor, "ai.review");
   const showDesigners = can(actor, "designer.manage");
   const showMessages = can(actor, "outreach.approve");
+  const showPosts = can(actor, "social.publish");
   const pendingMessage = { status: "pending_approval" as const, lead: { archivedAt: null } };
+  const [posts, postCount] = await Promise.all([
+    showPosts
+      ? db.socialPost.findMany({
+          where: { status: "pending_approval" },
+          orderBy: { submittedAt: "asc" },
+          take: limit,
+          select: {
+            id: true,
+            title: true,
+            platforms: true,
+            plannedAt: true,
+            submittedAt: true,
+            createdAt: true,
+          },
+        })
+      : Promise.resolve([]),
+    showPosts ? db.socialPost.count({ where: { status: "pending_approval" } }) : Promise.resolve(0),
+  ]);
   const [campaigns, campaignCount] = await Promise.all([
     showMessages
       ? db.campaign.findMany({
@@ -236,6 +255,14 @@ export async function approvalQueue(db: Db, actor: Actor, limit = 100) {
       createdAt: c.createdAt,
       href: `/admin/marketing/campaigns/${c.id}`,
     })),
+    ...posts.map((p) => ({
+      kind: "social_post" as const,
+      id: p.id,
+      title: p.title,
+      detail: p.platforms.join(", "),
+      createdAt: p.submittedAt ?? p.createdAt,
+      href: `/admin/social/${p.id}`,
+    })),
   ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
   return {
@@ -245,7 +272,8 @@ export async function approvalQueue(db: Db, actor: Actor, limit = 100) {
       campaign: showMessages ? campaignCount : null,
       ai_draft: showDrafts ? draftCount : null,
       designer: showDesigners ? designerCount : null,
+      social_post: showPosts ? postCount : null,
     },
-    total: draftCount + designerCount + messageCount + campaignCount,
+    total: draftCount + designerCount + messageCount + campaignCount + postCount,
   };
 }

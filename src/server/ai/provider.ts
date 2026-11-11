@@ -19,7 +19,14 @@ export class AiError extends Error {
 
 export interface AiRequest {
   /** Names the job (lead_reply, lead_summary, blog_post, furniture); the mock provider answers per task. */
-  task: "lead_reply" | "lead_summary" | "blog_post" | "furniture" | "customer_message";
+  task:
+    | "lead_reply"
+    | "lead_summary"
+    | "blog_post"
+    | "furniture"
+    | "customer_message"
+    | "social_post"
+    | "social_plan";
   system: string;
   user: string;
   maxTokens: number;
@@ -55,6 +62,45 @@ const mockAnswers: Record<AiRequest["task"], object> = {
     language: "en",
     subject: "Your enquiry with Global Island Kitchens",
     body: "We wanted to check whether you had a chance to look at the next steps for your project. If it helps, we can arrange a showroom visit or a call at a time that suits you.",
+  },
+  social_post: {
+    captionEn:
+      "A handleless kitchen in painted MDF, designed and made in our Bahrain factory. Visit our showroom to see the finishes.",
+    captionAr:
+      "مطبخ بدون مقابض من ألواح MDF المطلية، مصمم ومصنوع في مصنعنا في البحرين. زوروا صالة العرض لرؤية التشطيبات.",
+    hashtags: ["BahrainKitchens", "PaintedMDF", "مطابخ_البحرين"],
+    imageBrief:
+      "Square photo of the finished kitchen in daylight; company logo bottom right; no text over the cabinets.",
+    script: "",
+    photoIds: [],
+  },
+  social_plan: {
+    ideas: [
+      {
+        dayOffset: 0,
+        time: "19:00",
+        title: "Kitchen of the week",
+        brief: "Show a finished kitchen and its finish.",
+        type: "image",
+        platforms: ["instagram", "facebook"],
+      },
+      {
+        dayOffset: 2,
+        time: "19:00",
+        title: "Behind the scenes in the factory",
+        brief: "How doors are cut and edged.",
+        type: "reel",
+        platforms: ["instagram"],
+      },
+      {
+        dayOffset: 4,
+        time: "12:00",
+        title: "Choosing an EGGER décor",
+        brief: "Tips for choosing a wood-look décor.",
+        type: "image",
+        platforms: ["facebook", "linkedin"],
+      },
+    ],
   },
   furniture: {
     answer: "A fitted kitchen in EGGER melamine or painted MDF suits this. Our team can confirm the details.",

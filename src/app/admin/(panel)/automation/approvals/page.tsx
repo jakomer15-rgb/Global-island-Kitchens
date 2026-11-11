@@ -75,7 +75,6 @@ export default async function ApprovalsPage() {
           </tbody>
         </Table>
       )}
-      <p className="mt-4 text-sm text-ink-muted">{tr(T.later, lang)}</p>
     </>
   );
 }

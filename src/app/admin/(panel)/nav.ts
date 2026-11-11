@@ -80,6 +80,17 @@ const groups: {
     ],
   },
   {
+    // After Website, so content editors still start on the homepage editor.
+    label: "Social media",
+    items: [
+      { href: "/admin/social", label: "Content calendar", permission: "social.manage", exact: true },
+      { href: "/admin/social/posts", label: "All posts", permission: "social.manage" },
+      { href: "/admin/social/plan", label: "Plan with AI", permission: "social.manage" },
+      { href: "/admin/social/campaigns", label: "Social campaigns", permission: "social.manage" },
+      { href: "/admin/social/performance", label: "Performance", permission: "social.manage" },
+    ],
+  },
+  {
     label: "Administration",
     items: [
       { href: "/admin/ai", label: "AI drafts", permission: ["ai.use", "ai.review"] },

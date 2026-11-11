@@ -131,8 +131,24 @@ describe("connection tests (fake provider answers)", () => {
   });
 
   it("has no test for n8n, the scheduled job or planned integrations (nothing is sent to try them)", () => {
-    for (const key of ["n8n", "cron", "meta", "linkedin", "canva", "tiktok"] as const)
+    for (const key of ["n8n", "cron", "linkedin", "canva", "tiktok"] as const)
       expect(def(key).test).toBeUndefined();
+  });
+
+  it("Meta: read-only calls for the Page and Instagram, token in a header (Stage 6)", async () => {
+    const e = {
+      ...baseEnv,
+      META_PAGE_ID: "1234567",
+      META_PAGE_ACCESS_TOKEN: "page-token-that-is-long-enough",
+      META_INSTAGRAM_ACCOUNT_ID: "7654321",
+      META_GRAPH_VERSION: "v21.0",
+    } as Env;
+    await expect(def("meta").test!(e, reply(200, { name: "GIK", username: "gik" }))).resolves.toMatch(
+      /accepted/,
+    );
+    await expect(
+      def("meta").test!(e, reply(400, { error: { code: 190, message: "Expired" } })),
+    ).rejects.toThrow(/Meta refused it \(400 190\)/);
   });
 
   it("Google Places: one single-result search with the key in a header (Stage 5)", async () => {

@@ -115,7 +115,8 @@ describe("integration tests", () => {
 
   it("shows planned integrations and missing settings honestly", async () => {
     const list = await integrationOverview(db, owner, env);
-    expect(list.find((i) => i.key === "meta")!.status).toBe("planned");
+    expect(list.find((i) => i.key === "linkedin")!.status).toBe("planned");
+    expect(list.find((i) => i.key === "meta")!.status).toBe("awaiting_credentials");
     expect(list.find((i) => i.key === "resend")!.status).toBe("awaiting_credentials");
     expect(list.find((i) => i.key === "resend")!.testable).toBe(false);
   });

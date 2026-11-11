@@ -28,8 +28,8 @@ const modules: Module[] = [
   { key: "marketingAgent", href: "/admin/marketing", permission: "marketing.manage" },
   { key: "leads", href: "/admin/leads", permission: "lead.read" },
   { key: "customers", href: "/admin/customers", permission: "customer.read" },
-  { key: "social", stage: 6 },
-  { key: "calendar", stage: 6 },
+  { key: "social", href: "/admin/social/posts", permission: "social.manage" },
+  { key: "calendar", href: "/admin/social", permission: "social.manage" },
   { key: "campaigns", href: "/admin/marketing/campaigns", permission: "marketing.manage" },
   { key: "analytics", stage: 7 },
   { key: "knowledge", href: "/admin/ai-agent#knowledge", permission: "chat.manage" },
@@ -192,12 +192,27 @@ export default async function AutomationOverviewPage() {
                 </p>
               )}
             </li>
-            {(
-              [
-                ["social", 6],
-                ["analytics", 7],
-              ] as const
-            ).map(([key, stage]) => (
+            <li className="border border-line p-4">
+              <p className="font-medium">{tr(A.social.name, lang)}</p>
+              <p className="mt-1">
+                <Badge tone="good">{tr(A.social.live, lang)}</Badge>
+              </p>
+              <p className="mt-2 text-sm text-ink-muted">{tr(A.social.about, lang)}</p>
+              {can(actor, "social.manage") && (
+                <p className="mt-2 flex flex-wrap gap-x-4 text-sm">
+                  <Link href="/admin/social" className="underline underline-offset-4">
+                    {tr(A.social.calendar, lang)}
+                  </Link>
+                  <Link href="/admin/social/plan" className="underline underline-offset-4">
+                    {tr(A.social.plan, lang)}
+                  </Link>
+                  <Link href="/admin/social/performance" className="underline underline-offset-4">
+                    {tr(A.social.performance, lang)}
+                  </Link>
+                </p>
+              )}
+            </li>
+            {([["analytics", 7]] as const).map(([key, stage]) => (
               <li key={key} className="border border-dashed border-line p-4">
                 <p className="font-medium">{tr(A[key].name, lang)}</p>
                 <p className="mt-1">

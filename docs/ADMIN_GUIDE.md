@@ -60,6 +60,29 @@ For the owner, general manager and sales manager.
 - **Lead generation report**: today or this week (from Saturday) compared with the previous one: prospects
   added, contacted, interested, converted, unsubscribed, and leads received by source.
 
+## Social media (posts and content calendar)
+
+For the owner, general manager, sales manager and content editor. Only the owner and general manager approve
+and publish.
+
+- **Content calendar**: every post by day (month or week, weeks from Saturday), filtered by status, platform
+  or campaign. Click **+** on a day to write a post for it.
+- **New post**: a title and brief, the type (photo, text, reel, story), the platforms and the captions
+  (English, Arabic or both). After saving, **Write it with AI** fills in the captions, hashtags, image brief
+  (and a reel script) and suggests project photos; edit everything before sending it. Only published website
+  images can be used, and project photos only when their use is confirmed. Instagram needs a JPEG photo.
+- **Plan with AI**: the AI proposes a week's or month's posts and adds them to the calendar as drafts with a
+  day, time and idea. Open each one to write it.
+- **Approval**: **Send for approval**; the owner or general manager approves (keep it approved, schedule it for
+  its planned time, or publish now) or rejects it with what to change. Approved text and photo can't change:
+  **Back to draft** to change them, then approve again.
+- **Publishing**: Facebook and Instagram photo posts publish automatically once Meta is connected. Reels,
+  LinkedIn and TikTok (and everything before Meta is connected) show **Post by hand**: post it on the platform,
+  then **Mark as posted** with its link. Scheduled posts go out at the scheduled job's next run (once a day for
+  now); use **Publish now** for an exact time.
+- **Social campaigns** group posts with one aim. **Performance** shows posts published and the likes, comments
+  and shares Meta reports (last 7, 30 or 90 days).
+
 ## Enquiries (Leads)
 
 Every quote request, consultation booking, contact message, designer project and WhatsApp message becomes a

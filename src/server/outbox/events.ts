@@ -68,7 +68,13 @@ export interface CampaignMessageQueued {
   campaignId: string;
 }
 
+/** An approved social media post to publish now (Stage 6). */
+export interface SocialPostPublish {
+  postId: string;
+}
+
 export interface OutboxEvents {
+  "social.publish": SocialPostPublish;
   "customer.message": CustomerMessageApproved;
   "campaign.message": CampaignMessageQueued;
   "enquiry.received": EnquiryReceived;

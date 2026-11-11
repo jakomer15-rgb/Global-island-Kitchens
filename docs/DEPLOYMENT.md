@@ -79,6 +79,25 @@ API key restricted to that API, set a budget alert, then add `GOOGLE_PLACES_API_
 and redeploy. Each search in Admin → Marketing → Find businesses is billed by Google (limit: 30 searches an hour
 per staff member). Test it in Automation Centre → Integrations.
 
+**Facebook and Instagram publishing (Stage 6, optional).** Needs a Facebook Page and an Instagram professional
+(business or creator) account linked to it, in a Meta Business portfolio.
+
+1. At developers.facebook.com create an app (type Business) in the company's Business portfolio.
+2. Request the permissions `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, and for Instagram
+   `instagram_basic` and `instagram_content_publish`. Meta's app review is needed before they work on the live
+   Page (the owner, as an admin of the app, can test before review).
+3. Create a long-lived **Page** access token (Graph API Explorer → choose the app and the Page → generate, then
+   exchange it for a long-lived token; or a System User token in Business settings, which doesn't expire).
+4. Find the Page id (Page → About → Page transparency, or `GET /me/accounts`) and the Instagram account id
+   (`GET /{page-id}?fields=instagram_business_account`).
+5. In Vercel (Production) add `META_PAGE_ID`, `META_PAGE_ACCESS_TOKEN` and `META_INSTAGRAM_ACCOUNT_ID`, redeploy,
+   then press **Test connection** in Automation Centre → Integrations.
+
+Instagram downloads the photo from a link, so **file storage (Cloudflare R2) must be connected** and the photo
+must be a JPEG. Without Meta, posts still work: every platform is marked "Post by hand" and staff mark it as
+posted. Scheduled posts go out at the scheduled job's next run (once a day on the current Vercel plan; Stage 8
+makes it every few minutes); "Publish now" is immediate. Likes, comments and shares are read at each run.
+
 **Customer and campaign emails (Stages 4–5).** Messages to customers and campaign emails to prospects use the
 same Resend settings and are only sent after approval (`outreach.approve`). Campaign emails go 20 per outbox
 run (right after approval, then at each scheduled run).

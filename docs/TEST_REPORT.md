@@ -1,5 +1,30 @@
 # Test report
 
+## AI Social Media Agent, Stage 6 (2026-11-11)
+
+- Before this stage the test database (`gik_test`) was reset with the owner's approval (about 1,185 staff
+  accounts left by earlier runs). The reset showed "a lead can be worked from the leads list" relied on leads
+  left by other tests; it now sends its own contact enquiry (commit `001059d`).
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 174 passed, including 7 new in `src/lib/social.test.ts` (what publishes automatically,
+  hashtags, caption order, what is missing before approval, Bahrain time, Saturday weeks and month grids) and 7
+  in `src/server/social/meta.test.ts` (Facebook photo post with the token in a header, Instagram two-step
+  publishing, JPEG only, not connected, Meta errors shortened without links and 4xx not retried, figures,
+  read-only connection test), plus the Meta integration test.
+- Database (`npm run test:db`): 143 passed, including 14 new in `social.db.test.ts`: permissions (writers can't
+  approve), incomplete posts refused, images must be published and project photos permitted, one result per
+  platform (automatic only with Meta), rejection back to draft with a note, approved content locked (service
+  and trigger), the database refusing to publish an unapproved post, publishing through the outbox with
+  LinkedIn marked by hand and a published post final, failure and retry, a PNG for Instagram not retried,
+  scheduling queued once, engagement figures and the performance report, AI captions with only known photos
+  kept, an AI week plan of future drafts.
+- E2E (`npm run test:e2e`, production build, all projects): 241 passed, 0 failed, 69 skipped (mobile/desktop
+  duplicates and the mock-AI chat tests). New: six social media pages pass axe; a post is written, sent for
+  approval, approved, marked as posted on Facebook and LinkedIn by hand, and shown in the calendar.
+- Browser check (dev): content calendar, Automation Centre (Social Media Agent working, modules available),
+  Integrations (Meta "Awaiting credentials").
+- Not tested: real publishing to Facebook and Instagram and real figures (no Meta keys or R2 locally).
+
 ## AI Marketing Agent, Stage 5 (2026-11-11)
 
 - `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.

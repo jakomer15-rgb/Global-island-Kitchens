@@ -36,6 +36,10 @@ export const permissions = {
     "Use the marketing agent: add, import and score prospects, search Google Places, prepare email campaigns and submit them for approval",
   "outreach.approve":
     "Approve or reject messages to customers (written by staff or drafted by the AI) so they are sent, and switch automatic follow-up drafts on or off",
+  "social.manage":
+    "Use the social media agent: write posts (or have the AI draft them), plan the content calendar and send posts for approval",
+  "social.publish":
+    "Approve or reject social media posts, schedule and publish them, and mark posts made by hand as published",
   "integrations.manage":
     "Test connections to outside services (Claude, email, storage, WhatsApp) and retry failed deliveries",
 } as const;
@@ -87,6 +91,7 @@ export const roleDefinitions: {
       "chat.manage",
       "automation.read",
       "marketing.manage",
+      "social.manage",
     ],
   },
   {
@@ -116,6 +121,7 @@ export const roleDefinitions: {
       "settings.manage",
       "ai.use",
       "ai.review",
+      "social.manage",
     ],
   },
 ];

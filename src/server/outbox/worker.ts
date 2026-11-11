@@ -8,8 +8,10 @@ import type {
   CustomerMessageApproved,
   EnquiryReceived,
   OutboxType,
+  SocialPostPublish,
 } from "./events";
 import { sendCampaignMessage } from "@/server/marketing/campaigns";
+import { publishSocialPost } from "@/server/social/posts";
 import { sendCustomerMessage } from "@/server/outreach/messages";
 import { notifyChatLeadByEmail } from "@/server/chat/notify";
 import { alertSalesTeamOnWhatsApp } from "@/server/chat/whatsapp-alert";
@@ -59,6 +61,11 @@ export function defaultDelivery(e: Env, siteUrl: string, db?: Db): Delivery {
     if ((event.type as OutboxType) === "campaign.message" && db) {
       const payload = event.payload as CampaignMessageQueued;
       await run("prospectEmail", () => sendCampaignMessage(db, e, payload.campaignMessageId));
+    }
+    // An approved social media post: published on each platform that publishes automatically.
+    if ((event.type as OutboxType) === "social.publish" && db) {
+      const payload = event.payload as SocialPostPublish;
+      await run("socialPublish", () => publishSocialPost(db, e, payload.postId));
     }
     await run("n8n", () => postToN8n(e, event.type, event.id, event.payload));
     if (errors.length) throw new DeliveryError(errors.join("; "), result);

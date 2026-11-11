@@ -45,6 +45,12 @@ const pages = [
   ["/admin/marketing/places", "Find businesses"],
   ["/admin/marketing/campaigns", "Campaigns"],
   ["/admin/marketing/reports", "Lead generation report"],
+  ["/admin/social", "Content calendar"],
+  ["/admin/social/posts", "All posts"],
+  ["/admin/social/new", "New post"],
+  ["/admin/social/plan", "Plan with AI"],
+  ["/admin/social/campaigns", "Social campaigns"],
+  ["/admin/social/performance", "Performance"],
   ["/admin/automation", "Overview"],
   ["/admin/automation/approvals", "Approvals"],
   ["/admin/automation/integrations", "Integrations"],
@@ -285,6 +291,40 @@ test.describe("admin portal", () => {
     await expect(page.getByText("Waiting for approval").first()).toBeVisible();
     await expect(page.getByRole("button", { name: /Approve and send \d+ email/ })).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test("a social media post is written, approved and marked as posted", async ({ page }) => {
+    await signIn(page);
+    const title = `E2E post ${uid()}`;
+    await page.goto("/admin/social/new");
+    await page.getByLabel("Title").fill(title);
+    await page.getByLabel("Type").selectOption("text");
+    await page.getByRole("checkbox", { name: "Instagram" }).uncheck();
+    await page.getByRole("checkbox", { name: "LinkedIn" }).check();
+    await page.getByLabel("Captions", { exact: true }).selectOption("en");
+    await page.getByLabel("Caption (English)").fill("Painted MDF kitchens, designed and made in Bahrain.");
+    await page.getByLabel("Hashtags").fill("#Bahrain #Kitchens");
+    await page.getByRole("button", { name: "Save draft" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+
+    await page.getByRole("button", { name: "Send for approval" }).click();
+    await expect(page.getByRole("button", { name: "Approve", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Approve", exact: true }).click();
+    // No Meta connection in tests: both platforms are posted by hand, then marked.
+    const mark = page.getByRole("button", { name: "Mark as posted" });
+    await expect(mark).toHaveCount(2);
+    await expect(page.locator("pre").filter({ hasText: "#Bahrain #Kitchens" })).toContainText(
+      "Painted MDF kitchens, designed and made in Bahrain.",
+    );
+    await mark.first().click();
+    await expect(mark).toHaveCount(1);
+    await mark.first().click();
+    await expect(mark).toHaveCount(0);
+    await expect(page.getByText("Published", { exact: true }).first()).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+
+    await page.goto("/admin/social");
+    await expect(page.getByRole("link", { name: new RegExp(title) })).toBeVisible();
   });
 
   test("leads can be filtered, sorted and exported", async ({ page }) => {

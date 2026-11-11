@@ -5,6 +5,7 @@ import { json } from "@/server/http";
 import { processOutbox } from "@/server/outbox/worker";
 import { draftNoResponseFollowUps } from "@/server/outreach/messages";
 import { sweepRateLimits } from "@/server/rate-limit";
+import { queueDuePosts, refreshEngagement } from "@/server/social/posts";
 import { getStorage } from "@/server/storage/driver";
 import { sweepStaleUploads } from "@/server/storage/files";
 
@@ -24,9 +25,16 @@ export async function GET(request: Request): Promise<Response> {
     console.error("Follow-up drafting failed:", error instanceof Error ? error.message : "unknown");
     return { drafted: 0, skipped: "error" as const };
   });
+  // Approved posts whose scheduled time has come are queued for publishing.
+  const socialPosts = await queueDuePosts(db).catch((error) => {
+    console.error("Queuing scheduled posts failed:", error instanceof Error ? error.message : "unknown");
+    return { queued: 0 };
+  });
   const outbox = await processOutbox(db);
+  // Likes, comments and shares of recent posts (Meta only, when connected).
+  const engagement = await refreshEngagement(db).catch(() => ({ updated: 0, failed: 0 }));
   await sweepRateLimits(db);
   const storage = getStorage();
   const staleUploads = storage ? await sweepStaleUploads(db, storage) : 0;
-  return json({ outbox, staleUploads, followUps });
+  return json({ outbox, staleUploads, followUps, socialPosts, engagement });
 }
