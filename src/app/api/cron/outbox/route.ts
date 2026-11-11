@@ -6,6 +6,7 @@ import { processOutbox } from "@/server/outbox/worker";
 import { draftNoResponseFollowUps } from "@/server/outreach/messages";
 import { sweepRateLimits } from "@/server/rate-limit";
 import { queueDuePosts, refreshEngagement } from "@/server/social/posts";
+import { queueDueReports } from "@/server/analytics/report";
 import { getStorage } from "@/server/storage/driver";
 import { sweepStaleUploads } from "@/server/storage/files";
 
@@ -30,11 +31,16 @@ export async function GET(request: Request): Promise<Response> {
     console.error("Queuing scheduled posts failed:", error instanceof Error ? error.message : "unknown");
     return { queued: 0 };
   });
+  // Business reports switched on in Admin → Business analytics (each period emailed once).
+  const reports = await queueDueReports(db).catch((error) => {
+    console.error("Queuing reports failed:", error instanceof Error ? error.message : "unknown");
+    return { queued: 0 };
+  });
   const outbox = await processOutbox(db);
   // Likes, comments and shares of recent posts (Meta only, when connected).
   const engagement = await refreshEngagement(db).catch(() => ({ updated: 0, failed: 0 }));
   await sweepRateLimits(db);
   const storage = getStorage();
   const staleUploads = storage ? await sweepStaleUploads(db, storage) : 0;
-  return json({ outbox, staleUploads, followUps, socialPosts, engagement });
+  return json({ outbox, staleUploads, followUps, socialPosts, engagement, reports });
 }

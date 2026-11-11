@@ -26,7 +26,9 @@ export interface AiRequest {
     | "furniture"
     | "customer_message"
     | "social_post"
-    | "social_plan";
+    | "social_plan"
+    | "analytics_plan"
+    | "analytics_answer";
   system: string;
   user: string;
   maxTokens: number;
@@ -101,6 +103,10 @@ const mockAnswers: Record<AiRequest["task"], object> = {
         platforms: ["facebook", "linkedin"],
       },
     ],
+  },
+  analytics_plan: { queries: [{ name: "summary", period: "this_week" }] },
+  analytics_answer: {
+    answer: "Here are this week's figures from the database; the table below shows each number used.",
   },
   furniture: {
     answer: "A fitted kitchen in EGGER melamine or painted MDF suits this. Our team can confirm the details.",

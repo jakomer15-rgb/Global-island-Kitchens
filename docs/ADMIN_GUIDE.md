@@ -83,6 +83,25 @@ and publish.
 - **Social campaigns** group posts with one aim. **Performance** shows posts published and the likes, comments
   and shares Meta reports (last 7, 30 or 90 days).
 
+## Business analytics (reports and questions)
+
+For the owner, general manager and sales manager (Automation Centre → Business analytics).
+
+- **Reports**: daily, weekly (from Saturday) or monthly, with **← Earlier** to look back, each compared with
+  the period before: enquiries, new customers, hot / warm / cold, follow-ups overdue, quotations created,
+  approved and awaiting the customer, orders and their value, conversion (of the period's enquiries: won,
+  lost, open), response time (from enquiry to the first call, email, WhatsApp or meeting logged by staff),
+  lead sources, products asked about, social media, campaigns, open leads by stage, follow-ups due and
+  quotations waiting. Everything is counted from the database when the page opens.
+- **Ask a question** in plain words ("Which channel brought the most leads this month?"). The AI picks
+  from the system's fixed reports, the server counts the figures, and the AI answers from them only; the
+  answer page shows the figures used. Questions about things the system doesn't record get "I can't". It
+  needs the AI assistant switched on (Settings → AI, "lead assistant"). Customer names and contact details
+  are never sent to the AI.
+- **Email these reports** (owner and general manager): switch on daily, weekly or monthly and list who gets
+  them. The morning job sends yesterday's report, last week's on Saturday and last month's on the 1st, once
+  each. Needs email sending (Resend).
+
 ## Enquiries (Leads)
 
 Every quote request, consultation booking, contact message, designer project and WhatsApp message becomes a

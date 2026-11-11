@@ -40,6 +40,9 @@ export const permissions = {
     "Use the social media agent: write posts (or have the AI draft them), plan the content calendar and send posts for approval",
   "social.publish":
     "Approve or reject social media posts, schedule and publish them, and mark posts made by hand as published",
+  "analytics.read":
+    "Open business reports (daily, weekly, monthly) and ask the analytics agent questions answered from the database",
+  "analytics.manage": "Choose which reports are emailed and to whom",
   "integrations.manage":
     "Test connections to outside services (Claude, email, storage, WhatsApp) and retry failed deliveries",
 } as const;
@@ -92,6 +95,7 @@ export const roleDefinitions: {
       "automation.read",
       "marketing.manage",
       "social.manage",
+      "analytics.read",
     ],
   },
   {

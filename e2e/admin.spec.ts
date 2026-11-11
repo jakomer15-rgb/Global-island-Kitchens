@@ -51,6 +51,8 @@ const pages = [
   ["/admin/social/plan", "Plan with AI"],
   ["/admin/social/campaigns", "Social campaigns"],
   ["/admin/social/performance", "Performance"],
+  ["/admin/analytics", "Business analytics"],
+  ["/admin/analytics/ask", "Ask the analytics agent"],
   ["/admin/automation", "Overview"],
   ["/admin/automation/approvals", "Approvals"],
   ["/admin/automation/integrations", "Integrations"],
@@ -325,6 +327,28 @@ test.describe("admin portal", () => {
 
     await page.goto("/admin/social");
     await expect(page.getByRole("link", { name: new RegExp(title) })).toBeVisible();
+  });
+
+  test("business reports switch between periods and can be emailed", async ({ page }) => {
+    await signIn(page);
+    await page.goto("/admin/analytics?report=monthly");
+    await expect(page.getByRole("link", { name: "Monthly" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByText("Total enquiries")).toBeVisible();
+    await page.getByRole("link", { name: "← Earlier" }).click();
+    await expect(page).toHaveURL(/back=1/);
+    await expect(page.getByRole("link", { name: "Later →" })).toBeVisible();
+    await page.getByRole("checkbox", { name: "Weekly" }).check();
+    await page.getByLabel("Send to").fill("reports@gik.example");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("checkbox", { name: "Weekly" })).toBeChecked();
+    // Back off, so other runs start from the default.
+    await page.getByRole("checkbox", { name: "Weekly" }).uncheck();
+    await page.getByLabel("Send to").fill("");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
   });
 
   test("leads can be filtered, sorted and exported", async ({ page }) => {

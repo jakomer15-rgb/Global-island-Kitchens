@@ -98,6 +98,11 @@ must be a JPEG. Without Meta, posts still work: every platform is marked "Post b
 posted. Scheduled posts go out at the scheduled job's next run (once a day on the current Vercel plan; Stage 8
 makes it every few minutes); "Publish now" is immediate. Likes, comments and shares are read at each run.
 
+**Emailed business reports (Stage 7, optional).** Switched on in Admin → Business analytics (owner or general
+manager). The scheduled job (06:00 Bahrain time) queues yesterday's report, last week's on Saturday and last
+month's on the 1st, each once (`analytics_report_runs`). Needs `RESEND_API_KEY` and `EMAIL_FROM`; recipients are
+set on the page, or `NOTIFY_EMAILS` when empty.
+
 **Customer and campaign emails (Stages 4–5).** Messages to customers and campaign emails to prospects use the
 same Resend settings and are only sent after approval (`outreach.approve`). Campaign emails go 20 per outbox
 run (right after approval, then at each scheduled run).

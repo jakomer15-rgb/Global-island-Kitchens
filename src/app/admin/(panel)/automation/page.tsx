@@ -31,7 +31,7 @@ const modules: Module[] = [
   { key: "social", href: "/admin/social/posts", permission: "social.manage" },
   { key: "calendar", href: "/admin/social", permission: "social.manage" },
   { key: "campaigns", href: "/admin/marketing/campaigns", permission: "marketing.manage" },
-  { key: "analytics", stage: 7 },
+  { key: "analytics", href: "/admin/analytics", permission: "analytics.read" },
   { key: "knowledge", href: "/admin/ai-agent#knowledge", permission: "chat.manage" },
   { key: "workflows", stage: 8 },
   { key: "integrations", href: "/admin/automation/integrations", permission: "automation.read" },
@@ -212,17 +212,23 @@ export default async function AutomationOverviewPage() {
                 </p>
               )}
             </li>
-            {([["analytics", 7]] as const).map(([key, stage]) => (
-              <li key={key} className="border border-dashed border-line p-4">
-                <p className="font-medium">{tr(A[key].name, lang)}</p>
-                <p className="mt-1">
-                  <Badge>
-                    {tr(A.planned, lang)} {stage}
-                  </Badge>
+            <li className="border border-line p-4">
+              <p className="font-medium">{tr(A.analytics.name, lang)}</p>
+              <p className="mt-1">
+                <Badge tone="good">{tr(A.analytics.live, lang)}</Badge>
+              </p>
+              <p className="mt-2 text-sm text-ink-muted">{tr(A.analytics.about, lang)}</p>
+              {can(actor, "analytics.read") && (
+                <p className="mt-2 flex flex-wrap gap-x-4 text-sm">
+                  <Link href="/admin/analytics" className="underline underline-offset-4">
+                    {tr(A.analytics.reports, lang)}
+                  </Link>
+                  <Link href="/admin/analytics/ask" className="underline underline-offset-4">
+                    {tr(A.analytics.ask, lang)}
+                  </Link>
                 </p>
-                <p className="mt-2 text-sm text-ink-muted">{tr(A[key].about, lang)}</p>
-              </li>
-            ))}
+              )}
+            </li>
           </ul>
         </Panel>
       </div>

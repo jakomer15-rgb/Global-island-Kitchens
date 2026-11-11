@@ -1,5 +1,22 @@
 # Test report
 
+## AI Business Analytics Agent, Stage 7 (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 178 passed, including 4 new in `src/lib/analytics.test.ts` (periods in Bahrain time with
+  weeks from Saturday, the Bahrain day near midnight, earlier report periods, change/median/duration text).
+- Database (`npm run test:db`): 149 passed, including 6 new in `analytics.db.test.ts` (data in a random past
+  week so counts are exact): every brief figure with the previous period (enquiries, new customers,
+  hot/warm/cold, conversion, response time, sources, products, follow-ups due) and no customer names in the
+  report or its email; report emails queued once per period, settings limited to `analytics.manage`, sent to the
+  chosen addresses, "not configured" without email; questions answered from the chosen queries with no
+  customer names or phone numbers sent to the AI, "can't answer" without a second AI call, queries outside the
+  catalogue and staff without permission refused, unavailable while the AI is off.
+- E2E (`npm run test:e2e`, production build, all projects): 242 passed, 0 failed, 70 skipped. New: the two
+  analytics pages pass axe; monthly report, earlier period, report-email settings saved and reset.
+- Not tested: real AI answers (no Claude key locally; tests use fixed AI replies) and real report emails (no
+  Resend key).
+
 ## AI Social Media Agent, Stage 6 (2026-11-11)
 
 - Before this stage the test database (`gik_test`) was reset with the owner's approval (about 1,185 staff

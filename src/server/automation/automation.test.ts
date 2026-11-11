@@ -181,6 +181,7 @@ describe("admin navigation", () => {
       "/admin/automation/approvals",
       "/admin/ai-sales",
       "/admin/ai-agent",
+      "/admin/analytics",
       "/admin/automation/integrations",
       "/admin/automation/logs",
     ]);

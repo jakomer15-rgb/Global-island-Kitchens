@@ -15,6 +15,7 @@ export const settingPermission: Record<SettingKey, Permission> = {
   ai: "settings.manage",
   chatAgent: "chat.manage",
   salesFollowUp: "outreach.approve",
+  analyticsReports: "analytics.manage",
 };
 
 export async function readSetting<K extends SettingKey>(db: Db, actor: Actor, key: K): Promise<Settings[K]> {

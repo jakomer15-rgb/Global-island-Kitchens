@@ -174,6 +174,18 @@ Opus 5.5), owner instructions, welcome texts, daily message limit.
 A second contact form from the same conversation, or from a customer with an open lead (new, contacted,
 qualified or quoted) from the last 60 days, is added to that lead instead of creating a new one.
 
+### AI Business Analytics Agent (Stage 7, 2026-11-11, migration `20261111220000_analytics_agent`)
+
+| Model                | Key fields                                                                                                                 | Rules                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `AnalyticsQuestion`  | question, queries (JSON: catalogue names and periods), results (JSON: the figures given to the AI), answer, model, askedBy | CHECK question 3–500 characters, answer ≤ 5,000. Results hold lead references and figures, no customer names or contact details |
+| `AnalyticsReportRun` | kind (daily, weekly, monthly), periodStart                                                                                 | Unique (kind, periodStart): each emailed report is queued once                                                                  |
+
+Also: permissions `analytics.read` (owner, general manager, sales manager) and `analytics.manage` (owner,
+general manager); setting `analyticsReports` (daily, weekly, monthly switches, emails; all off by default);
+outbox event `analytics.report` (kind, periodStart). Figures come from the fixed query catalogue in
+`src/server/analytics/queries.ts`; periods in `src/lib/analytics.ts` (Bahrain time, weeks from Saturday).
+
 ### AI Social Media Agent (Stage 6, 2026-11-11, migration `20261111200000_social_media_agent`)
 
 | Model              | Key fields                                                                                                                                                                                                                                                                                                                                                                                        | Rules                                                                                                                                                                                                                                                                                                                                                                                                                                             |

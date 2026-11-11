@@ -86,6 +86,7 @@ model User {
   socialPostsCreated SocialPost[]         @relation("SocialPostCreator")
   socialPostsDecided SocialPost[]         @relation("SocialPostDecider")
   socialCampaigns    SocialCampaign[]     @relation("SocialCampaignCreator")
+  analyticsQuestions AnalyticsQuestion[]
 
   @@map("users")
 }
@@ -1734,4 +1735,37 @@ model SocialPostTarget {
   @@unique([postId, platform])
   @@index([status, publishedAt])
   @@map("social_post_targets")
+}
+
+// ───────────────────────────── Analytics (Stage 7) ─────────────────────────────
+
+/// A management question answered by the AI from fixed database queries. Keeps the queries run, their
+/// results (the figures shown with the answer) and the answer, so every answer can be checked later.
+model AnalyticsQuestion {
+  id        String   @id @default(cuid())
+  question  String
+  /// [{ name, period }] chosen by the AI from the query catalogue.
+  queries   Json
+  /// The query results exactly as given to the AI.
+  results   Json
+  answer    String
+  model     String
+  askedById String?  @map("asked_by_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  askedBy User? @relation(fields: [askedById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("analytics_questions")
+}
+
+/// One emailed report per period (daily, weekly, monthly), so the scheduled job never sends it twice.
+model AnalyticsReportRun {
+  id          String   @id @default(cuid())
+  kind        String
+  periodStart DateTime @map("period_start") @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([kind, periodStart])
+  @@map("analytics_report_runs")
 }

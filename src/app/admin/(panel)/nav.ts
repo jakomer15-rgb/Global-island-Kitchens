@@ -29,6 +29,7 @@ const groups: {
       { href: "/admin/automation/approvals", label: centreText.nav.approvals, permission: "automation.read" },
       { href: "/admin/ai-sales", label: centreText.agents.sales.name, permission: "lead.read" },
       { href: "/admin/ai-agent", label: centreText.modules.knowledge, permission: "chat.manage" },
+      { href: "/admin/analytics", label: centreText.nav.analytics, permission: "analytics.read" },
       {
         href: "/admin/automation/integrations",
         label: centreText.nav.integrations,

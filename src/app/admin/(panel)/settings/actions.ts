@@ -67,6 +67,12 @@ const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
     autoDraft: f.get("autoDraft") === "on",
     afterDays: Number(str(f, "afterDays")),
   }),
+  analyticsReports: (f) => ({
+    daily: f.get("daily") === "on",
+    weekly: f.get("weekly") === "on",
+    monthly: f.get("monthly") === "on",
+    emails: list(f, "emails"),
+  }),
   quotation: (f) => {
     const rate = Number(str(f, "vatRate").replace("%", ""));
     const days = str(f, "validityDays");
@@ -105,18 +111,22 @@ export async function saveSettingAction(
   const value = fromForm[key](formData);
   const check = settingSchemas[key].safeParse(value);
   if (!check.success) return fieldErrors(check.error);
+  // Internal settings don't change the public website.
+  const internal = key === "salesFollowUp" || key === "analyticsReports";
   const result = await runAction(
     () => updateSetting(db, actor, key, value),
-    "Saved. The website is updated.",
+    internal ? "Saved." : "Saved. The website is updated.",
   );
   // Contact details, banner and SEO appear on every public page.
-  if (result.ok) revalidatePath("/[locale]", "layout");
+  if (result.ok && !internal) revalidatePath("/[locale]", "layout");
   revalidatePath(
     key === "chatAgent" || key === "salesFollowUp"
       ? "/admin/ai-agent"
-      : settingPermission[key] === "settings.manage"
-        ? "/admin/settings"
-        : "/admin/content",
+      : key === "analyticsReports"
+        ? "/admin/analytics"
+        : settingPermission[key] === "settings.manage"
+          ? "/admin/settings"
+          : "/admin/content",
   );
   return result;
 }

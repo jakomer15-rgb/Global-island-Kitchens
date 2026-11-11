@@ -3,6 +3,7 @@ import type { Db } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { confirmToCustomer, notifyStaff, postToN8n, type ChannelResult } from "./deliver";
 import type {
+  AnalyticsReportDue,
   CampaignMessageQueued,
   ChatLead,
   CustomerMessageApproved,
@@ -12,6 +13,7 @@ import type {
 } from "./events";
 import { sendCampaignMessage } from "@/server/marketing/campaigns";
 import { publishSocialPost } from "@/server/social/posts";
+import { sendReportEmail } from "@/server/analytics/report";
 import { sendCustomerMessage } from "@/server/outreach/messages";
 import { notifyChatLeadByEmail } from "@/server/chat/notify";
 import { alertSalesTeamOnWhatsApp } from "@/server/chat/whatsapp-alert";
@@ -66,6 +68,11 @@ export function defaultDelivery(e: Env, siteUrl: string, db?: Db): Delivery {
     if ((event.type as OutboxType) === "social.publish" && db) {
       const payload = event.payload as SocialPostPublish;
       await run("socialPublish", () => publishSocialPost(db, e, payload.postId));
+    }
+    // A business report for a completed period, emailed to the chosen staff.
+    if ((event.type as OutboxType) === "analytics.report" && db) {
+      const payload = event.payload as AnalyticsReportDue;
+      await run("staffEmail", () => sendReportEmail(db, e, payload.kind, payload.periodStart, siteUrl));
     }
     await run("n8n", () => postToN8n(e, event.type, event.id, event.payload));
     if (errors.length) throw new DeliveryError(errors.join("; "), result);
