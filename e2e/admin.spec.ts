@@ -192,11 +192,25 @@ test.describe("admin portal", () => {
   });
 
   test("a lead can be worked from the leads list", async ({ page }) => {
+    // Its own enquiry, so the test doesn't depend on leads left by other tests or earlier runs.
+    await page.goto("/contact");
+    await page.getByLabel("Full name").fill("E2E Lead");
+    await page.getByLabel("Phone number").fill(`3${String(rand(1e7)).padStart(7, "0")}`);
+    await page.getByLabel("Your message").fill("Please call me about a kitchen.");
+    await page.getByLabel(/privacy policy/).check();
+    await page.waitForTimeout(3200); // the form rejects submissions faster than a person types
+    await page.getByRole("button", { name: "Send message" }).click();
+    const status = page.getByRole("status");
+    await expect(status).toContainText("We have received it");
+    const reference = (await status.locator("strong").textContent())!;
+
     await signIn(page);
-    await page.goto("/admin/leads");
-    const first = page.getByRole("table", { name: "Leads" }).getByRole("link").first();
-    await first.click();
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("GIK-");
+    await page.goto(`/admin/leads?q=${reference}`);
+    await page
+      .getByRole("table", { name: "Leads" })
+      .getByRole("link", { name: reference, exact: true })
+      .click();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(reference);
     const note = `E2E note ${uid()}`;
     await page.getByLabel("Details").fill(note);
     await page.getByRole("button", { name: "Add to history" }).click();
