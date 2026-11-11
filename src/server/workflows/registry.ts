@@ -481,7 +481,10 @@ export async function setWorkflow(
   if (!def.switchable) throw new RuleError("notSwitchable", "This workflow can't be switched off here.");
   const row = (await rows(db)).get(key)!;
   const old = configOf(def, row.config);
-  const parsed = def.config ? def.config.schema.safeParse({ ...old, ...(input.config ?? {}) }) : null;
+  // Only the workflow's own options are accepted from the form (never `since` or other keys).
+  const allowed = new Set(def.config?.fields.map((f) => f.name) ?? []);
+  const changes = Object.fromEntries(Object.entries(input.config ?? {}).filter(([k]) => allowed.has(k)));
+  const parsed = def.config ? def.config.schema.safeParse({ ...old, ...changes }) : null;
   if (parsed && !parsed.success) throw new RuleError("config", "Check the workflow's options.");
   const config: Record<string, unknown> = { ...old, ...(parsed?.data ?? {}) };
   // Work before switching on isn't picked up (e.g. every existing portfolio photo).
@@ -515,6 +518,12 @@ export async function setWorkflow(
 export async function runWorkflowNow(db: Db, actor: Actor, key: string, retryOfId?: string) {
   assertCan(actor, "workflows.manage");
   if (!isWorkflowKey(key)) throw new NotFoundError("Workflow");
+  // "Run again" only for a failed run of this same workflow.
+  if (
+    retryOfId &&
+    !(await db.workflowRun.findFirst({ where: { id: retryOfId, workflow: key, status: "failed" } }))
+  )
+    throw new NotFoundError("Failed run");
   const run = await runWorkflow(db, key, {
     trigger: retryOfId ? "retry" : "manual",
     actorId: actor.id,

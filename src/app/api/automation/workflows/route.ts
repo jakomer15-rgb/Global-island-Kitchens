@@ -15,6 +15,7 @@ import { isWorkflowKey, runDueWorkflows, runWorkflow } from "@/server/workflows/
 export async function POST(request: Request): Promise<Response> {
   const secret = env().N8N_WEBHOOK_SECRET;
   if (!secret) return json({ error: "not_configured" }, 503);
+  if (Number(request.headers.get("content-length") ?? "0") > 1000) return json({ error: "too_large" }, 413);
   const body = await request.text();
   if (body.length > 1000) return json({ error: "too_large" }, 413);
   const signed = verifyWebhook(secret, {

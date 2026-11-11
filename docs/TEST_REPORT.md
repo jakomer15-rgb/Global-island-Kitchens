@@ -1,5 +1,30 @@
 # Test report
 
+## Release check, Stage 9 (2026-11-12): Stages 2–8 before release
+
+Security review of everything added since the last release (`df573a9..HEAD`, 125 files):
+
+- **Permissions:** all 34 new or changed admin pages call `requireActor`, every new server action (46) checks a
+  permission, and the services check again (`assertCan`), including exports, merges, imports, Places, retries.
+- **Routes:** document upload (same-origin, `chat.manage`, 4 MB, rate-limited); CSV exports (permission, audited,
+  formula-safe cells); `/api/cron/outbox` (bearer secret, constant-time); `/api/automation/workflows` (HMAC
+  signature with timestamp, 1 KB body, rate-limited, 503 without a secret).
+- **Customer-facing safety:** messages, campaigns and social posts are sent or published only after approval
+  (also enforced by database triggers for posts); unsubscribe links are signed and need a click; no customer
+  names or contact details go to the analytics AI.
+- **Secrets:** keys only in environment variables; never shown, logged or stored (integration checks keep a
+  keyed hash); Meta tokens sent in a header; Meta errors shortened and stripped of links.
+- `npm audit --omit=dev`: 0 vulnerabilities. No `dangerouslySetInnerHTML` or unsafe raw SQL added.
+- **Fixed:** workflow options now accept only each workflow's declared fields; the n8n start address refuses
+  bodies over 1 KB before reading them; "Run again" works only on a failed run of the same workflow (tests
+  added).
+
+Full suites after the fixes: lint, format, typecheck and build pass; unit 178 passed; database 160 passed; E2E
+(all projects) 245 passed, 0 failed, 71 skipped.
+
+Not run: Lighthouse (no public page changed apart from accepting prospect unsubscribe links) and
+`npm run launch:check` (needs the production environment; run it after the release).
+
 ## Workflows, Stage 8 (2026-11-12)
 
 - `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.

@@ -123,6 +123,20 @@ describe("workflow registry", () => {
     expect(run).toMatchObject({ status: "skipped", trigger: "manual", triggeredById: owner.id });
   });
 
+  it("accepts only the workflow's own options, and retries only its own failed runs", async () => {
+    await setWorkflow(db, owner, "qualified_follow_up", {
+      enabled: true,
+      config: { days: 5, since: "2000-01-01T00:00:00Z", injected: "x" },
+    });
+    const row = await db.workflowSetting.findUniqueOrThrow({ where: { key: "qualified_follow_up" } });
+    expect(row.config).toMatchObject({ days: 5 });
+    expect((row.config as Record<string, unknown>).injected).toBeUndefined();
+    expect((row.config as Record<string, unknown>).since).not.toBe("2000-01-01T00:00:00Z");
+    const skipped = await runWorkflowNow(db, owner, "weekly_campaign_report");
+    await expect(runWorkflowNow(db, owner, "qualified_follow_up", skipped!.id)).rejects.toThrow(/not found/);
+    await setWorkflow(db, owner, "qualified_follow_up", { enabled: false });
+  });
+
   it("counts a run as work only when it did something", () => {
     expect(didWork({ created: 0, skipped: "aiOff" })).toBe(false);
     expect(didWork({ created: 2 })).toBe(true);
