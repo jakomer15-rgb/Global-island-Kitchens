@@ -3,16 +3,16 @@ import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { json } from "@/server/http";
 import { processOutbox } from "@/server/outbox/worker";
-import { draftNoResponseFollowUps } from "@/server/outreach/messages";
 import { sweepRateLimits } from "@/server/rate-limit";
-import { queueDuePosts, refreshEngagement } from "@/server/social/posts";
-import { queueDueReports } from "@/server/analytics/report";
 import { getStorage } from "@/server/storage/driver";
 import { sweepStaleUploads } from "@/server/storage/files";
+import { runDueWorkflows } from "@/server/workflows/registry";
 
 /**
- * Scheduled job (host cron, every few minutes): delivers outbox events and clears expired rate-limit
- * buckets and abandoned uploads. Requires `Authorization: Bearer CRON_SECRET`.
+ * Scheduled job: runs the automation workflows that are due (each at its own interval, never twice at
+ * once), delivers outbox events, and clears expired rate-limit buckets and abandoned uploads. Called by
+ * Vercel Cron daily, and as often as every few minutes by an n8n Schedule trigger or a paid plan.
+ * Requires `Authorization: Bearer CRON_SECRET`.
  */
 export async function GET(request: Request): Promise<Response> {
   const secret = env().CRON_SECRET;
@@ -20,27 +20,14 @@ export async function GET(request: Request): Promise<Response> {
   const ok =
     secret && given.length === secret.length && timingSafeEqual(Buffer.from(given), Buffer.from(secret));
   if (!ok) return json({ error: "unauthorised" }, 401);
-  // Follow-up drafts for customers who stopped replying (only if the owner switched it on); they wait
-  // for approval, nothing is sent here.
-  const followUps = await draftNoResponseFollowUps(db).catch((error) => {
-    console.error("Follow-up drafting failed:", error instanceof Error ? error.message : "unknown");
-    return { drafted: 0, skipped: "error" as const };
-  });
-  // Approved posts whose scheduled time has come are queued for publishing.
-  const socialPosts = await queueDuePosts(db).catch((error) => {
-    console.error("Queuing scheduled posts failed:", error instanceof Error ? error.message : "unknown");
-    return { queued: 0 };
-  });
-  // Business reports switched on in Admin → Business analytics (each period emailed once).
-  const reports = await queueDueReports(db).catch((error) => {
-    console.error("Queuing reports failed:", error instanceof Error ? error.message : "unknown");
-    return { queued: 0 };
+  // Workflows only draft, queue or count: anything for customers or social media still needs approval.
+  const workflows = await runDueWorkflows(db).catch((error) => {
+    console.error("Workflow scheduler failed:", error instanceof Error ? error.message : "unknown");
+    return { error: "scheduler" };
   });
   const outbox = await processOutbox(db);
-  // Likes, comments and shares of recent posts (Meta only, when connected).
-  const engagement = await refreshEngagement(db).catch(() => ({ updated: 0, failed: 0 }));
   await sweepRateLimits(db);
   const storage = getStorage();
   const staleUploads = storage ? await sweepStaleUploads(db, storage) : 0;
-  return json({ outbox, staleUploads, followUps, socialPosts, engagement, reports });
+  return json({ workflows, outbox, staleUploads });
 }

@@ -56,6 +56,7 @@ const pages = [
   ["/admin/automation", "Overview"],
   ["/admin/automation/approvals", "Approvals"],
   ["/admin/automation/integrations", "Integrations"],
+  ["/admin/automation/workflows", "Workflows"],
   ["/admin/automation/logs", "System log"],
 ] as const;
 
@@ -348,6 +349,27 @@ test.describe("admin portal", () => {
     await page.getByLabel("Send to").fill("");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByText("Saved.")).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test("a workflow is switched on, run by hand and logged, then switched off", async ({ page }) => {
+    await signIn(page);
+    await page.goto("/admin/automation/workflows");
+    await expect(page.locator("main li[id]")).toHaveCount(9); // the brief's nine workflows
+    const card = page.locator("#qualified_follow_up");
+    await card.getByRole("checkbox", { name: "Switched on" }).check();
+    await card.getByLabel("Follow up after (days)").fill("2");
+    await card.getByRole("button", { name: "Save" }).click();
+    await expect(card.getByText("Saved.")).toBeVisible();
+    await card.getByRole("button", { name: "Run now" }).click();
+    await expect(card.getByText(/^Done: created \d+/)).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("table", { name: "Run log" }).getByText("Qualified lead → follow-up").first(),
+    ).toBeVisible();
+    await card.getByRole("checkbox", { name: "Switched on" }).uncheck();
+    await card.getByRole("button", { name: "Save" }).click();
+    await expect(card.getByText("Saved.")).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 

@@ -33,6 +33,13 @@ top right switches the Centre between English and Arabic; the rest of the admin 
     untested again.
   - _Error_: the last test failed; the message says why (for example "rejected the API key").
   - _Planned_: built in a later stage.
+- **Workflows:** the nine automations from the brief, each with what starts it, what happens, its status
+  (On, Off, Always on, Partly built, Not set up) and what it still needs, when it last ran and its results in
+  the last 7 days. The owner and general manager switch them on or off, change their options (days before a
+  follow-up, whether the AI writes project-photo posts), press **Run now**, and **Run again** on a failed run.
+  The run log lists every run that did something or failed. On the current hosting plan timer workflows run
+  each morning; with an n8n timer, every few minutes (DEPLOYMENT.md, "Workflows"). Workflows only prepare drafts,
+  follow-ups and reports: anything for customers or social media still waits for approval.
 - **System log:** every automated email, WhatsApp alert and n8n event with its result per channel. A
   delivery that kept failing shows **Retry** (owner and general manager): channels that already worked are
   not repeated. Customer details are not shown here.

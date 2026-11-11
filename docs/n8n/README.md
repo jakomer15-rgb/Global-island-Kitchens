@@ -31,6 +31,21 @@ others carry references and statuses; look the lead up in the admin.
 “Email the sales team at”, or `NOTIFY_EMAILS`) and, once set up, a WhatsApp alert to staff numbers. n8n
 doesn't need to repeat those.
 
+Also sent since Stages 6–7: `social.publish` (`postId`) when an approved post is queued for publishing, and
+`analytics.report` (`kind`, `periodStart`) when a report email is queued.
+
+## Running and starting workflows (Stage 8)
+
+The nine workflows run inside the platform (Automation Centre → Workflows). n8n can drive them:
+
+- **Every few minutes:** a Schedule Trigger → HTTP Request `GET /api/cron/outbox` with
+  `Authorization: Bearer <CRON_SECRET>`. Each workflow still runs at most at its own interval.
+- **One workflow now:** `POST /api/automation/workflows` with `{"workflow":"<key>"}` (or `"due"`), signed exactly
+  like the events you receive (below), with `N8N_WEBHOOK_SECRET`. The answer is the run's status and counts.
+
+Starting a workflow never sends anything to a customer or publishes anything: they draft, queue and count, and
+people approve.
+
 ## Automated sales follow-ups (design, not built)
 
 What the owner asked for, and how to build it safely when the accounts exist. Nothing here runs today.

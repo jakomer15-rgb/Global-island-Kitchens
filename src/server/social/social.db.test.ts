@@ -338,16 +338,19 @@ describe("social posts: publishing", () => {
 
   it("reads engagement for published Meta posts and reports it", async () => {
     const p = await approved({ platforms: ["facebook"] }, "now");
+    const externalId = `9_${uid()}`;
     await publishSocialPost(db, metaEnv, p.id, {
       storage,
-      facebook: async () => ({ externalId: `9_${uid()}`, permalink: null }),
+      facebook: async () => ({ externalId, permalink: null }),
     });
+    // This post gets far more engagement than any earlier test post, so it tops the report.
     const r = await refreshEngagement(db, metaEnv, {
-      fetchMetrics: async () => ({ likes: 7, comments: 2, shares: 1 }),
+      fetchMetrics: async (_p, id) =>
+        id === externalId ? { likes: 70000, comments: 2, shares: 1 } : { likes: 1, comments: 0, shares: 0 },
     });
     expect(r.updated).toBeGreaterThanOrEqual(1);
     const t = await db.socialPostTarget.findFirstOrThrow({ where: { postId: p.id } });
-    expect(t).toMatchObject({ likes: 7, comments: 2, shares: 1 });
+    expect(t).toMatchObject({ likes: 70000, comments: 2, shares: 1 });
     expect(await refreshEngagement(db, noMeta)).toMatchObject({ skipped: "not_configured" });
     const perf = await socialPerformance(db, sales, 7);
     expect(perf.perPlatform.find((x) => x.platform === "facebook")!.published).toBeGreaterThanOrEqual(1);

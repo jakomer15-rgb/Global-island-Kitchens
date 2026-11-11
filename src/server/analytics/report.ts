@@ -140,32 +140,67 @@ export function reportEmail(r: BusinessReport, siteUrl: string) {
   return { subject: title, text };
 }
 
+/** Records a report for one period once and queues its email; false when it was already queued. */
+async function queueOnce(db: Db, kind: ReportKind | "campaigns", p: Period) {
+  return db.$transaction(async (tx) => {
+    const inserted = await tx.$executeRaw`
+      INSERT INTO "analytics_report_runs" ("id", "kind", "period_start")
+      VALUES (${`arr_${kind}_${p.from}`}, ${kind}, ${p.start})
+      ON CONFLICT ("kind", "period_start") DO NOTHING`;
+    if (inserted) await enqueue(tx, "analytics.report", { kind, periodStart: p.start.toISOString() });
+    return inserted > 0;
+  });
+}
+
 /** The last completed period of each report kind switched on, queued once each (scheduled job). */
 export async function queueDueReports(db: Db, now = new Date()) {
   const row = await db.siteSetting.findUnique({ where: { key: "analyticsReports" } });
   const s = parseSetting("analyticsReports", row?.value);
   let queued = 0;
   for (const kind of ["daily", "weekly", "monthly"] as const) {
-    if (!s[kind]) continue;
-    const p: Period = reportPeriod(kind, now, 1);
-    const created = await db.$transaction(async (tx) => {
-      const inserted = await tx.$executeRaw`
-        INSERT INTO "analytics_report_runs" ("id", "kind", "period_start")
-        VALUES (${`arr_${kind}_${p.from}`}, ${kind}, ${p.start})
-        ON CONFLICT ("kind", "period_start") DO NOTHING`;
-      if (inserted) await enqueue(tx, "analytics.report", { kind, periodStart: p.start.toISOString() });
-      return inserted > 0;
-    });
-    if (created) queued++;
+    if (s[kind] && (await queueOnce(db, kind, reportPeriod(kind, now, 1)))) queued++;
   }
   return { queued };
+}
+
+/** Workflow "Weekly campaign → performance report": last week's campaign results, queued once a week. */
+export async function queueCampaignReport(db: Db, now = new Date()) {
+  return { queued: (await queueOnce(db, "campaigns", reportPeriod("weekly", now, 1))) ? 1 : 0 };
+}
+
+/** Campaign results of one week as a plain-text email. */
+export function campaignReportEmail(c: Awaited<ReturnType<typeof campaignResults>>, siteUrl: string) {
+  const subject = `Weekly campaign report: ${c.period.from} to ${c.period.to}`;
+  const text = [
+    subject,
+    "Global Island Kitchens — counted from the database.",
+    "",
+    "EMAIL CAMPAIGNS TO PROSPECTS",
+    ...(c.emailCampaigns.length
+      ? c.emailCampaigns.map(
+          (x) =>
+            `- ${x.campaign} (${x.status}): ${x.emailsSentInPeriod} emails sent this week; now ${x.nowInterested} interested, ${x.nowConverted} converted, ${x.unsubscribed} unsubscribed`,
+        )
+      : ["- none this week"]),
+    "",
+    "SOCIAL MEDIA CAMPAIGNS",
+    ...(c.socialCampaigns.length
+      ? c.socialCampaigns.map(
+          (x) =>
+            `- ${x.campaign}: ${x.publications} publications, ${x.likes} likes, ${x.comments} comments, ${x.shares} shares`,
+        )
+      : ["- none this week"]),
+    "",
+    `Details: ${siteUrl}/admin/marketing/campaigns and ${siteUrl}/admin/social/campaigns`,
+  ].join("\n");
+  return { subject, text };
 }
 
 /** Outbox delivery of one emailed report to the chosen addresses (or NOTIFY_EMAILS). */
 export async function sendReportEmail(
   db: Db,
   e: Env,
-  kind: ReportKind,
+  kind: ReportKind | "campaigns",
   periodStart: string,
   siteUrl: string,
   send = sendEmail,
@@ -181,11 +216,12 @@ export async function sendReportEmail(
   if (!e.RESEND_API_KEY || !e.EMAIL_FROM || to.length === 0) return "not_configured";
   // The period that started at periodStart (a minute into it picks it); "now" figures as of sending.
   const anchor = new Date(new Date(periodStart).getTime() + 60_000);
-  const r = await buildReport(db, kind, new Date(), 0, anchor);
-  const { subject, text } = reportEmail(r, siteUrl);
+  const { subject, text } =
+    kind === "campaigns"
+      ? campaignReportEmail(await campaignResults(db, reportPeriod("weekly", anchor, 0)), siteUrl)
+      : reportEmail(await buildReport(db, kind, new Date(), 0, anchor), siteUrl);
   await send(e, to, subject, text);
   return "sent";
 }
-
 export const reportSettingsReady = (e: Pick<Env, "RESEND_API_KEY" | "EMAIL_FROM"> = readEnv()) =>
   Boolean(e.RESEND_API_KEY && e.EMAIL_FROM);

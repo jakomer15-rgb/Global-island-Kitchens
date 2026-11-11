@@ -87,6 +87,8 @@ model User {
   socialPostsDecided SocialPost[]         @relation("SocialPostDecider")
   socialCampaigns    SocialCampaign[]     @relation("SocialCampaignCreator")
   analyticsQuestions AnalyticsQuestion[]
+  workflowsChanged   WorkflowSetting[]
+  workflowRuns       WorkflowRun[]
 
   @@map("users")
 }
@@ -1768,4 +1770,43 @@ model AnalyticsReportRun {
 
   @@unique([kind, periodStart])
   @@map("analytics_report_runs")
+}
+
+// ───────────────────────────── Workflows (Stage 8) ─────────────────────────────
+
+/// One row per workflow (src/server/workflows/registry.ts): its switch (for workflows without a setting of
+/// their own), its options and when the scheduler last looked at it.
+model WorkflowSetting {
+  key           String    @id
+  enabled       Boolean   @default(false)
+  config        Json      @default("{}")
+  lastCheckedAt DateTime? @map("last_checked_at") @db.Timestamptz(3)
+  updatedById   String?   @map("updated_by_id")
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("workflow_settings")
+}
+
+/// A workflow run that did something or failed (runs with nothing to do only update lastCheckedAt).
+model WorkflowRun {
+  id            String    @id @default(cuid())
+  workflow      String
+  /// schedule, manual, n8n or retry.
+  trigger       String
+  /// succeeded, failed or skipped (switched off or not set up when started by hand).
+  status        String
+  startedAt     DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt    DateTime? @map("finished_at") @db.Timestamptz(3)
+  result        Json?
+  error         String?
+  retryOfId     String?   @map("retry_of_id")
+  triggeredById String?   @map("triggered_by_id")
+
+  triggeredBy User? @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([workflow, startedAt])
+  @@index([status, startedAt])
+  @@map("workflow_runs")
 }

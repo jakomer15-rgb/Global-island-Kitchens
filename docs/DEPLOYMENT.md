@@ -180,6 +180,26 @@ outbox events (with retries and backoff), deletes expired rate-limit buckets, an
 never attached to a request after 24 hours. New enquiries are also delivered straight after
 submission; the job covers retries.
 
+## Workflows (Stage 8)
+
+The same job runs the automation workflows that are due (Automation Centre → Workflows): each at most at its
+own interval (5 minutes to 6 hours), claimed with one atomic update so two overlapping calls never run it
+twice. On the Vercel Hobby plan the job runs once a day; to run workflows every few minutes without a paid plan,
+use n8n:
+
+1. In n8n add a **Schedule Trigger** (every 10 minutes) and an **HTTP Request** node: `GET
+https://<site>/api/cron/outbox`, header `Authorization: Bearer <CRON_SECRET>`.
+2. Optional, to start one workflow from n8n: `POST https://<site>/api/automation/workflows` with body
+   `{"workflow":"<key>"}` (or `"due"`), headers `X-GIK-Timestamp` (Unix seconds) and `X-GIK-Signature` = hex
+   HMAC-SHA256 of `${timestamp}.${body}` with `N8N_WEBHOOK_SECRET` (the same signature the app puts on the
+   webhooks it sends; see docs/n8n/README.md). Unsigned, wrong or older-than-five-minutes requests get 401; without
+   `N8N_WEBHOOK_SECRET` the address answers 503.
+
+Workflow keys: `website_enquiry_reply`, `whatsapp_enquiry`, `new_lead_alert`, `qualified_follow_up`,
+`no_response_follow_up`, `project_photo_social`, `approved_post_publishing`, `weekly_campaign_report`,
+`management_reports`. Workflows only draft, queue and count; nothing for customers or social media leaves without
+approval.
+
 ## Object storage (Cloudflare R2)
 
 - Private bucket; no public access.

@@ -183,6 +183,7 @@ describe("admin navigation", () => {
       "/admin/ai-agent",
       "/admin/analytics",
       "/admin/automation/integrations",
+      "/admin/automation/workflows",
       "/admin/automation/logs",
     ]);
   });

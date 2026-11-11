@@ -33,7 +33,7 @@ const modules: Module[] = [
   { key: "campaigns", href: "/admin/marketing/campaigns", permission: "marketing.manage" },
   { key: "analytics", href: "/admin/analytics", permission: "analytics.read" },
   { key: "knowledge", href: "/admin/ai-agent#knowledge", permission: "chat.manage" },
-  { key: "workflows", stage: 8 },
+  { key: "workflows", href: "/admin/automation/workflows", permission: "automation.read" },
   { key: "integrations", href: "/admin/automation/integrations", permission: "automation.read" },
   { key: "users", href: "/admin/staff", permission: "staff.manage" },
   { key: "logs", href: "/admin/automation/logs", permission: "automation.read" },

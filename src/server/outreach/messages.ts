@@ -384,6 +384,59 @@ export async function draftNoResponseFollowUps(
   return { drafted, skipped: null };
 }
 
+const WEBSITE_SOURCES = ["website_quote", "website_consultation", "website_contact", "website_chat"] as const;
+
+/**
+ * Workflow "Website enquiry → AI response" (Stage 8): for website enquiries received since `since` that have
+ * no message yet and whose customer agreed to email, the AI drafts a first reply. Drafts wait for approval
+ * like every other message; nothing is sent here.
+ */
+export async function draftNewEnquiryReplies(
+  db: Db,
+  options: { since: Date; now?: Date; limit?: number; generate?: AiGenerate; env?: Env },
+) {
+  const e = options.env ?? readEnv();
+  if (!aiConfigured(e) || !(await aiAvailable(db, "leadAssistant")))
+    return { drafted: 0, skipped: "aiOff" as const };
+  if (!emailReady(e)) return { drafted: 0, skipped: "emailOff" as const };
+  const limit = options.limit ?? 10;
+  const leads = await db.lead.findMany({
+    where: {
+      archivedAt: null,
+      source: { in: [...WEBSITE_SOURCES] },
+      status: "new",
+      createdAt: { gte: options.since, lte: options.now ?? new Date() },
+      messages: { none: {} },
+      customer: { email: { not: null }, archivedAt: null },
+    },
+    orderBy: { createdAt: "asc" },
+    take: limit * 3,
+    select: { id: true, customerId: true },
+  });
+  let drafted = 0;
+  let failed = 0;
+  for (const lead of leads) {
+    if (drafted >= limit) break;
+    if (!(await emailEligibility(db, lead.customerId)).ok) continue;
+    try {
+      const { draft } = await generateMessage(
+        db,
+        lead.id,
+        "This is the first reply to the customer's new enquiry: thank them, confirm what they asked about, and ask for the missing details (measurements, location, timeline) or offer a showroom visit or call.",
+        options.generate ?? aiGenerate,
+      );
+      await db.$transaction((tx) =>
+        createMessage(tx, { leadId: lead.id, ...draft, origin: "ai", createdById: null }),
+      );
+      drafted++;
+    } catch (error) {
+      failed++;
+      console.warn("Enquiry reply draft failed:", error instanceof Error ? error.message : "unknown");
+    }
+  }
+  return { drafted, failed, skipped: null };
+}
+
 export const messageStatusNames: Record<CustomerMessageStatus, string> = {
   pending_approval: "Waiting for approval",
   approved: "Approved, sending",

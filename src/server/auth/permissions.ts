@@ -43,6 +43,8 @@ export const permissions = {
   "analytics.read":
     "Open business reports (daily, weekly, monthly) and ask the analytics agent questions answered from the database",
   "analytics.manage": "Choose which reports are emailed and to whom",
+  "workflows.manage":
+    "Switch automation workflows on or off, change their options, run them now and retry failed runs",
   "integrations.manage":
     "Test connections to outside services (Claude, email, storage, WhatsApp) and retry failed deliveries",
 } as const;

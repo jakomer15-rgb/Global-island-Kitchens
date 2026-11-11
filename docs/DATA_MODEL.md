@@ -174,6 +174,16 @@ Opus 5.5), owner instructions, welcome texts, daily message limit.
 A second contact form from the same conversation, or from a customer with an open lead (new, contacted,
 qualified or quoted) from the last 60 days, is added to that lead instead of creating a new one.
 
+### Workflows (Stage 8, migration `20261112090000_workflows`)
+
+| Model             | Key fields                                                                                                                                                        | Rules                                                                                                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WorkflowSetting` | key (one of the nine in `src/server/workflows/registry.ts`), enabled, config (JSON options, `since` when switched on), lastCheckedAt, updatedBy                   | One row per workflow, created on first use. `no_response_follow_up` and `management_reports` keep their switch in the `salesFollowUp` and `analyticsReports` settings |
+| `WorkflowRun`     | workflow, trigger (schedule, manual, n8n, retry), status (succeeded, failed, skipped), startedAt, finishedAt, result (JSON counts), error, retryOfId, triggeredBy | CHECK trigger and status values. Timer runs with nothing to do aren't logged (only `lastCheckedAt` moves)                                                             |
+
+Also: permission `workflows.manage` (owner, general manager); `analytics_report_runs.kind` may be `campaigns`
+(weekly campaign report); `/api/automation/workflows` (signed POST for n8n).
+
 ### AI Business Analytics Agent (Stage 7, 2026-11-11, migration `20261111220000_analytics_agent`)
 
 | Model                | Key fields                                                                                                                 | Rules                                                                                                                           |

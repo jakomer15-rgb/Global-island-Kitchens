@@ -591,6 +591,8 @@ export async function refreshEngagement(
       externalId: { not: null },
       platform: { in: ["facebook", "instagram"] },
       publishedAt: { gte: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000) },
+      // Read at most every 6 hours per post, however often the scheduler runs.
+      OR: [{ metricsAt: null }, { metricsAt: { lt: new Date(now.getTime() - 6 * 60 * 60 * 1000) } }],
     },
     orderBy: { metricsAt: { sort: "asc", nulls: "first" } },
     take: 50,

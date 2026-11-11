@@ -56,6 +56,19 @@ const aiPost = z.object({
 /** Drafts the post's text from its title and brief, and suggests up to three photos. Draft posts only. */
 export async function writePostWithAi(db: Db, actor: Actor, id: string, generate: AiGenerate = aiGenerate) {
   await readyForAi(db, actor);
+  return aiWritePost(db, id, actor.id, generate);
+}
+
+/**
+ * The drafting itself, also used by the "new project photo" workflow (no person: `actorId` null). Callers
+ * check the AI switch and permissions.
+ */
+export async function aiWritePost(
+  db: Db,
+  id: string,
+  actorId: string | null,
+  generate: AiGenerate = aiGenerate,
+) {
   const post = await db.socialPost.findUnique({ where: { id }, include: { campaign: true } });
   if (!post) throw new NotFoundError("Post");
   if (post.status !== "draft")
@@ -117,7 +130,7 @@ export async function writePostWithAi(db: Db, actor: Actor, id: string, generate
   await db.$transaction(async (tx) => {
     await tx.socialPost.update({ where: { id }, data });
     await audit(tx, {
-      actorId: actor.id,
+      actorId,
       action: "social_post.ai_written",
       entityType: "social_post",
       entityId: id,

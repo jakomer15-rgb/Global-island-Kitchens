@@ -75,7 +75,7 @@ export interface SocialPostPublish {
 
 /** A business report to email for a completed period (Stage 7). */
 export interface AnalyticsReportDue {
-  kind: "daily" | "weekly" | "monthly";
+  kind: "daily" | "weekly" | "monthly" | "campaigns";
   periodStart: string;
 }
 

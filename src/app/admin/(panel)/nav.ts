@@ -35,6 +35,7 @@ const groups: {
         label: centreText.nav.integrations,
         permission: "automation.read",
       },
+      { href: "/admin/automation/workflows", label: centreText.nav.workflows, permission: "automation.read" },
       { href: "/admin/automation/logs", label: centreText.nav.logs, permission: "automation.read" },
     ],
   },

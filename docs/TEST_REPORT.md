@@ -1,5 +1,23 @@
 # Test report
 
+## Workflows, Stage 8 (2026-11-12)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 178 passed (admin menu test updated for the Workflows item).
+- Database (`npm run test:db`): 159 passed, including 10 new in `workflows.db.test.ts`: the nine workflows and
+  their defaults, only `workflows.manage` changes or runs them, a switched-off workflow is skipped (logged when
+  started by hand), qualified lead → one follow-up per lead for its salesperson after the chosen days, website
+  enquiry → AI reply draft waiting for approval only with email consent and only once (none without email
+  sending), new project photo → one draft post (photos from before switching on ignored), the weekly campaign
+  report queued once and emailed, switches stored on other screens kept in step, and the scheduler running each
+  due workflow exactly once when called twice at the same moment. One Stage 6 test was made independent of
+  older test data (engagement "top posts").
+- E2E (`npm run test:e2e`, production build, all projects): 245 passed, 0 failed, 71 skipped. New: the Workflows
+  page passes axe; a workflow switched on, run by hand, seen in the run log and switched off; the n8n start
+  address refuses an unsigned request.
+- Not tested: a real n8n instance calling the scheduler or the signed start address (no n8n locally); the
+  signature check is the same function the existing webhook tests cover.
+
 ## AI Business Analytics Agent, Stage 7 (2026-11-11)
 
 - `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
