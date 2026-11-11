@@ -22,7 +22,7 @@ export default async function ApprovalsPage() {
         description={tr(T.description, lang)}
         actions={
           <ul className="flex flex-wrap gap-2 text-sm">
-            {(["customer_message", "ai_draft", "designer"] as const).map((k) =>
+            {(["campaign", "customer_message", "ai_draft", "designer"] as const).map((k) =>
               queue.counts[k] === null ? null : (
                 <li key={k}>
                   <Badge tone={queue.counts[k] ? "warn" : "neutral"}>

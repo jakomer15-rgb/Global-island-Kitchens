@@ -70,6 +70,19 @@ reply, and the daily limit set on that page (default 1,500 AI calls, background 
 whole site; also set a monthly spending limit in the Anthropic console. To add the key on Vercel: Project → Settings → Environment
 Variables → `ANTHROPIC_API_KEY` (Production), then redeploy.
 
+**Knowledge documents (Stage 4).** PDFs and images uploaded in Admin → AI agent → Documents are sent to
+Anthropic once to read their text (needs `ANTHROPIC_API_KEY`); text files are read on the server. Uploads are
+limited to 4 MB (Vercel's request limit is about 4.5 MB); the upload route allows 300 seconds.
+
+**Google Places (Stage 5, optional).** In Google Cloud: create a project, enable **Places API (New)**, create an
+API key restricted to that API, set a budget alert, then add `GOOGLE_PLACES_API_KEY` in Vercel (Production)
+and redeploy. Each search in Admin → Marketing → Find businesses is billed by Google (limit: 30 searches an hour
+per staff member). Test it in Automation Centre → Integrations.
+
+**Customer and campaign emails (Stages 4–5).** Messages to customers and campaign emails to prospects use the
+same Resend settings and are only sent after approval (`outreach.approve`). Campaign emails go 20 per outbox
+run (right after approval, then at each scheduled run).
+
 **Sales-team emails for chat leads.** Each chat contact form emails the sales team: customer, requirements,
 rating, chat summary and links to the lead and conversation. Needs `RESEND_API_KEY` and `EMAIL_FROM` (Resend:
 create an account, verify the sending domain under Domains, create an API key, add both on Vercel), and the

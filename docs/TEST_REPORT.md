@@ -1,5 +1,28 @@
 # Test report
 
+## AI Marketing Agent, Stage 5 (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 159 passed, including 9 new in `src/server/marketing/marketing.test.ts` (CSV reader, prospect
+  score, website/email/phone checks, signed unsubscribe links, template filling with the prospect's country,
+  sender/reason/unsubscribe in every email, Places request asks no contact fields, Saturday-based weeks) and a
+  new Google Places connection test.
+- Database (`npm run test:db`): 129 passed, including 6 new in `marketing.db.test.ts`: scoring and duplicate
+  refusal (email, website domain, name in the same country), import with skipped rows reported, status and
+  conversion to a `GIK-P` lead, a full campaign (eligibility, approval permission, email set-up required,
+  unsubscribe before approval drops the email, sending, sent email final, no second campaign within 30 days),
+  Places search marking known businesses, report counts.
+- Fixed during testing: an Omani prospect without an area got "projects in Bahrain"; the template now falls back
+  to the prospect's own country.
+- E2E (`npx playwright test e2e/admin.spec.ts e2e/automation.spec.ts e2e/designers.spec.ts --project desktop`,
+  production build): 14 passed, 1 failed: "a new sales manager sees only the CRM" timed out under parallel load
+  and passes when run alone (`--workers=1`). The test database holds 1,185 staff accounts left by earlier runs,
+  which slows the staff page; resetting the test database would fix it (not done: needs the owner's approval).
+  New: six marketing pages pass axe; add a prospect → create, write, prepare and submit a campaign. The
+  all-pages test now allows 12 minutes for 30 pages.
+- Browser check (dev): prospects, find businesses ("Awaiting credentials"), reports with real local leads.
+- Not tested: a real Google Places search and real campaign emails (no keys locally).
+
 ## AI Sales Agent, Stage 4 part A (2026-11-11)
 
 - `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.

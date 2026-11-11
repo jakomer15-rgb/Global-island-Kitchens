@@ -47,6 +47,15 @@ const groups: {
     ],
   },
   {
+    label: "Marketing",
+    items: [
+      { href: "/admin/marketing", label: "Prospects", permission: "marketing.manage", exact: true },
+      { href: "/admin/marketing/places", label: "Find businesses", permission: "marketing.manage" },
+      { href: "/admin/marketing/campaigns", label: "Campaigns", permission: "marketing.manage" },
+      { href: "/admin/marketing/reports", label: "Lead generation report", permission: "marketing.manage" },
+    ],
+  },
+  {
     label: "Sales and projects",
     items: [
       { href: "/admin/quotations", label: "Quotations", permission: "quotation.read" },

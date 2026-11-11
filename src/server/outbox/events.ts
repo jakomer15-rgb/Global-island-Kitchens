@@ -62,8 +62,15 @@ export interface CustomerMessageApproved {
   leadId: string;
 }
 
+/** One approved campaign email to a prospect (Stage 5). */
+export interface CampaignMessageQueued {
+  campaignMessageId: string;
+  campaignId: string;
+}
+
 export interface OutboxEvents {
   "customer.message": CustomerMessageApproved;
+  "campaign.message": CampaignMessageQueued;
   "enquiry.received": EnquiryReceived;
   "chat.lead": ChatLead;
   "lead.status_changed": LeadStatusChanged;

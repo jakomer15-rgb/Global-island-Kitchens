@@ -6,6 +6,7 @@ import type { Db } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { RuleError } from "@/server/errors";
 import { rateLimit } from "@/server/rate-limit";
+import { placesRequest } from "@/server/marketing/places";
 
 /**
  * Outside services the platform uses, and their real connection status (Automation Centre →
@@ -186,7 +187,23 @@ export const integrations: readonly IntegrationDef[] = [
   { key: "cron", envVars: ["CRON_SECRET"], values: (e) => [e.CRON_SECRET] },
   { key: "meta", envVars: [], plannedStage: 4 },
   { key: "linkedin", envVars: [], plannedStage: 6 },
-  { key: "google_places", envVars: [], plannedStage: 5 },
+  {
+    key: "google_places",
+    envVars: ["GOOGLE_PLACES_API_KEY"],
+    values: (e) => [e.GOOGLE_PLACES_API_KEY],
+    async test(e, f) {
+      // One real search for a single result (billed by Google as one request).
+      const { url, init } = placesRequest(e.GOOGLE_PLACES_API_KEY!, "kitchen", "BH");
+      const body = JSON.parse(init.body);
+      const res = await call(f, url, { ...init, body: JSON.stringify({ ...body, pageSize: 1 }) });
+      if (res.status === 400 || res.status === 401 || res.status === 403)
+        throw new IntegrationTestError(
+          `Google refused the key (${res.status}). Check it and that "Places API (New)" is enabled in Google Cloud.`,
+        );
+      if (!res.ok) throw new IntegrationTestError(`Google answered with an error (${res.status}).`);
+      return "API key accepted; Places search works.";
+    },
+  },
   { key: "canva", envVars: [], plannedStage: 6 },
   { key: "tiktok", envVars: [], plannedStage: "future" },
 ];

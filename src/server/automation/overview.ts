@@ -120,7 +120,7 @@ export async function centreOverview(db: Db, actor: Actor, now = new Date()) {
 }
 
 export type ApprovalItem = {
-  kind: "ai_draft" | "designer" | "customer_message";
+  kind: "ai_draft" | "designer" | "customer_message" | "campaign";
   id: string;
   /** Short description: draft type and lead reference, or the designer's name. */
   title: string;
@@ -139,6 +139,17 @@ export async function approvalQueue(db: Db, actor: Actor, limit = 100) {
   const showDesigners = can(actor, "designer.manage");
   const showMessages = can(actor, "outreach.approve");
   const pendingMessage = { status: "pending_approval" as const, lead: { archivedAt: null } };
+  const [campaigns, campaignCount] = await Promise.all([
+    showMessages
+      ? db.campaign.findMany({
+          where: { status: "pending_approval" },
+          orderBy: { createdAt: "asc" },
+          take: limit,
+          select: { id: true, name: true, createdAt: true, _count: { select: { messages: true } } },
+        })
+      : Promise.resolve([]),
+    showMessages ? db.campaign.count({ where: { status: "pending_approval" } }) : Promise.resolve(0),
+  ]);
   const [messages, messageCount] = await Promise.all([
     showMessages
       ? db.customerMessage.findMany({
@@ -217,15 +228,24 @@ export async function approvalQueue(db: Db, actor: Actor, limit = 100) {
       createdAt: m.createdAt,
       href: `/admin/leads/${m.lead.id}#messages`,
     })),
+    ...campaigns.map((c) => ({
+      kind: "campaign" as const,
+      id: c.id,
+      title: c.name,
+      detail: `${c._count.messages} email(s)`,
+      createdAt: c.createdAt,
+      href: `/admin/marketing/campaigns/${c.id}`,
+    })),
   ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
   return {
     items: items.slice(0, limit),
     counts: {
       customer_message: showMessages ? messageCount : null,
+      campaign: showMessages ? campaignCount : null,
       ai_draft: showDrafts ? draftCount : null,
       designer: showDesigners ? designerCount : null,
     },
-    total: draftCount + designerCount + messageCount,
+    total: draftCount + designerCount + messageCount + campaignCount,
   };
 }

@@ -25,12 +25,12 @@ type Module = {
 const modules: Module[] = [
   { key: "overview", href: "/admin/automation", permission: "automation.read" },
   { key: "salesAgent", href: "/admin/ai-sales", permission: "lead.read" },
-  { key: "marketingAgent", stage: 5 },
+  { key: "marketingAgent", href: "/admin/marketing", permission: "marketing.manage" },
   { key: "leads", href: "/admin/leads", permission: "lead.read" },
   { key: "customers", href: "/admin/customers", permission: "customer.read" },
   { key: "social", stage: 6 },
   { key: "calendar", stage: 6 },
-  { key: "campaigns", stage: 5 },
+  { key: "campaigns", href: "/admin/marketing/campaigns", permission: "marketing.manage" },
   { key: "analytics", stage: 7 },
   { key: "knowledge", href: "/admin/ai-agent#knowledge", permission: "chat.manage" },
   { key: "workflows", stage: 8 },
@@ -172,9 +172,28 @@ export default async function AutomationOverviewPage() {
                 )}
               </p>
             </li>
+            <li className="border border-line p-4">
+              <p className="font-medium">{tr(A.marketing.name, lang)}</p>
+              <p className="mt-1">
+                <Badge tone="good">{tr(A.marketing.live, lang)}</Badge>
+              </p>
+              <p className="mt-2 text-sm text-ink-muted">{tr(A.marketing.about, lang)}</p>
+              {can(actor, "marketing.manage") && (
+                <p className="mt-2 flex flex-wrap gap-x-4 text-sm">
+                  <Link href="/admin/marketing" className="underline underline-offset-4">
+                    {tr(A.marketing.prospects, lang)}
+                  </Link>
+                  <Link href="/admin/marketing/campaigns" className="underline underline-offset-4">
+                    {tr(A.marketing.campaigns, lang)}
+                  </Link>
+                  <Link href="/admin/marketing/reports" className="underline underline-offset-4">
+                    {tr(A.marketing.report, lang)}
+                  </Link>
+                </p>
+              )}
+            </li>
             {(
               [
-                ["marketing", 5],
                 ["social", 6],
                 ["analytics", 7],
               ] as const

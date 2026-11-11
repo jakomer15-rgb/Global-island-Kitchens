@@ -77,6 +77,10 @@ export const centreText = {
         "Prospect database for designers, architects, developers and contractors in Bahrain and the GCC, scoring and approved outreach.",
         "قاعدة بيانات للعملاء المرتقبين من المصممين والمعماريين والمطورين والمقاولين في البحرين والخليج، مع تقييمهم وتواصل معتمد.",
       ),
+      live: t("Working: prospects, campaigns and reports", "يعمل: العملاء المرتقبون والحملات والتقارير"),
+      prospects: t("Prospects", "العملاء المرتقبون"),
+      campaigns: t("Campaigns", "الحملات"),
+      report: t("Report", "التقرير"),
     },
     social: {
       name: t("AI Social Media Marketing Agent", "وكيل التسويق عبر وسائل التواصل"),
@@ -122,6 +126,7 @@ export const centreText = {
     review: t("Review", "مراجعة"),
     kinds: {
       customer_message: t("Message to a customer", "رسالة إلى عميل"),
+      campaign: t("Marketing campaign", "حملة تسويقية"),
       ai_draft: t("AI draft", "مسودة ذكاء اصطناعي"),
       designer: t("Designer registration", "تسجيل مصمم"),
     },
@@ -131,8 +136,8 @@ export const centreText = {
       blog_post: t("Blog post", "مقال مدونة"),
     } as Record<string, Text>,
     later: t(
-      "Later stages add outbound campaigns and social media posts to this queue.",
-      "ستضيف المراحل القادمة الحملات الخارجية ومنشورات وسائل التواصل إلى هذه القائمة.",
+      "Social media posts are added to this queue in a later stage.",
+      "ستُضاف منشورات وسائل التواصل إلى هذه القائمة في مرحلة لاحقة.",
     ),
   },
   integrations: {
@@ -269,8 +274,8 @@ export const centreText = {
     google_places: {
       name: t("Google Places", "Google Places"),
       purpose: t(
-        "Finding businesses (contractors, developers, designers) from public listings, for the prospect database.",
-        "البحث عن الشركات (مقاولون ومطورون ومصممون) من القوائم العامة لقاعدة العملاء المرتقبين.",
+        "Finding businesses (contractors, developers, designers) from Google's listings for the prospect list (Marketing → Find businesses). Google charges per search.",
+        "البحث عن الشركات (مقاولون ومطورون ومصممون) من قوائم Google لقائمة العملاء المرتقبين (التسويق ← البحث عن شركات). تحتسب Google رسومًا لكل بحث.",
       ),
     },
     canva: {

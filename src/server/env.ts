@@ -38,6 +38,8 @@ const schema = z
     /** Quotation PDFs: a Chrome executable, or the WebSocket endpoint of a running Chrome. */
     CHROME_PATH: z.preprocess((v) => v || undefined, z.string().optional()),
     BROWSER_WS_ENDPOINT: z.preprocess((v) => v || undefined, z.string().url().optional()),
+    /** Google Places API (New), for finding businesses for the prospect list (Stage 5). Optional. */
+    GOOGLE_PLACES_API_KEY: z.preprocess((v) => v || undefined, z.string().min(20).optional()),
     // AI assistants (drafts only). Off until a key is set here AND switched on in Admin → Settings.
     ANTHROPIC_API_KEY: z.preprocess((v) => v || undefined, z.string().min(20).optional()),
     AI_MODEL: z.preprocess((v) => v || undefined, z.string().default("claude-sonnet-5-5")),

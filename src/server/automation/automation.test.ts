@@ -131,8 +131,19 @@ describe("connection tests (fake provider answers)", () => {
   });
 
   it("has no test for n8n, the scheduled job or planned integrations (nothing is sent to try them)", () => {
-    for (const key of ["n8n", "cron", "meta", "linkedin", "google_places", "canva", "tiktok"] as const)
+    for (const key of ["n8n", "cron", "meta", "linkedin", "canva", "tiktok"] as const)
       expect(def(key).test).toBeUndefined();
+  });
+
+  it("Google Places: one single-result search with the key in a header (Stage 5)", async () => {
+    const e = { ...baseEnv, GOOGLE_PLACES_API_KEY: "AIza-test-key-0000000000" } as Env;
+    const f = reply(200, { places: [] });
+    await expect(def("google_places").test!(e, f)).resolves.toMatch(/accepted/);
+    const [url, init] = (f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0]!;
+    expect(url).toBe("https://places.googleapis.com/v1/places:searchText");
+    expect((init.headers as Record<string, string>)["x-goog-api-key"]).toBe("AIza-test-key-0000000000");
+    expect(JSON.parse(init.body as string).pageSize).toBe(1);
+    await expect(def("google_places").test!(e, reply(403))).rejects.toThrow(/refused the key/);
   });
 });
 

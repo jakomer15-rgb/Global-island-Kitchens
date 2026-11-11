@@ -79,6 +79,10 @@ model User {
   documentsUpdated   KnowledgeDocument[]  @relation("DocumentEditor")
   messagesWritten    CustomerMessage[]    @relation("MessageAuthor")
   messagesDecided    CustomerMessage[]    @relation("MessageDecider")
+  prospectsAssigned  Prospect[]           @relation("ProspectAssignee")
+  prospectsCreated   Prospect[]           @relation("ProspectCreator")
+  campaignsCreated   Campaign[]           @relation("CampaignCreator")
+  campaignsDecided   Campaign[]           @relation("CampaignDecider")
 
   @@map("users")
 }
@@ -242,6 +246,8 @@ enum LeadSource {
   instagram
   /// GIK Smart Assistant, the website's AI sales chat.
   website_chat
+  /// A prospect from the marketing agent that became interested (Stage 5).
+  prospecting
   other
 }
 
@@ -309,6 +315,7 @@ model Lead {
   requirements     LeadRequirement?
   messages         CustomerMessage[]
   chats            ChatConversation[]
+  prospects        Prospect[]
 
   @@index([status, createdAt])
   @@index([assignedToId])
@@ -1433,4 +1440,160 @@ model CustomerMessage {
   @@index([status, createdAt])
   @@index([leadId])
   @@map("customer_messages")
+}
+
+// ─── AI Marketing and Lead Generation Agent (Stage 5, 2026-11-11) ──────────
+
+enum ProspectType {
+  interior_designer
+  architect
+  construction_company
+  real_estate_developer
+  property_management
+  renovation_contractor
+  commercial_contractor
+  homeowner_new_build
+  other
+}
+
+enum ProspectStatus {
+  new
+  contacted
+  interested
+  not_interested
+  converted
+  /// Asked not to be contacted (or unsubscribed): never emailed again.
+  do_not_contact
+}
+
+enum ProspectSource {
+  manual
+  import
+  google_places
+  referral
+  event
+  other
+}
+
+enum ProspectPriority {
+  high
+  medium
+  low
+}
+
+/// A business (or person) that may buy from GIK, found by staff, imported from a spreadsheet or picked
+/// from a Google Places search. Contact details are what staff entered from the business's own public
+/// information. Score and priority are worked out by the app (src/lib/prospect-score.ts).
+model Prospect {
+  id              String           @id @default(cuid())
+  companyName     String           @map("company_name")
+  contactName     String?          @map("contact_name")
+  contactRole     String?          @map("contact_role")
+  type            ProspectType     @default(other)
+  /// https://… only.
+  website         String?
+  /// Lower-cased; unique when present.
+  email           String?
+  /// E.164; unique when present.
+  phone           String?
+  /// BH, SA, AE, KW, QA or OM.
+  country         String           @default("BH")
+  area            String?
+  source          ProspectSource   @default(manual)
+  sourceNote      String?          @map("source_note")
+  /// Google Places id, when picked from a search (unique when present).
+  placeId         String?          @map("place_id")
+  status          ProspectStatus   @default(new)
+  score           Int              @default(0)
+  priority        ProspectPriority @default(low)
+  /// Why this business may need GIK (staff, or an AI suggestion staff kept).
+  opportunity     String?
+  notes           String?
+  assignedToId    String?          @map("assigned_to_id")
+  lastContactedAt DateTime?        @map("last_contacted_at") @db.Timestamptz(3)
+  /// Used the unsubscribe link (status is then do_not_contact).
+  unsubscribedAt  DateTime?        @map("unsubscribed_at") @db.Timestamptz(3)
+  convertedLeadId String?          @map("converted_lead_id")
+  createdById     String?          @map("created_by_id")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  assignedTo    User?             @relation("ProspectAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy     User?             @relation("ProspectCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  convertedLead Lead?             @relation(fields: [convertedLeadId], references: [id], onDelete: SetNull)
+  messages      CampaignMessage[]
+
+  @@index([status, score])
+  @@index([type, country])
+  @@index([createdAt])
+  @@map("prospects")
+}
+
+enum CampaignStatus {
+  draft
+  pending_approval
+  approved
+  sent
+  rejected
+  cancelled
+}
+
+enum CampaignMessageStatus {
+  draft
+  queued
+  sent
+  failed
+  skipped
+}
+
+/// An email campaign to prospects. Staff choose the audience and what it should say; the AI writes one
+/// email per prospect (staff can edit them); an approver (`outreach.approve`) approves the whole
+/// campaign; the outbox sends it a few at a time, each with an unsubscribe link.
+model Campaign {
+  id              String         @id @default(cuid())
+  name            String
+  /// What the emails should say (instructions for the AI and the approver).
+  brief           String
+  /// Template with {company}, {contact}, {area}, {type}; written by staff or the AI.
+  subjectTemplate String?        @map("subject_template")
+  bodyTemplate    String?        @map("body_template")
+  language        Locale         @default(en)
+  /// The audience filters when the emails were prepared.
+  audience        Json
+  status          CampaignStatus @default(draft)
+  createdById     String?        @map("created_by_id")
+  decidedById     String?        @map("decided_by_id")
+  decidedAt       DateTime?      @map("decided_at") @db.Timestamptz(3)
+  decisionNote    String?        @map("decision_note")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  createdBy User?             @relation("CampaignCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  decidedBy User?             @relation("CampaignDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  messages  CampaignMessage[]
+
+  @@index([status, createdAt])
+  @@map("campaigns")
+}
+
+/// One prospect's email in a campaign. A sent message can't be changed (trigger).
+model CampaignMessage {
+  id         String                @id @default(cuid())
+  campaignId String                @map("campaign_id")
+  prospectId String                @map("prospect_id")
+  subject    String
+  body       String
+  status     CampaignMessageStatus @default(draft)
+  sentAt     DateTime?             @map("sent_at") @db.Timestamptz(3)
+  error      String?
+  createdAt  DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, prospectId])
+  @@index([status])
+  @@index([prospectId])
+  @@map("campaign_messages")
 }

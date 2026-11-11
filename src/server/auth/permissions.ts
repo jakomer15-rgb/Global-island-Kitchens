@@ -32,6 +32,8 @@ export const permissions = {
   "audit.read": "View the audit log",
   "automation.read":
     "Open the AI Business Automation Centre: overview, approvals queue, integration status and delivery log",
+  "marketing.manage":
+    "Use the marketing agent: add, import and score prospects, search Google Places, prepare email campaigns and submit them for approval",
   "outreach.approve":
     "Approve or reject messages to customers (written by staff or drafted by the AI) so they are sent, and switch automatic follow-up drafts on or off",
   "integrations.manage":
@@ -84,6 +86,7 @@ export const roleDefinitions: {
       "ai.review",
       "chat.manage",
       "automation.read",
+      "marketing.manage",
     ],
   },
   {

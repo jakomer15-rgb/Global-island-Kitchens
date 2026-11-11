@@ -17,8 +17,8 @@ import type { DesignerProject } from "@/lib/designer";
  * reference the customer sees, e.g. GIK-Q-2026-00042.
  */
 
-/** Q quotation, C consultation, M message, W WhatsApp, A AI sales chat. */
-type Prefix = "Q" | "C" | "M" | "W" | "A";
+/** Q quotation, C consultation, M message, W WhatsApp, A AI sales chat, P prospect from the marketing agent. */
+type Prefix = "Q" | "C" | "M" | "W" | "A" | "P";
 
 export async function nextReference(tx: Tx, prefix: Prefix, now = new Date()): Promise<string> {
   const [row] = await tx.$queryRaw<{ n: bigint }[]>`SELECT nextval('enquiry_reference_seq') AS n`;

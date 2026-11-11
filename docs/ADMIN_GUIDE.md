@@ -37,6 +37,29 @@ top right switches the Centre between English and Arabic; the rest of the admin 
   delivery that kept failing shows **Retry** (owner and general manager): channels that already worked are
   not repeated. Customer details are not shown here.
 
+## Marketing (prospects and campaigns)
+
+For the owner, general manager and sales manager.
+
+- **Prospects**: businesses that may buy from GIK in Bahrain and the GCC (designers, architects, developers,
+  construction and renovation companies, property managers, commercial contractors, people building new
+  homes). Each has a **score** (0–100) and **priority** from its type, country, the contact details known and
+  how it responded; the prospect page shows how the score adds up. Filter by location, type, status, priority,
+  source and who it's assigned to; export to Excel.
+- **Add a prospect** by hand, **Import a spreadsheet** (save Excel as CSV; columns Company, Type, Contact, Role,
+  Email, Phone, Website, Country, Area, Notes), or **Find businesses** on Google (once Google Places is
+  connected). Only use contact details the business publishes itself; don't import bought lists. The same
+  business can't be added twice.
+- Move a prospect through **New → Contacted → Interested** (or Not interested / Do not contact). When it has a
+  real project, **Convert to a lead**: a customer and a lead (`GIK-P-…`) appear in Leads for the sales team.
+- **Campaigns**: choose who receives it and describe what to say, write the email (or **Write it with AI**),
+  **Prepare the emails** (one per business, each editable), then **Send for approval**. The owner or general
+  manager approves (or rejects) it in Automation Centre → Approvals; emails go out 20 at a time, each with
+  who sent it, why, and an unsubscribe link. Anyone who unsubscribes becomes Do not contact. Businesses aren't
+  emailed by two campaigns within 30 days. Email sending (Resend) must be set up.
+- **Lead generation report**: today or this week (from Saturday) compared with the previous one: prospects
+  added, contacted, interested, converted, unsubscribed, and leads received by source.
+
 ## Enquiries (Leads)
 
 Every quote request, consultation booking, contact message, designer project and WhatsApp message becomes a

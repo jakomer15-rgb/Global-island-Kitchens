@@ -39,6 +39,12 @@ const pages = [
   ["/admin/leads/pipeline", "Sales pipeline"],
   ["/admin/customers/duplicates", "Possible duplicate customers"],
   ["/admin/ai-agent/documents/new", "Upload a document"],
+  ["/admin/marketing", "Prospects"],
+  ["/admin/marketing/new", "Add a prospect"],
+  ["/admin/marketing/import", "Import prospects"],
+  ["/admin/marketing/places", "Find businesses"],
+  ["/admin/marketing/campaigns", "Campaigns"],
+  ["/admin/marketing/reports", "Lead generation report"],
   ["/admin/automation", "Overview"],
   ["/admin/automation/approvals", "Approvals"],
   ["/admin/automation/integrations", "Integrations"],
@@ -49,8 +55,8 @@ test.describe("admin portal", () => {
   test.skip(({ isMobile }) => isMobile, "admin journeys run once, on desktop");
 
   test("every page opens for the owner without accessibility problems", async ({ page }) => {
-    // axe on 18 pages; slow when the whole suite runs in parallel
-    test.setTimeout(480_000);
+    // axe on 30 pages; slow when the whole suite runs in parallel
+    test.setTimeout(720_000);
     await signIn(page);
     for (const [path, heading] of pages) {
       await page.goto(path);
@@ -226,6 +232,44 @@ test.describe("admin portal", () => {
     await expect(page.getByText("Draft: not used by the chat")).toBeVisible();
     await page.getByRole("button", { name: "Publish" }).click();
     await expect(page.getByText(/Published\. The chat uses it/)).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test("a prospect is added and a campaign prepared for approval", async ({ page }) => {
+    await signIn(page);
+    const tag = uid();
+    await page.goto("/admin/marketing/new");
+    await page.getByLabel("Company or person").fill(`E2E Studio ${tag}`);
+    await page.getByLabel("Business email").fill(`hello@e2e-${tag}.example`);
+    await page.getByLabel("Country").selectOption("QA");
+    await page.getByRole("button", { name: "Add prospect" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: `E2E Studio ${tag}` })).toBeVisible();
+    // Interior designer 25 + Qatar 10 + email 15 = 50: medium.
+    await expect(page.getByText("medium priority")).toBeVisible();
+
+    await page.goto("/admin/marketing/campaigns");
+    await page.getByLabel("Name").fill(`E2E campaign ${tag}`);
+    await page
+      .getByLabel("What the emails should say")
+      .fill("Introduce our factory to interior designers in Qatar.");
+    await page.getByLabel("Country").selectOption("QA");
+    await page.getByRole("button", { name: "Create draft" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: `E2E campaign ${tag}` })).toBeVisible();
+    await page.getByLabel("Subject").fill("Kitchens and wardrobes for {company}");
+    await page
+      .getByLabel("Email", { exact: true })
+      .fill(
+        "We manufacture fitted kitchens and wardrobes and would be glad to support your projects in {area}.",
+      );
+    await page.getByRole("button", { name: "Save email" }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
+    await page.getByRole("button", { name: "Prepare the emails" }).click();
+    await expect(page.getByText(/email\(s\) prepared/)).toBeVisible();
+    await expect(page.getByRole("link", { name: `E2E Studio ${tag}` })).toBeVisible();
+    await page.getByRole("button", { name: "Send for approval" }).click();
+    // The page switches to the approval step (the button and its message go away).
+    await expect(page.getByText("Waiting for approval").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Approve and send \d+ email/ })).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
