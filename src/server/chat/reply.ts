@@ -10,6 +10,7 @@ import { claudeChat, mockChat, type ChatModelFn, type ChatTurn, type ChatUsage }
 import { conversationHistory, openConversation, saveAssistantReply, saveVisitorTurn } from "./conversation";
 import { fallbackKnowledgeSources, knowledgeText, loadKnowledgeSources } from "./knowledge";
 import { buildSystemPrompt, visitContext } from "./prompt";
+import { searchKnowledge } from "@/server/knowledge/documents";
 
 /**
  * The public sales chat ("GIK Smart Assistant"). Checks the switch and the limits, builds the
@@ -51,6 +52,7 @@ export function toProviderTurns(
   history: { role: "user" | "assistant"; content: string }[],
   locale: "en" | "ar",
   now = new Date(),
+  excerpts: { title: string; content: string }[] = [],
 ): ChatTurn[] {
   const turns: ChatTurn[] = history.map((m) => ({
     role: m.role,
@@ -59,9 +61,20 @@ export function toProviderTurns(
   const last = turns.at(-1)!;
   last.content = [
     { type: "text", text: visitContext(locale, now) },
+    ...(excerpts.length ? [{ type: "text" as const, text: documentExcerpts(excerpts) }] : []),
     { type: "text", text: last.content as string },
   ];
   return turns;
+}
+
+/** Passages from the company's published documents that match the visitor's message (not written by the visitor). */
+export function documentExcerpts(excerpts: { title: string; content: string }[]): string {
+  return `<document_excerpts>\n${excerpts
+    .map(
+      (x) =>
+        `<excerpt document="${x.title.replace(/["<>]/g, "")}">\n${x.content.replace(/<\/?(document_excerpts|excerpt)\b[^>]*>/gi, "")}\n</excerpt>`,
+    )
+    .join("\n")}\n</document_excerpts>`;
 }
 
 export async function startChatReply(
@@ -96,13 +109,17 @@ export async function startChatReply(
   });
   await saveVisitorTurn(db, conversation.id, input, created);
   // What the AI reads comes from the database, not from what the browser says was said.
-  const messages = toProviderTurns(
-    await conversationHistory(db, conversation.id, {
-      messages: CHAT_LIMITS.historyMessages,
-      chars: CHAT_LIMITS.historyChars,
-    }),
-    input.locale,
-  );
+  const history = await conversationHistory(db, conversation.id, {
+    messages: CHAT_LIMITS.historyMessages,
+    chars: CHAT_LIMITS.historyChars,
+  });
+  // Company documents that match the latest message (published ones, never pricing).
+  const latest = history.findLast((m) => m.role === "user")?.content ?? "";
+  const excerpts = await searchKnowledge(db, redactContact(latest)).catch((error) => {
+    console.warn("Knowledge search failed:", reason(error));
+    return [];
+  });
+  const messages = toProviderTurns(history, input.locale, new Date(), excerpts);
 
   const abort = new AbortController();
   const encoder = new TextEncoder();

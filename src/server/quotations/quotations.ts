@@ -311,7 +311,8 @@ export async function markSent(db: Db, actor: Actor, quotationId: string, now = 
     await tx.quotation.update({ where: { id: quotationId }, data: { status: "sent" } });
     if (quotation.leadId) {
       const lead = await tx.lead.findUnique({ where: { id: quotation.leadId } });
-      if (lead && !["quoted", "won", "lost"].includes(lead.status)) {
+      // A lead already negotiating (or decided) stays where it is.
+      if (lead && !["quoted", "negotiation", "won", "lost"].includes(lead.status)) {
         await tx.lead.update({ where: { id: lead.id }, data: { status: "quoted" } });
         await tx.leadActivity.create({
           data: {

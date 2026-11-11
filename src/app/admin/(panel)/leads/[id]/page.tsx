@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { bahrainDate } from "@/lib/admin/time";
+import { bahrainDate, isPast } from "@/lib/admin/time";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/admin/action-form";
 import { AdminInput, AdminSelect, AdminTextarea } from "@/components/admin/fields";
@@ -13,14 +13,40 @@ import {
   leadStatusTone,
   PageHeader,
   Panel,
+  ScoreBadge,
   TemperatureBadge,
 } from "@/components/admin/ui";
+import { leadScoreParts } from "@/lib/lead-score";
+import { env } from "@/server/env";
+import {
+  emailEligibility,
+  emailReady,
+  messagesForLead,
+  messageStatusNames,
+} from "@/server/outreach/messages";
+import type { CustomerMessageStatus } from "@/generated/prisma/client";
+import type { Tone } from "@/components/admin/ui";
+import {
+  cancelMessageAction,
+  decideMessageAction,
+  draftMessageAction,
+  writeMessageAction,
+} from "../message-actions";
+
+const messageTone: Record<CustomerMessageStatus, Tone> = {
+  pending_approval: "warn",
+  approved: "info",
+  sent: "good",
+  failed: "bad",
+  rejected: "neutral",
+  cancelled: "neutral",
+};
 import { requirementFields } from "@/server/chat/admin";
 import { CUID } from "@/server/admin/action";
 import { requireActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
 import { categoryLabel } from "@/server/enquiries/submit";
-import { getLead, leadStatuses, loggableKinds } from "@/server/crm/leads";
+import { getLead, leadStatuses, leadStatusNames, loggableKinds } from "@/server/crm/leads";
 import { assignableStaff } from "@/server/crm/shared";
 import { db } from "@/server/db";
 import { NotFoundError } from "@/server/errors";
@@ -97,6 +123,23 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
   const history = lead.activities.filter((a) => a.kind !== "message");
   // Bahrain time for the datetime-local default (tomorrow 10:00).
   const tomorrow = bahrainDate(1);
+  const [customerMessages, eligibility] = await Promise.all([
+    messagesForLead(db, actor, lead.id),
+    emailEligibility(db, lead.customerId),
+  ]);
+  const mailReady = emailReady(env());
+  const canApprove = can(actor, "outreach.approve");
+  const handoverWaiting =
+    lead.handoverRequestedAt &&
+    (!lead.lastContactAt || lead.lastContactAt.getTime() < lead.handoverRequestedAt.getTime());
+  const scoreParts = leadScoreParts({
+    status: lead.status,
+    temperature: lead.temperature,
+    category: lead.category,
+    requirements: lead.requirements,
+    measured: Array.isArray(qr?.measurements) && qr.measurements.length > 0,
+    area: qr?.area ?? null,
+  });
 
   return (
     <>
@@ -111,11 +154,19 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
           <>
             {label(lead.source)} · received {fmtDateTime(lead.createdAt)} ·{" "}
             {lead.locale === "ar" ? "Arabic" : "English"}{" "}
-            <Badge tone={leadStatusTone[lead.status]}>{label(lead.status)}</Badge>
+            <Badge tone={leadStatusTone[lead.status]}>{leadStatusNames[lead.status]}</Badge>{" "}
+            <ScoreBadge value={lead.score} />
           </>
         }
       />
 
+      {handoverWaiting && (
+        <p role="status" className="mb-6 border-s-2 border-red-700 bg-red-50 px-4 py-3 text-sm">
+          <strong>The customer asked to talk to a person</strong> in the website chat on{" "}
+          {fmtDateTime(lead.handoverRequestedAt!)}. Call or message them, then log the contact below (this
+          notice then goes away).
+        </p>
+      )}
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Panel title="Enquiry">
@@ -217,9 +268,15 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
             )}
           </Panel>
 
-          {(lead.requirements || lead.chats.length > 0) && (
+          {(lead.requirements || lead.chats.length > 0 || canUpdate) && (
             <Panel title="Requirements">
-              {!lead.requirements?.editedByStaff && (
+              {!lead.requirements && lead.chats.length === 0 && (
+                <p className="mb-3 text-xs text-ink-muted">
+                  What the customer wants: product, dimensions, budget, location and timeline. Each one you
+                  fill in raises the lead score.
+                </p>
+              )}
+              {!lead.requirements?.editedByStaff && (lead.requirements || lead.chats.length > 0) && (
                 <p className="mb-3 text-xs text-ink-muted">
                   Noted by the AI assistant from the chat. Check them with the customer; once you save changes
                   here, the assistant no longer updates them.
@@ -304,6 +361,151 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
               </ul>
             </Panel>
           )}
+
+          <section id="messages" className="scroll-mt-24">
+            <Panel title="Messages to the customer">
+              <p className="text-sm text-ink-muted">
+                Emails to the customer, written by you or drafted by the AI. Each one is sent only after
+                someone who approves customer messages approves it, only if the customer agreed to email, and
+                always with an unsubscribe link.
+              </p>
+              <p className="mt-2 text-sm">
+                {!eligibility.ok ? (
+                  <Badge tone="warn">Can&apos;t email: {eligibility.reason}</Badge>
+                ) : !mailReady ? (
+                  <Badge tone="warn">
+                    Email sending isn&apos;t set up yet (Automation Centre → Integrations)
+                  </Badge>
+                ) : (
+                  <Badge tone="good">Email allowed: {eligibility.email}</Badge>
+                )}
+              </p>
+              {customerMessages.length > 0 && (
+                <ul className="mt-4 space-y-4 text-sm">
+                  {customerMessages.map((m) => (
+                    <li key={m.id} className="border border-line p-3">
+                      <p className="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+                        <Badge tone={messageTone[m.status]}>{messageStatusNames[m.status]}</Badge>
+                        {m.origin === "staff"
+                          ? `Written by ${m.createdBy?.name ?? "staff"}`
+                          : m.origin === "ai"
+                            ? `AI draft for ${m.createdBy?.name ?? "staff"}`
+                            : "Automatic follow-up draft (AI)"}
+                        · {fmtDateTime(m.createdAt)}
+                        {m.decidedBy &&
+                          ` · ${m.status === "rejected" ? "rejected" : "approved"} by ${m.decidedBy.name}`}
+                        {m.sentAt && ` · sent ${fmtDateTime(m.sentAt)}`}
+                      </p>
+                      {m.status === "pending_approval" && canApprove ? (
+                        <div className="mt-3 space-y-3">
+                          <ActionForm
+                            action={decideMessageAction.bind(null, m.id, lead.id)}
+                            submitLabel="Approve and send"
+                            pendingLabel="Sending…"
+                          >
+                            <input type="hidden" name="decision" value="approve" />
+                            <AdminInput
+                              label="Subject"
+                              name="subject"
+                              defaultValue={m.subject ?? ""}
+                              maxLength={200}
+                              required
+                            />
+                            <AdminTextarea
+                              label="Message (you can edit it before approving)"
+                              name="body"
+                              rows={6}
+                              maxLength={5000}
+                              defaultValue={m.body}
+                              dir="auto"
+                              hint={`Sent as: “${m.language === "ar" ? "مرحبًا" : "Dear"} ${lead.customer.name.split(/\s+/)[0]},” + this text + the team signature + an unsubscribe link.`}
+                            />
+                          </ActionForm>
+                          <ActionForm
+                            action={decideMessageAction.bind(null, m.id, lead.id)}
+                            submitLabel="Reject"
+                            variant="outline"
+                            inline
+                          >
+                            <input type="hidden" name="decision" value="reject" />
+                            <AdminInput label="Reason (optional)" name="note" maxLength={300} />
+                          </ActionForm>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="mt-2 font-medium" dir="auto">
+                            {m.subject}
+                          </p>
+                          <p className="mt-1 whitespace-pre-wrap" dir="auto">
+                            {m.body}
+                          </p>
+                        </>
+                      )}
+                      {m.error && <p className="mt-2 text-xs text-red-800">{m.error}</p>}
+                      {m.decisionNote && (
+                        <p className="mt-2 text-xs text-ink-muted">Note: {m.decisionNote}</p>
+                      )}
+                      {m.status === "pending_approval" &&
+                        canUpdate &&
+                        (m.createdBy?.id === actor.id || canApprove) && (
+                          <ActionForm
+                            action={cancelMessageAction.bind(null, m.id, lead.id)}
+                            submitLabel="Cancel this message"
+                            variant="outline"
+                            className="mt-3"
+                          />
+                        )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {canUpdate && eligibility.ok && (
+                <div className="mt-6 grid gap-6 border-t border-line pt-4 lg:grid-cols-2">
+                  <ActionForm
+                    action={writeMessageAction.bind(null, lead.id)}
+                    submitLabel="Save for approval"
+                    resetOnSuccess
+                  >
+                    <h3 className="text-sm font-medium">Write a message</h3>
+                    <AdminSelect
+                      label="Language"
+                      name="language"
+                      defaultValue={lead.locale}
+                      options={[
+                        { value: "en", label: "English" },
+                        { value: "ar", label: "Arabic" },
+                      ]}
+                    />
+                    <AdminInput label="Subject" name="subject" maxLength={200} required />
+                    <AdminTextarea
+                      label="Message"
+                      name="body"
+                      rows={5}
+                      maxLength={5000}
+                      required
+                      dir="auto"
+                      hint="Without greeting or signature: they are added. Never promise prices or dates the team hasn't confirmed."
+                    />
+                  </ActionForm>
+                  {aiOn && (
+                    <ActionForm
+                      action={draftMessageAction.bind(null, lead.id)}
+                      submitLabel="Draft a follow-up with AI"
+                      pendingLabel="Drafting…"
+                      variant="outline"
+                    >
+                      <h3 className="text-sm font-medium">Or let the AI draft it</h3>
+                      <AdminInput label="What should it say? (optional)" name="instruction" maxLength={300} />
+                      <p className="text-xs text-ink-muted">
+                        The AI sees the enquiry without phone or email. Its draft waits for approval like any
+                        other message.
+                      </p>
+                    </ActionForm>
+                  )}
+                </div>
+              )}
+            </Panel>
+          </section>
 
           <Panel title="Communication history and notes">
             {canUpdate && (
@@ -515,14 +717,67 @@ export default async function LeadPage({ params }: PageProps<"/admin/leads/[id]"
             <p className="mt-1 text-xs text-ink-muted">{label(lead.customer.type)}</p>
           </Panel>
 
+          <Panel title="Lead score">
+            {scoreParts ? (
+              <>
+                <p className="flex items-baseline gap-2">
+                  <span className="font-display text-4xl tabular-nums">{lead.score ?? 0}</span>
+                  <span className="text-sm text-ink-muted">out of 100</span>
+                </p>
+                <ul className="mt-3 space-y-1 text-sm">
+                  {scoreParts.map((p) => (
+                    <li key={p.key} className="flex justify-between gap-3">
+                      <span className={p.points ? undefined : "text-ink-muted"}>{p.label}</span>
+                      <span className="tabular-nums">
+                        {p.points} / {p.max}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-ink-muted">
+                  Worked out from what is known, not by the AI: the rating, the pipeline stage and the
+                  requirements filled in.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-ink-muted">
+                No score: this lead is {leadStatusNames[lead.status].toLowerCase()}.
+              </p>
+            )}
+            <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-3 text-sm">
+              <div>
+                <dt className="text-ink-muted">Last contact</dt>
+                <dd>{lead.lastContactAt ? fmtDateTime(lead.lastContactAt) : "Never"}</dd>
+              </div>
+              <div>
+                <dt className="text-ink-muted">Next follow-up</dt>
+                <dd
+                  className={
+                    lead.nextFollowUpAt && isPast(lead.nextFollowUpAt)
+                      ? "font-medium text-red-800"
+                      : undefined
+                  }
+                >
+                  {lead.nextFollowUpAt ? fmtDateTime(lead.nextFollowUpAt) : "None"}
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-2 text-xs text-ink-muted">
+              Last contact updates when you log a call, email, WhatsApp message or meeting below.
+            </p>
+          </Panel>
+
           {canUpdate && (
-            <Panel title="Status">
-              <ActionForm action={changeStatusAction.bind(null, lead.id)} submitLabel="Update status">
+            <Panel title="Pipeline stage">
+              <ActionForm action={changeStatusAction.bind(null, lead.id)} submitLabel="Update stage">
                 <AdminSelect
-                  label="Status"
+                  label="Stage"
                   name="status"
                   defaultValue={lead.status}
-                  options={leadStatuses.map((s) => ({ value: s, label: label(s) }))}
+                  options={leadStatuses.map((s, i) => ({
+                    value: s,
+                    label: `${i + 1}. ${leadStatusNames[s]}`,
+                  }))}
                 />
                 <AdminInput
                   label="Reason (required when lost)"

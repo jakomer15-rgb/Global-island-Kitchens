@@ -69,7 +69,7 @@ async function guard(db: Db, actor: Actor, feature: Feature) {
 }
 
 /** One lead as the provider sees it: no phone, email or full name. */
-async function leadContext(db: Db, leadId: string) {
+export async function leadContext(db: Db, leadId: string) {
   const lead = await db.lead.findFirst({
     where: { id: leadId, archivedAt: null },
     include: {

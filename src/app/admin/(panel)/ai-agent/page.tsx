@@ -12,6 +12,9 @@ import { whatsappAlertsConfigured } from "@/server/chat/whatsapp-alert";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { saveSettingAction } from "../settings/actions";
+import { parseSetting } from "@/lib/site-settings";
+import { can } from "@/server/auth/staff";
+import { documentKinds, listDocuments } from "@/server/knowledge/documents";
 
 export const metadata: Metadata = { title: "AI agent" };
 
@@ -23,11 +26,15 @@ const modelOptions = [
 
 export default async function AiAgentPage() {
   const actor = await requireActor("chat.manage");
-  const [settings, entries, sources] = await Promise.all([
+  const canFollowUp = can(actor, "outreach.approve");
+  const [settings, entries, sources, documents, followUpRow] = await Promise.all([
     chatSettings(db),
     listKnowledge(db, actor),
     loadKnowledgeSources(db),
+    listDocuments(db, actor),
+    db.siteSetting.findUnique({ where: { key: "salesFollowUp" } }),
   ]);
+  const followUp = parseSetting("salesFollowUp", followUpRow?.value);
   const keySet = aiConfigured();
   const e = env();
   const emailReady = Boolean(e.RESEND_API_KEY && e.EMAIL_FROM);
@@ -197,6 +204,99 @@ export default async function AiAgentPage() {
             )}
           </div>
         </Panel>
+
+        <Panel
+          title={`Documents (${documents.filter((d) => d.status === "published" && d.kind !== "pricing").length} searched by the chat)`}
+        >
+          <div id="documents" className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="max-w-2xl text-sm text-ink-muted">
+                Brochures, catalogues, product sheets and policies. For each visitor message the chat searches
+                the published ones and answers from the matching passages; if nothing matches, it says the
+                team will confirm. Pricing documents are never given to the chat.
+              </p>
+              <Link
+                href="/admin/ai-agent/documents/new"
+                className="text-sm font-medium underline underline-offset-4"
+              >
+                Upload a document
+              </Link>
+            </div>
+            {documents.length === 0 ? (
+              <Empty>No documents yet.</Empty>
+            ) : (
+              <Table label="Documents">
+                <thead>
+                  <tr>
+                    <Th>Title</Th>
+                    <Th>Type</Th>
+                    <Th>Status</Th>
+                    <Th>Last edited</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documents.map((d) => (
+                    <tr key={d.id}>
+                      <Td className="max-w-lg">
+                        <Link
+                          href={`/admin/ai-agent/documents/${d.id}`}
+                          className="font-medium underline-offset-4 hover:underline"
+                        >
+                          {d.title}
+                        </Link>
+                        <span className="block text-xs text-ink-muted">{d.fileName}</span>
+                      </Td>
+                      <Td>{documentKinds[d.kind]}</Td>
+                      <Td>
+                        {d.status === "published" ? (
+                          <Badge tone="good">Published · {d._count.chunks} passages</Badge>
+                        ) : (
+                          <Badge tone="warn">Draft: check and publish</Badge>
+                        )}
+                      </Td>
+                      <Td className="text-xs text-ink-muted">{d.updatedBy?.name ?? "—"}</Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </div>
+        </Panel>
+
+        {canFollowUp && (
+          <Panel title="Follow-ups for customers who stopped replying">
+            <ActionForm action={saveSettingAction.bind(null, "salesFollowUp")} submitLabel="Save">
+              <p className="text-sm text-ink-muted">
+                When on, the daily job asks the AI to draft a follow-up email for open leads with no contact
+                for the number of days below, if the customer has an email address and agreed to email. Every
+                draft waits on the lead (and in Automation Centre → Approvals) until someone approves it;
+                nothing is sent automatically.
+              </p>
+              <AdminCheckbox
+                name="autoDraft"
+                defaultChecked={followUp.autoDraft}
+                label="Draft follow-ups automatically"
+              />
+              <AdminInput
+                label="After how many days without contact"
+                name="afterDays"
+                type="number"
+                min={2}
+                max={60}
+                defaultValue={followUp.afterDays}
+              />
+              {(!emailReady || !keySet) && (
+                <p className="text-xs text-amber-900">
+                  Needs{" "}
+                  {[!keySet && "the Claude API key", !emailReady && "email sending (Resend)"]
+                    .filter(Boolean)
+                    .join(" and ")}{" "}
+                  on the server, and the AI assistants switched on in Settings. Until then no drafts are made.
+                </p>
+              )}
+            </ActionForm>
+          </Panel>
+        )}
 
         <Panel title="Also used by the assistant (edited elsewhere)">
           <ul className="list-disc space-y-1 ps-5 text-sm">

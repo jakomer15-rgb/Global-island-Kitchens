@@ -1,5 +1,6 @@
 import type {
   ActivityKind,
+  CustomerType,
   LeadSource,
   LeadStatus,
   LeadTemperature,
@@ -12,7 +13,32 @@ import { assertCan, can, type Actor } from "@/server/auth/staff";
 import { NotFoundError, RuleError } from "@/server/errors";
 import { assignableStaff, notify, paged, pageArgs } from "./shared";
 
-export const leadStatuses: LeadStatus[] = ["new", "contacted", "qualified", "quoted", "won", "lost"];
+/** The owner's pipeline, in order (2026-11-11). `quoted` is the Quotation stage. */
+export const leadStatuses: LeadStatus[] = [
+  "new",
+  "contacted",
+  "qualified",
+  "site_visit",
+  "measurement",
+  "quoted",
+  "negotiation",
+  "won",
+  "lost",
+];
+/** Stages a lead is still being worked in (everything before won / lost). */
+export const openLeadStatuses: LeadStatus[] = leadStatuses.filter((s) => s !== "won" && s !== "lost");
+/** Pipeline names shown to staff. */
+export const leadStatusNames: Record<LeadStatus, string> = {
+  new: "New inquiry",
+  contacted: "Contacted",
+  qualified: "Qualified",
+  site_visit: "Site visit",
+  measurement: "Measurement",
+  quoted: "Quotation",
+  negotiation: "Negotiation",
+  won: "Won",
+  lost: "Lost",
+};
 export const leadSources: LeadSource[] = [
   "website_quote",
   "website_consultation",
@@ -29,23 +55,61 @@ export const leadSources: LeadSource[] = [
 /** Kinds staff can log by hand (status changes and assignments are logged automatically). */
 export const loggableKinds: ActivityKind[] = ["note", "call", "email", "whatsapp", "meeting"];
 
+export const leadSorts = ["newest", "oldest", "score", "next_follow_up", "last_contact", "stale"] as const;
+export type LeadSort = (typeof leadSorts)[number];
+export const followUpFilters = ["overdue", "today", "week", "none"] as const;
+
 export interface LeadFilters {
   status?: LeadStatus;
+  /** "open": any stage before won / lost. */
+  stage?: "open";
   source?: LeadSource;
   /** User id, or "none" for unassigned. */
   assignedTo?: string;
   /** HOT / WARM / COLD, or "none" for leads without a rating. */
   temperature?: LeadTemperature | "none";
+  customerType?: CustomerType;
+  /** Product page key (src/config/routes.ts) or "none". */
+  category?: string;
+  followUp?: (typeof followUpFilters)[number];
+  /** Minimum score (0–100). */
+  minScore?: number;
+  /** Received from / before (inclusive / exclusive). */
+  from?: Date;
+  to?: Date;
   q?: string;
+  sort?: LeadSort;
   page?: number;
 }
 
-export async function listLeads(db: Db, actor: Actor, filters: LeadFilters) {
-  assertCan(actor, "lead.read");
+const DAY = 24 * 60 * 60 * 1000;
+/** Bahrain (UTC+3, no daylight saving) midnight at the start of `now`'s day. */
+const bahrainMidnight = (now: Date) =>
+  new Date(Math.floor((now.getTime() + 3 * 3600_000) / DAY) * DAY - 3 * 3600_000);
+
+/** The filter shared by the leads list, the pipeline and the CSV export. */
+export function leadWhere(filters: LeadFilters, now = new Date()): Prisma.LeadWhereInput {
   const q = filters.q?.trim();
-  const where: Prisma.LeadWhereInput = {
+  const and: Prisma.LeadWhereInput[] = [];
+  if (filters.followUp === "overdue") and.push({ nextFollowUpAt: { lt: now } });
+  if (filters.followUp === "today")
+    and.push({ nextFollowUpAt: { lt: new Date(bahrainMidnight(now).getTime() + DAY) } });
+  if (filters.followUp === "week") and.push({ nextFollowUpAt: { lt: new Date(now.getTime() + 7 * DAY) } });
+  if (filters.followUp === "none") and.push({ nextFollowUpAt: null });
+  if (filters.from || filters.to)
+    and.push({
+      createdAt: {
+        ...(filters.from ? { gte: filters.from } : {}),
+        ...(filters.to ? { lt: filters.to } : {}),
+      },
+    });
+  return {
     archivedAt: null,
-    ...(filters.status ? { status: filters.status } : {}),
+    ...(filters.status
+      ? { status: filters.status }
+      : filters.stage === "open"
+        ? { status: { in: openLeadStatuses } }
+        : {}),
     ...(filters.source ? { source: filters.source } : {}),
     ...(filters.temperature === "none"
       ? { temperature: null }
@@ -57,6 +121,14 @@ export async function listLeads(db: Db, actor: Actor, filters: LeadFilters) {
       : filters.assignedTo
         ? { assignedToId: filters.assignedTo }
         : {}),
+    ...(filters.customerType ? { customer: { type: filters.customerType } } : {}),
+    ...(filters.category === "none"
+      ? { category: null }
+      : filters.category
+        ? { category: filters.category }
+        : {}),
+    ...(filters.minScore !== undefined ? { score: { gte: filters.minScore } } : {}),
+    ...(and.length ? { AND: and } : {}),
     ...(q
       ? {
           OR: [
@@ -65,26 +137,113 @@ export async function listLeads(db: Db, actor: Actor, filters: LeadFilters) {
             { customer: { name: { contains: q, mode: "insensitive" } } },
             { customer: { phone: { contains: q.replace(/\s/g, "") } } },
             { customer: { email: { contains: q.toLowerCase() } } },
+            { customer: { location: { contains: q, mode: "insensitive" } } },
+            { requirements: { location: { contains: q, mode: "insensitive" } } },
           ],
         }
       : {}),
   };
+}
+
+/** Sort order; ties fall back to newest first. Empty values (no score, no date) go last. */
+export function leadOrder(sort: LeadSort = "newest"): Prisma.LeadOrderByWithRelationInput[] {
+  const newest: Prisma.LeadOrderByWithRelationInput = { createdAt: "desc" };
+  switch (sort) {
+    case "oldest":
+      return [{ createdAt: "asc" }];
+    case "score":
+      return [{ score: { sort: "desc", nulls: "last" } }, newest];
+    case "next_follow_up":
+      return [{ nextFollowUpAt: { sort: "asc", nulls: "last" } }, newest];
+    case "last_contact":
+      return [{ lastContactAt: { sort: "desc", nulls: "last" } }, newest];
+    case "stale":
+      // Longest without contact first; never contacted first of all.
+      return [{ lastContactAt: { sort: "asc", nulls: "first" } }, { createdAt: "asc" }];
+    default:
+      return [newest];
+  }
+}
+
+export async function listLeads(db: Db, actor: Actor, filters: LeadFilters) {
+  assertCan(actor, "lead.read");
+  const where = leadWhere(filters);
   const { skip, take, page } = pageArgs(filters.page);
   const [items, total] = await Promise.all([
     db.lead.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: leadOrder(filters.sort),
       skip,
       take,
       include: {
-        customer: { select: { id: true, name: true, phone: true, email: true } },
+        customer: { select: { id: true, name: true, phone: true, email: true, type: true, location: true } },
         assignedTo: { select: { id: true, name: true } },
-        followUps: { where: { doneAt: null }, orderBy: { dueAt: "asc" }, take: 1, select: { dueAt: true } },
+        requirements: { select: { location: true, budget: true } },
       },
     }),
     db.lead.count({ where }),
   ]);
   return paged(items, total, page);
+}
+
+/**
+ * The sales pipeline: each stage with its count and its leads (highest score first, up to `perStage`).
+ * Won and lost show counts for the period only.
+ */
+export async function leadPipeline(
+  db: Db,
+  actor: Actor,
+  filters: Pick<LeadFilters, "assignedTo" | "temperature" | "customerType" | "source" | "q">,
+  perStage = 30,
+  now = new Date(),
+) {
+  assertCan(actor, "lead.read");
+  const base = leadWhere(filters, now);
+  const since90 = new Date(now.getTime() - 90 * DAY);
+  const [counts, decided, columns] = await Promise.all([
+    db.lead.groupBy({
+      by: ["status"],
+      where: { ...base, status: { in: openLeadStatuses } },
+      _count: { _all: true },
+    }),
+    db.lead.groupBy({
+      by: ["status"],
+      where: { ...base, status: { in: ["won", "lost"] }, updatedAt: { gte: since90 } },
+      _count: { _all: true },
+    }),
+    Promise.all(
+      openLeadStatuses.map((status) =>
+        db.lead.findMany({
+          where: { ...base, status },
+          orderBy: leadOrder("score"),
+          take: perStage,
+          select: {
+            id: true,
+            reference: true,
+            summary: true,
+            score: true,
+            temperature: true,
+            nextFollowUpAt: true,
+            lastContactAt: true,
+            createdAt: true,
+            customer: { select: { name: true } },
+            assignedTo: { select: { name: true } },
+          },
+        }),
+      ),
+    ),
+  ]);
+  const count = (rows: { status: LeadStatus; _count: { _all: number } }[], s: LeadStatus) =>
+    rows.find((r) => r.status === s)?._count._all ?? 0;
+  return {
+    stages: openLeadStatuses.map((status, i) => ({
+      status,
+      count: count(counts, status),
+      leads: columns[i]!,
+    })),
+    won90: count(decided, "won"),
+    lost90: count(decided, "lost"),
+  };
 }
 
 export async function getLead(db: Db, actor: Actor, id: string) {

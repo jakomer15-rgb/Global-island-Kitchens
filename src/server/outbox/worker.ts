@@ -2,7 +2,19 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Db } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { confirmToCustomer, notifyStaff, postToN8n, type ChannelResult } from "./deliver";
-import type { ChatLead, EnquiryReceived, OutboxType } from "./events";
+import type {
+  AnalyticsReportDue,
+  CampaignMessageQueued,
+  ChatLead,
+  CustomerMessageApproved,
+  EnquiryReceived,
+  OutboxType,
+  SocialPostPublish,
+} from "./events";
+import { sendCampaignMessage } from "@/server/marketing/campaigns";
+import { publishSocialPost } from "@/server/social/posts";
+import { sendReportEmail } from "@/server/analytics/report";
+import { sendCustomerMessage } from "@/server/outreach/messages";
 import { notifyChatLeadByEmail } from "@/server/chat/notify";
 import { alertSalesTeamOnWhatsApp } from "@/server/chat/whatsapp-alert";
 
@@ -41,6 +53,26 @@ export function defaultDelivery(e: Env, siteUrl: string, db?: Db): Delivery {
       const payload = event.payload as ChatLead;
       await run("staffEmail", () => notifyChatLeadByEmail(db, e, payload, siteUrl));
       await run("staffWhatsApp", () => alertSalesTeamOnWhatsApp(db, e, payload));
+    }
+    // An approved message to a customer: sent by email (consent checked again at sending time).
+    if ((event.type as OutboxType) === "customer.message" && db) {
+      const payload = event.payload as CustomerMessageApproved;
+      await run("customerEmail", () => sendCustomerMessage(db, e, payload.messageId));
+    }
+    // A campaign email to a prospect (eligibility checked again at sending time).
+    if ((event.type as OutboxType) === "campaign.message" && db) {
+      const payload = event.payload as CampaignMessageQueued;
+      await run("prospectEmail", () => sendCampaignMessage(db, e, payload.campaignMessageId));
+    }
+    // An approved social media post: published on each platform that publishes automatically.
+    if ((event.type as OutboxType) === "social.publish" && db) {
+      const payload = event.payload as SocialPostPublish;
+      await run("socialPublish", () => publishSocialPost(db, e, payload.postId));
+    }
+    // A business report for a completed period, emailed to the chosen staff.
+    if ((event.type as OutboxType) === "analytics.report" && db) {
+      const payload = event.payload as AnalyticsReportDue;
+      await run("staffEmail", () => sendReportEmail(db, e, payload.kind, payload.periodStart, siteUrl));
     }
     await run("n8n", () => postToN8n(e, event.type, event.id, event.payload));
     if (errors.length) throw new DeliveryError(errors.join("; "), result);

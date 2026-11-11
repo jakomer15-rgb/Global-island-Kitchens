@@ -38,6 +38,34 @@ const schema = z
     /** Quotation PDFs: a Chrome executable, or the WebSocket endpoint of a running Chrome. */
     CHROME_PATH: z.preprocess((v) => v || undefined, z.string().optional()),
     BROWSER_WS_ENDPOINT: z.preprocess((v) => v || undefined, z.string().url().optional()),
+    /** Google Places API (New), for finding businesses for the prospect list (Stage 5). Optional. */
+    GOOGLE_PLACES_API_KEY: z.preprocess((v) => v || undefined, z.string().min(20).optional()),
+    /**
+     * Meta (Facebook Page and Instagram professional account) for publishing approved posts (Stage 6).
+     * A long-lived Page access token with pages_manage_posts (and instagram_content_publish for Instagram).
+     */
+    META_PAGE_ID: z.preprocess(
+      (v) => v || undefined,
+      z
+        .string()
+        .regex(/^\d{5,30}$/)
+        .optional(),
+    ),
+    META_PAGE_ACCESS_TOKEN: z.preprocess((v) => v || undefined, z.string().min(20).optional()),
+    META_INSTAGRAM_ACCOUNT_ID: z.preprocess(
+      (v) => v || undefined,
+      z
+        .string()
+        .regex(/^\d{5,30}$/)
+        .optional(),
+    ),
+    META_GRAPH_VERSION: z.preprocess(
+      (v) => v || undefined,
+      z
+        .string()
+        .regex(/^v\d+\.\d+$/)
+        .default("v21.0"),
+    ),
     // AI assistants (drafts only). Off until a key is set here AND switched on in Admin → Settings.
     ANTHROPIC_API_KEY: z.preprocess((v) => v || undefined, z.string().min(20).optional()),
     AI_MODEL: z.preprocess((v) => v || undefined, z.string().default("claude-sonnet-5-5")),

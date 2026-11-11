@@ -70,6 +70,43 @@ reply, and the daily limit set on that page (default 1,500 AI calls, background 
 whole site; also set a monthly spending limit in the Anthropic console. To add the key on Vercel: Project → Settings → Environment
 Variables → `ANTHROPIC_API_KEY` (Production), then redeploy.
 
+**Knowledge documents (Stage 4).** PDFs and images uploaded in Admin → AI agent → Documents are sent to
+Anthropic once to read their text (needs `ANTHROPIC_API_KEY`); text files are read on the server. Uploads are
+limited to 4 MB (Vercel's request limit is about 4.5 MB); the upload route allows 300 seconds.
+
+**Google Places (Stage 5, optional).** In Google Cloud: create a project, enable **Places API (New)**, create an
+API key restricted to that API, set a budget alert, then add `GOOGLE_PLACES_API_KEY` in Vercel (Production)
+and redeploy. Each search in Admin → Marketing → Find businesses is billed by Google (limit: 30 searches an hour
+per staff member). Test it in Automation Centre → Integrations.
+
+**Facebook and Instagram publishing (Stage 6, optional).** Needs a Facebook Page and an Instagram professional
+(business or creator) account linked to it, in a Meta Business portfolio.
+
+1. At developers.facebook.com create an app (type Business) in the company's Business portfolio.
+2. Request the permissions `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, and for Instagram
+   `instagram_basic` and `instagram_content_publish`. Meta's app review is needed before they work on the live
+   Page (the owner, as an admin of the app, can test before review).
+3. Create a long-lived **Page** access token (Graph API Explorer → choose the app and the Page → generate, then
+   exchange it for a long-lived token; or a System User token in Business settings, which doesn't expire).
+4. Find the Page id (Page → About → Page transparency, or `GET /me/accounts`) and the Instagram account id
+   (`GET /{page-id}?fields=instagram_business_account`).
+5. In Vercel (Production) add `META_PAGE_ID`, `META_PAGE_ACCESS_TOKEN` and `META_INSTAGRAM_ACCOUNT_ID`, redeploy,
+   then press **Test connection** in Automation Centre → Integrations.
+
+Instagram downloads the photo from a link, so **file storage (Cloudflare R2) must be connected** and the photo
+must be a JPEG. Without Meta, posts still work: every platform is marked "Post by hand" and staff mark it as
+posted. Scheduled posts go out at the scheduled job's next run (once a day on the current Vercel plan; Stage 8
+makes it every few minutes); "Publish now" is immediate. Likes, comments and shares are read at each run.
+
+**Emailed business reports (Stage 7, optional).** Switched on in Admin → Business analytics (owner or general
+manager). The scheduled job (06:00 Bahrain time) queues yesterday's report, last week's on Saturday and last
+month's on the 1st, each once (`analytics_report_runs`). Needs `RESEND_API_KEY` and `EMAIL_FROM`; recipients are
+set on the page, or `NOTIFY_EMAILS` when empty.
+
+**Customer and campaign emails (Stages 4–5).** Messages to customers and campaign emails to prospects use the
+same Resend settings and are only sent after approval (`outreach.approve`). Campaign emails go 20 per outbox
+run (right after approval, then at each scheduled run).
+
 **Sales-team emails for chat leads.** Each chat contact form emails the sales team: customer, requirements,
 rating, chat summary and links to the lead and conversation. Needs `RESEND_API_KEY` and `EMAIL_FROM` (Resend:
 create an account, verify the sending domain under Domains, create an API key, add both on Vercel), and the
@@ -142,6 +179,26 @@ Call `GET /api/cron/outbox` with `Authorization: Bearer $CRON_SECRET` every 5 mi
 outbox events (with retries and backoff), deletes expired rate-limit buckets, and removes uploads
 never attached to a request after 24 hours. New enquiries are also delivered straight after
 submission; the job covers retries.
+
+## Workflows (Stage 8)
+
+The same job runs the automation workflows that are due (Automation Centre → Workflows): each at most at its
+own interval (5 minutes to 6 hours), claimed with one atomic update so two overlapping calls never run it
+twice. On the Vercel Hobby plan the job runs once a day; to run workflows every few minutes without a paid plan,
+use n8n:
+
+1. In n8n add a **Schedule Trigger** (every 10 minutes) and an **HTTP Request** node: `GET
+https://<site>/api/cron/outbox`, header `Authorization: Bearer <CRON_SECRET>`.
+2. Optional, to start one workflow from n8n: `POST https://<site>/api/automation/workflows` with body
+   `{"workflow":"<key>"}` (or `"due"`), headers `X-GIK-Timestamp` (Unix seconds) and `X-GIK-Signature` = hex
+   HMAC-SHA256 of `${timestamp}.${body}` with `N8N_WEBHOOK_SECRET` (the same signature the app puts on the
+   webhooks it sends; see docs/n8n/README.md). Unsigned, wrong or older-than-five-minutes requests get 401; without
+   `N8N_WEBHOOK_SECRET` the address answers 503.
+
+Workflow keys: `website_enquiry_reply`, `whatsapp_enquiry`, `new_lead_alert`, `qualified_follow_up`,
+`no_response_follow_up`, `project_photo_social`, `approved_post_publishing`, `weekly_campaign_report`,
+`management_reports`. Workflows only draft, queue and count; nothing for customers or social media leaves without
+approval.
 
 ## Object storage (Cloudflare R2)
 

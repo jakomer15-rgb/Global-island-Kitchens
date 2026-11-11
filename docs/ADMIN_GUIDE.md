@@ -12,17 +12,131 @@ permissions).
 2. Open **Notifications** (in the top bar) for leads and messages assigned to you.
 3. The **Dashboard** shows new leads, follow-ups due, open quotations and sales figures.
 
+## AI Business Automation Centre
+
+The **Automation Centre** group in the menu (owner, general manager, sales manager). The button at the
+top right switches the Centre between English and Arabic; the rest of the admin stays English for now.
+
+- **Overview:** today's enquiries, leads not yet contacted, overdue follow-ups, HOT / WARM / COLD open
+  leads, quotations awaiting an answer, approvals waiting and failed deliveries. Every number is counted
+  from the database when the page opens. The four AI agents and the 14 areas of the Centre are listed:
+  areas not built yet say which stage builds them.
+- **Approvals:** everything waiting for a person's decision (AI drafts, designer registrations). **Review**
+  opens the item's own screen; nothing is sent or published from this list.
+- **AI Sales Agent** and **Company knowledge base:** the existing AI sales and AI agent screens.
+- **Integrations:** each outside service (Claude, email, file storage, WhatsApp, n8n, the scheduled job,
+  and the planned Meta, LinkedIn, Google Places, Canva and TikTok) with its real status. The keys
+  themselves are never shown, and each test is recorded in the audit log.
+  - _Awaiting credentials_: its keys aren't set in Vercel yet.
+  - _Set, not tested_: keys are set; press **Test connection** (owner and general manager).
+  - _Connected_: the last test with the keys in use now succeeded. Changing a key in Vercel shows it as
+    untested again.
+  - _Error_: the last test failed; the message says why (for example "rejected the API key").
+  - _Planned_: built in a later stage.
+- **Workflows:** the nine automations from the brief, each with what starts it, what happens, its status
+  (On, Off, Always on, Partly built, Not set up) and what it still needs, when it last ran and its results in
+  the last 7 days. The owner and general manager switch them on or off, change their options (days before a
+  follow-up, whether the AI writes project-photo posts), press **Run now**, and **Run again** on a failed run.
+  The run log lists every run that did something or failed. On the current hosting plan timer workflows run
+  each morning; with an n8n timer, every few minutes (DEPLOYMENT.md, "Workflows"). Workflows only prepare drafts,
+  follow-ups and reports: anything for customers or social media still waits for approval.
+- **System log:** every automated email, WhatsApp alert and n8n event with its result per channel. A
+  delivery that kept failing shows **Retry** (owner and general manager): channels that already worked are
+  not repeated. Customer details are not shown here.
+
+## Marketing (prospects and campaigns)
+
+For the owner, general manager and sales manager.
+
+- **Prospects**: businesses that may buy from GIK in Bahrain and the GCC (designers, architects, developers,
+  construction and renovation companies, property managers, commercial contractors, people building new
+  homes). Each has a **score** (0–100) and **priority** from its type, country, the contact details known and
+  how it responded; the prospect page shows how the score adds up. Filter by location, type, status, priority,
+  source and who it's assigned to; export to Excel.
+- **Add a prospect** by hand, **Import a spreadsheet** (save Excel as CSV; columns Company, Type, Contact, Role,
+  Email, Phone, Website, Country, Area, Notes), or **Find businesses** on Google (once Google Places is
+  connected). Only use contact details the business publishes itself; don't import bought lists. The same
+  business can't be added twice.
+- Move a prospect through **New → Contacted → Interested** (or Not interested / Do not contact). When it has a
+  real project, **Convert to a lead**: a customer and a lead (`GIK-P-…`) appear in Leads for the sales team.
+- **Campaigns**: choose who receives it and describe what to say, write the email (or **Write it with AI**),
+  **Prepare the emails** (one per business, each editable), then **Send for approval**. The owner or general
+  manager approves (or rejects) it in Automation Centre → Approvals; emails go out 20 at a time, each with
+  who sent it, why, and an unsubscribe link. Anyone who unsubscribes becomes Do not contact. Businesses aren't
+  emailed by two campaigns within 30 days. Email sending (Resend) must be set up.
+- **Lead generation report**: today or this week (from Saturday) compared with the previous one: prospects
+  added, contacted, interested, converted, unsubscribed, and leads received by source.
+
+## Social media (posts and content calendar)
+
+For the owner, general manager, sales manager and content editor. Only the owner and general manager approve
+and publish.
+
+- **Content calendar**: every post by day (month or week, weeks from Saturday), filtered by status, platform
+  or campaign. Click **+** on a day to write a post for it.
+- **New post**: a title and brief, the type (photo, text, reel, story), the platforms and the captions
+  (English, Arabic or both). After saving, **Write it with AI** fills in the captions, hashtags, image brief
+  (and a reel script) and suggests project photos; edit everything before sending it. Only published website
+  images can be used, and project photos only when their use is confirmed. Instagram needs a JPEG photo.
+- **Plan with AI**: the AI proposes a week's or month's posts and adds them to the calendar as drafts with a
+  day, time and idea. Open each one to write it.
+- **Approval**: **Send for approval**; the owner or general manager approves (keep it approved, schedule it for
+  its planned time, or publish now) or rejects it with what to change. Approved text and photo can't change:
+  **Back to draft** to change them, then approve again.
+- **Publishing**: Facebook and Instagram photo posts publish automatically once Meta is connected. Reels,
+  LinkedIn and TikTok (and everything before Meta is connected) show **Post by hand**: post it on the platform,
+  then **Mark as posted** with its link. Scheduled posts go out at the scheduled job's next run (once a day for
+  now); use **Publish now** for an exact time.
+- **Social campaigns** group posts with one aim. **Performance** shows posts published and the likes, comments
+  and shares Meta reports (last 7, 30 or 90 days).
+
+## Business analytics (reports and questions)
+
+For the owner, general manager and sales manager (Automation Centre → Business analytics).
+
+- **Reports**: daily, weekly (from Saturday) or monthly, with **← Earlier** to look back, each compared with
+  the period before: enquiries, new customers, hot / warm / cold, follow-ups overdue, quotations created,
+  approved and awaiting the customer, orders and their value, conversion (of the period's enquiries: won,
+  lost, open), response time (from enquiry to the first call, email, WhatsApp or meeting logged by staff),
+  lead sources, products asked about, social media, campaigns, open leads by stage, follow-ups due and
+  quotations waiting. Everything is counted from the database when the page opens.
+- **Ask a question** in plain words ("Which channel brought the most leads this month?"). The AI picks
+  from the system's fixed reports, the server counts the figures, and the AI answers from them only; the
+  answer page shows the figures used. Questions about things the system doesn't record get "I can't". It
+  needs the AI assistant switched on (Settings → AI, "lead assistant"). Customer names and contact details
+  are never sent to the AI.
+- **Email these reports** (owner and general manager): switch on daily, weekly or monthly and list who gets
+  them. The morning job sends yesterday's report, last week's on Saturday and last month's on the 1st, once
+  each. Needs email sending (Resend).
+
 ## Enquiries (Leads)
 
 Every quote request, consultation booking, contact message, designer project and WhatsApp message becomes a
 **lead** with a reference such as `GIK-Q-2026-00042`.
 
-- **Work a lead:** open it from **Leads**. Change its **status** (new, contacted, qualified, quoted, won, lost;
-  "lost" needs a reason), **assign** it to a colleague, **log** calls and messages in the history, and
-  **schedule a follow-up**. Follow-ups due appear under **Follow-ups** and on the dashboard.
+- **Work a lead:** open it from **Leads**. Move it along the **pipeline stage**: New inquiry → Contacted →
+  Qualified → Site visit → Measurement → Quotation → Negotiation → Won / Lost ("Lost" needs a reason).
+  **Assign** it to a colleague, **log** calls, emails, WhatsApp messages and meetings in the history, and
+  **schedule a follow-up**. Fill in the **Requirements** (product, dimensions, budget, location, timeline).
+- **Lead score (0–100):** worked out automatically from the HOT / WARM / COLD rating, the pipeline stage and
+  the requirements known; the lead page shows how each part adds up. Won and lost leads have no score.
+- **Last contact** updates by itself when a call, email, WhatsApp message or meeting is logged; **next
+  follow-up** is the earliest follow-up not yet done.
+- **The leads list** searches name, phone, email, reference and area, filters by stage, rating, minimum
+  score, source, product, customer type, assignee, follow-up (overdue, today, this week, none) and dates,
+  sorts by newest, oldest, score, next follow-up, recent contact or longest without contact, and **exports to
+  Excel** with the same filters (needs access to customers; every export is in the audit log).
+- **Pipeline board** (button on the leads list): one column per stage with its count and its leads, highest
+  score first. Overdue follow-ups show in red.
 - **Files** the customer uploaded (photos, drawings) download from the lead page; each download is recorded.
-- **Customers** keeps one record per person, with the consent they gave. Editing a customer never changes
-  what the customer typed on a lead.
+- **Customers** keeps one record per person, with the consent they gave, their type and location. Editing a
+  customer never changes what the customer typed on a lead. The list searches, filters by type, sorts and
+  exports to Excel (including each customer's current email and WhatsApp consent).
+- **Duplicates:** the same phone or email always joins one record. **Possible duplicates** (on the customers
+  list) shows customers with the same name but different details. On the record to keep, **Merge into this
+  record** moves the other's leads, quotations, orders, projects and chats over, copies its consent history
+  and archives it; enquiries from its phone or email then arrive on the kept record. A merge can't be undone
+  from the admin, so check first.
 - **Consultations** lists showroom, site-visit and online bookings: confirm, complete or cancel them.
 
 ## Quotations, orders and projects
@@ -126,6 +240,22 @@ rating.
   dashboard comes in the next step.)
 - Contact details, opening hours, products and finishes come from **Settings**, **Manage categories** and
   **Materials**; **Show everything the assistant knows** at the bottom shows exactly what it reads.
+- **Documents**: **Upload a document** (PDF, JPG, PNG, WebP or a text file, up to 4 MB; save Word files as PDF).
+  The text is read straight away (Claude reads PDFs and images). Check it on the next page, correct anything
+  misread, remove anything the chat must not say, then **Publish**. For every visitor message the chat searches
+  the published documents and answers from matching passages. **Pricing** documents are kept but never given
+  to the chat.
+- **Talk to a person**: when a visitor asks for a person or a callback in the chat's form, everyone who assigns
+  leads gets a notification, a follow-up due within two hours is added, and the lead shows a red notice until
+  someone logs a call, email, WhatsApp message or meeting. The Automation Centre overview counts them.
+- **Messages to the customer** (on each lead): write an email, or let the AI draft one. It waits until the
+  owner or general manager (or anyone given “Approve messages to customers” in Roles) approves it; they can edit
+  it first. It is sent only to customers with an email address who agreed to email, with a greeting, the team
+  signature and an unsubscribe link, and is logged in the lead's history. Email sending must be set up
+  (Resend) first.
+- **Follow-ups for customers who stopped replying** (owner and general manager): when switched on, the daily
+  job drafts a follow-up email for open leads with no contact for the chosen number of days. The drafts wait
+  on the lead and in Automation Centre → Approvals; nothing is sent automatically.
 
 ## AI drafts (only if the owner switched them on)
 

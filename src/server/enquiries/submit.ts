@@ -2,6 +2,7 @@ import { Prisma, type CustomerType, type LeadSource } from "@/generated/prisma/c
 import type { Db, Tx } from "@/server/db/client";
 import { audit } from "@/server/audit";
 import { consentFields } from "@/server/consent";
+import { findCustomerByContact } from "@/server/crm/customer-match";
 import { enqueue } from "@/server/outbox/events";
 import { attachUploads } from "@/server/storage/files";
 import { products } from "@/content/products";
@@ -16,8 +17,8 @@ import type { DesignerProject } from "@/lib/designer";
  * reference the customer sees, e.g. GIK-Q-2026-00042.
  */
 
-/** Q quotation, C consultation, M message, W WhatsApp, A AI sales chat. */
-type Prefix = "Q" | "C" | "M" | "W" | "A";
+/** Q quotation, C consultation, M message, W WhatsApp, A AI sales chat, P prospect from the marketing agent. */
+type Prefix = "Q" | "C" | "M" | "W" | "A" | "P";
 
 export async function nextReference(tx: Tx, prefix: Prefix, now = new Date()): Promise<string> {
   const [row] = await tx.$queryRaw<{ n: bigint }[]>`SELECT nextval('enquiry_reference_seq') AS n`;
@@ -46,15 +47,7 @@ interface ContactInput {
  * customer record: what the visitor typed is kept on the lead's activity instead.
  */
 export async function findOrCreateCustomer(tx: Tx, input: ContactInput) {
-  const match = await tx.customer.findFirst({
-    where: {
-      OR: [
-        ...(input.phone ? [{ phone: input.phone }] : []),
-        ...(input.email ? [{ email: input.email }] : []),
-      ],
-    },
-    orderBy: { createdAt: "asc" },
-  });
+  const match = await findCustomerByContact(tx, input);
   if (match) return match;
   return tx.customer.create({
     data: {

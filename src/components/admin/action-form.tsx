@@ -28,10 +28,13 @@ export function ActionForm({
   className,
   inline = false,
   resetOnSuccess = false,
+  pendingLabel = "Saving…",
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   children?: ReactNode;
   submitLabel: string;
+  /** Button text while the action runs. */
+  pendingLabel?: string;
   confirm?: string;
   variant?: "primary" | "outline";
   className?: string;
@@ -60,7 +63,7 @@ export function ActionForm({
       {children}
       <div className={cn("flex flex-wrap items-center gap-3", inline && "contents")}>
         <Button type="submit" variant={variant} disabled={pending} className="min-h-10 px-4 py-2">
-          {pending ? "Saving…" : submitLabel}
+          {pending ? pendingLabel : submitLabel}
         </Button>
         {(state.message || state.error) && (
           <p

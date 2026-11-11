@@ -1,6 +1,7 @@
-import type { LeadSource, LeadStatus, LeadTemperature, Prisma } from "@/generated/prisma/client";
+import type { LeadStatus, LeadTemperature, Prisma } from "@/generated/prisma/client";
 import { audit } from "@/server/audit";
 import { assertCan, type Actor } from "@/server/auth/staff";
+import { leadOrder, leadStatusNames, leadWhere, type LeadFilters } from "@/server/crm/leads";
 import { paged, pageArgs } from "@/server/crm/shared";
 import type { Db } from "@/server/db/client";
 import { NotFoundError } from "@/server/errors";
@@ -266,13 +267,8 @@ export async function saveLeadRequirements(db: Db, actor: Actor, leadId: string,
 
 // ─── CSV export ────────────────────────────────────────────────────────────
 
-export interface ExportFilters {
-  source?: LeadSource;
-  temperature?: LeadTemperature;
-  status?: LeadStatus;
-  from?: Date;
-  to?: Date;
-}
+/** Same filters as the leads list (sorting and paging aside). */
+export type ExportFilters = Omit<LeadFilters, "page">;
 
 export const EXPORT_LIMIT = 5000;
 
@@ -329,26 +325,12 @@ export function toCsv(rows: unknown[][]): string {
 export async function exportLeadsCsv(db: Db, actor: Actor, filters: ExportFilters, ipHash: string | null) {
   assertCan(actor, "lead.read");
   assertCan(actor, "customer.read");
-  const where: Prisma.LeadWhereInput = {
-    archivedAt: null,
-    ...(filters.source ? { source: filters.source } : {}),
-    ...(filters.temperature ? { temperature: filters.temperature } : {}),
-    ...(filters.status ? { status: filters.status } : {}),
-    ...(filters.from || filters.to
-      ? {
-          createdAt: {
-            ...(filters.from ? { gte: filters.from } : {}),
-            ...(filters.to ? { lt: filters.to } : {}),
-          },
-        }
-      : {}),
-  };
   const leads = await db.lead.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
+    where: leadWhere(filters),
+    orderBy: leadOrder(filters.sort),
     take: EXPORT_LIMIT,
     include: {
-      customer: { select: { name: true, phone: true, email: true } },
+      customer: { select: { name: true, phone: true, email: true, type: true, location: true } },
       assignedTo: { select: { name: true } },
       requirements: true,
       chats: { select: { id: true }, take: 1 },
@@ -360,11 +342,16 @@ export async function exportLeadsCsv(db: Db, actor: Actor, filters: ExportFilter
     "Source",
     "Status",
     "Rating",
+    "Score",
     "Customer",
     "Phone",
     "Email",
+    "Customer type",
+    "Customer location",
     ...requirementFields.map(([, label]) => label),
     "Assigned to",
+    "Last contact",
+    "Next follow-up",
     "Summary",
     "Has AI chat",
   ];
@@ -372,13 +359,18 @@ export async function exportLeadsCsv(db: Db, actor: Actor, filters: ExportFilter
     l.reference,
     l.createdAt,
     words(l.source),
-    words(l.status),
+    leadStatusNames[l.status],
     l.temperature?.toUpperCase() ?? "",
+    l.score ?? "",
     l.customer.name,
     new CsvPhone(l.customer.phone),
     l.customer.email,
+    words(l.customer.type),
+    l.customer.location ?? "",
     ...requirementFields.map(([key]) => l.requirements?.[key] ?? ""),
     l.assignedTo?.name ?? "",
+    l.lastContactAt ?? "",
+    l.nextFollowUpAt ?? "",
     l.summary,
     l.chats.length > 0 ? "yes" : "no",
   ]);

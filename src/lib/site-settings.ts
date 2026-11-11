@@ -134,6 +134,29 @@ export const settingSchemas = {
       .max(5, "At most 5 numbers.")
       .default([]),
   }),
+  /**
+   * Follow-ups to customers who stopped replying (Stage 4, Admin → AI agent). When on, the daily job
+   * asks the AI to draft a follow-up for open leads with no contact for `afterDays` days and email
+   * consent on record. Drafts wait for approval; nothing is sent automatically. Off by default.
+   */
+  salesFollowUp: z.object({
+    autoDraft: z.boolean().default(false),
+    afterDays: z.number().int().min(2).max(60).default(4),
+  }),
+  /**
+   * Business reports emailed by the daily job (Stage 7, Admin → Business analytics): yesterday's figures
+   * every morning, last week's on Saturday, last month's on the 1st. Off by default. Empty `emails` uses
+   * NOTIFY_EMAILS from the server.
+   */
+  analyticsReports: z.object({
+    daily: z.boolean().default(false),
+    weekly: z.boolean().default(false),
+    monthly: z.boolean().default(false),
+    emails: z
+      .array(z.string().trim().toLowerCase().email("Enter valid email addresses, one per line."))
+      .max(10, "At most 10 addresses.")
+      .default([]),
+  }),
   seo: z.object({
     titleEn: optionalText(60),
     descriptionEn: optionalText(160),
@@ -187,6 +210,8 @@ export const settingDefaults: Settings = {
     notifyEmails: [],
     notifyWhatsApp: [],
   },
+  salesFollowUp: { autoDraft: false, afterDays: 4 },
+  analyticsReports: { daily: false, weekly: false, monthly: false, emails: [] },
   quotation: {
     vatEnabled: false,
     vatRateBasisPoints: 1000,

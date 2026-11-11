@@ -51,7 +51,7 @@ export const SHOW_CONTACT_FORM = "show_contact_form";
 const contactFormTool = {
   name: SHOW_CONTACT_FORM,
   description:
-    "Shows the visitor a short form inside the chat where they can leave their name, phone or WhatsApp number, optional email, area and reference photos, so the sales team can contact them. Call it only after the visitor has agreed to share their contact details for a quotation, a callback, a showroom visit or to speak with a person. Say one short sentence before calling it. Never ask for the details in the chat itself.",
+    "Shows the visitor a short form inside the chat where they can leave their name, phone or WhatsApp number, optional email, area and reference photos or drawings, so the sales team can contact them. Call it only after the visitor has agreed to share their contact details for a quotation, a callback, a showroom visit or to speak with a person. Say one short sentence before calling it. Never ask for the details in the chat itself.",
   strict: true,
   input_schema: {
     type: "object" as const,

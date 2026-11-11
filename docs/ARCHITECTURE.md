@@ -186,6 +186,14 @@ installation → completion`, each change audited with who and when.
   from the outbox; n8n workflows handle notifications, follow-ups, reminders and reporting. WhatsApp
   messaging only through the official WhatsApp Business Platform, only to contacts who opted in.
 
+**AI Business Automation Centre (2026-11-11, staged plan in [ROADMAP.md](ROADMAP.md)):** an admin section at
+`/admin/automation` that brings the AI agents together. Agents are modules over the same database
+(`src/server/automation/` and each agent's own folder) and hand work to each other through outbox events;
+there is no separate service. Outside services are described in one registry
+(`src/server/automation/integrations.ts`): a service counts as connected only after a real read-only test
+call with the settings in use now. The Centre's text is English and Arabic (`src/content/automation-centre.ts`,
+chosen per person with a cookie); the rest of the admin stays English until it is translated in a later stage.
+
 ## 9. Decisions (approved 2026-10-25)
 
 1. Better Auth for authentication (section 2).

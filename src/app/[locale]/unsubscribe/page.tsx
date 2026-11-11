@@ -5,6 +5,7 @@ import { UnsubscribeForm } from "@/components/assistant/unsubscribe-form";
 import { unsubscribePage as c } from "@/content/assistant";
 import type { Locale } from "@/i18n/routing";
 import { readUnsubscribeToken } from "@/server/consent";
+import { readProspectToken } from "@/server/marketing/prospects";
 
 export const metadata: Metadata = { title: "Unsubscribe", robots: { index: false, follow: false } };
 
@@ -13,7 +14,10 @@ export default async function UnsubscribePage({ params, searchParams }: PageProp
   setRequestLocale(locale);
   const raw = (await searchParams).token;
   const token = typeof raw === "string" ? raw.slice(0, 300) : "";
-  const parsed = token ? readUnsubscribeToken(token) : null;
+  // Customers' consent links, or (marketing emails to businesses) a prospect's link.
+  const parsed = token
+    ? (readUnsubscribeToken(token) ?? (readProspectToken(token) ? { channel: "email" as const } : null))
+    : null;
   return (
     <section className="py-20 md:py-28">
       <div className="container-site max-w-xl">

@@ -168,4 +168,16 @@ test.describe("security", () => {
   test("cron endpoint needs its secret", async ({ request }) => {
     expect((await request.get("/api/cron/outbox")).status()).toBe(401);
   });
+
+  test("n8n can't start workflows without a valid signature", async ({ request }) => {
+    const res = await request.post("/api/automation/workflows", {
+      data: { workflow: "due" },
+      headers: {
+        "x-gik-timestamp": String(Math.floor(Date.now() / 1000)),
+        "x-gik-signature": "00".repeat(32),
+      },
+    });
+    // 401 with a secret set, 503 without one: never run.
+    expect([401, 503]).toContain(res.status());
+  });
 });

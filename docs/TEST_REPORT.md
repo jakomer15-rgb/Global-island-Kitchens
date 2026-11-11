@@ -1,5 +1,165 @@
 # Test report
 
+## Release check, Stage 9 (2026-11-12): Stages 2–8 before release
+
+Security review of everything added since the last release (`df573a9..HEAD`, 125 files):
+
+- **Permissions:** all 34 new or changed admin pages call `requireActor`, every new server action (46) checks a
+  permission, and the services check again (`assertCan`), including exports, merges, imports, Places, retries.
+- **Routes:** document upload (same-origin, `chat.manage`, 4 MB, rate-limited); CSV exports (permission, audited,
+  formula-safe cells); `/api/cron/outbox` (bearer secret, constant-time); `/api/automation/workflows` (HMAC
+  signature with timestamp, 1 KB body, rate-limited, 503 without a secret).
+- **Customer-facing safety:** messages, campaigns and social posts are sent or published only after approval
+  (also enforced by database triggers for posts); unsubscribe links are signed and need a click; no customer
+  names or contact details go to the analytics AI.
+- **Secrets:** keys only in environment variables; never shown, logged or stored (integration checks keep a
+  keyed hash); Meta tokens sent in a header; Meta errors shortened and stripped of links.
+- `npm audit --omit=dev`: 0 vulnerabilities. No `dangerouslySetInnerHTML` or unsafe raw SQL added.
+- **Fixed:** workflow options now accept only each workflow's declared fields; the n8n start address refuses
+  bodies over 1 KB before reading them; "Run again" works only on a failed run of the same workflow (tests
+  added).
+
+Full suites after the fixes: lint, format, typecheck and build pass; unit 178 passed; database 160 passed; E2E
+(all projects) 245 passed, 0 failed, 71 skipped.
+
+Not run: Lighthouse (no public page changed apart from accepting prospect unsubscribe links) and
+`npm run launch:check` (needs the production environment; run it after the release).
+
+## Workflows, Stage 8 (2026-11-12)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 178 passed (admin menu test updated for the Workflows item).
+- Database (`npm run test:db`): 159 passed, including 10 new in `workflows.db.test.ts`: the nine workflows and
+  their defaults, only `workflows.manage` changes or runs them, a switched-off workflow is skipped (logged when
+  started by hand), qualified lead → one follow-up per lead for its salesperson after the chosen days, website
+  enquiry → AI reply draft waiting for approval only with email consent and only once (none without email
+  sending), new project photo → one draft post (photos from before switching on ignored), the weekly campaign
+  report queued once and emailed, switches stored on other screens kept in step, and the scheduler running each
+  due workflow exactly once when called twice at the same moment. One Stage 6 test was made independent of
+  older test data (engagement "top posts").
+- E2E (`npm run test:e2e`, production build, all projects): 245 passed, 0 failed, 71 skipped. New: the Workflows
+  page passes axe; a workflow switched on, run by hand, seen in the run log and switched off; the n8n start
+  address refuses an unsigned request.
+- Not tested: a real n8n instance calling the scheduler or the signed start address (no n8n locally); the
+  signature check is the same function the existing webhook tests cover.
+
+## AI Business Analytics Agent, Stage 7 (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 178 passed, including 4 new in `src/lib/analytics.test.ts` (periods in Bahrain time with
+  weeks from Saturday, the Bahrain day near midnight, earlier report periods, change/median/duration text).
+- Database (`npm run test:db`): 149 passed, including 6 new in `analytics.db.test.ts` (data in a random past
+  week so counts are exact): every brief figure with the previous period (enquiries, new customers,
+  hot/warm/cold, conversion, response time, sources, products, follow-ups due) and no customer names in the
+  report or its email; report emails queued once per period, settings limited to `analytics.manage`, sent to the
+  chosen addresses, "not configured" without email; questions answered from the chosen queries with no
+  customer names or phone numbers sent to the AI, "can't answer" without a second AI call, queries outside the
+  catalogue and staff without permission refused, unavailable while the AI is off.
+- E2E (`npm run test:e2e`, production build, all projects): 242 passed, 0 failed, 70 skipped. New: the two
+  analytics pages pass axe; monthly report, earlier period, report-email settings saved and reset.
+- Not tested: real AI answers (no Claude key locally; tests use fixed AI replies) and real report emails (no
+  Resend key).
+
+## AI Social Media Agent, Stage 6 (2026-11-11)
+
+- Before this stage the test database (`gik_test`) was reset with the owner's approval (about 1,185 staff
+  accounts left by earlier runs). The reset showed "a lead can be worked from the leads list" relied on leads
+  left by other tests; it now sends its own contact enquiry (commit `001059d`).
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 174 passed, including 7 new in `src/lib/social.test.ts` (what publishes automatically,
+  hashtags, caption order, what is missing before approval, Bahrain time, Saturday weeks and month grids) and 7
+  in `src/server/social/meta.test.ts` (Facebook photo post with the token in a header, Instagram two-step
+  publishing, JPEG only, not connected, Meta errors shortened without links and 4xx not retried, figures,
+  read-only connection test), plus the Meta integration test.
+- Database (`npm run test:db`): 143 passed, including 14 new in `social.db.test.ts`: permissions (writers can't
+  approve), incomplete posts refused, images must be published and project photos permitted, one result per
+  platform (automatic only with Meta), rejection back to draft with a note, approved content locked (service
+  and trigger), the database refusing to publish an unapproved post, publishing through the outbox with
+  LinkedIn marked by hand and a published post final, failure and retry, a PNG for Instagram not retried,
+  scheduling queued once, engagement figures and the performance report, AI captions with only known photos
+  kept, an AI week plan of future drafts.
+- E2E (`npm run test:e2e`, production build, all projects): 241 passed, 0 failed, 69 skipped (mobile/desktop
+  duplicates and the mock-AI chat tests). New: six social media pages pass axe; a post is written, sent for
+  approval, approved, marked as posted on Facebook and LinkedIn by hand, and shown in the calendar.
+- Browser check (dev): content calendar, Automation Centre (Social Media Agent working, modules available),
+  Integrations (Meta "Awaiting credentials").
+- Not tested: real publishing to Facebook and Instagram and real figures (no Meta keys or R2 locally).
+
+## AI Marketing Agent, Stage 5 (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 159 passed, including 9 new in `src/server/marketing/marketing.test.ts` (CSV reader, prospect
+  score, website/email/phone checks, signed unsubscribe links, template filling with the prospect's country,
+  sender/reason/unsubscribe in every email, Places request asks no contact fields, Saturday-based weeks) and a
+  new Google Places connection test.
+- Database (`npm run test:db`): 129 passed, including 6 new in `marketing.db.test.ts`: scoring and duplicate
+  refusal (email, website domain, name in the same country), import with skipped rows reported, status and
+  conversion to a `GIK-P` lead, a full campaign (eligibility, approval permission, email set-up required,
+  unsubscribe before approval drops the email, sending, sent email final, no second campaign within 30 days),
+  Places search marking known businesses, report counts.
+- Fixed during testing: an Omani prospect without an area got "projects in Bahrain"; the template now falls back
+  to the prospect's own country.
+- E2E (`npx playwright test e2e/admin.spec.ts e2e/automation.spec.ts e2e/designers.spec.ts --project desktop`,
+  production build): 14 passed, 1 failed: "a new sales manager sees only the CRM" timed out under parallel load
+  and passes when run alone (`--workers=1`). The test database holds 1,185 staff accounts left by earlier runs,
+  which slows the staff page; resetting the test database would fix it (not done: needs the owner's approval).
+  New: six marketing pages pass axe; add a prospect → create, write, prepare and submit a campaign. The
+  all-pages test now allows 12 minutes for 30 pages.
+- Browser check (dev): prospects, find businesses ("Awaiting credentials"), reports with real local leads.
+- Not tested: a real Google Places search and real campaign emails (no keys locally).
+
+## AI Sales Agent, Stage 4 part A (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 149 passed, including 9 new in `src/server/outreach/sales-agent.test.ts` (document file
+  types, passage splitting, search words can't alter the query, text and PDF reading with a fake Claude answer,
+  truncation flag, excerpts added to the chat turn with tags neutralised, email greeting and unsubscribe link).
+- Database (`npm run test:db`): 123 passed, including 8 new in `sales-agent.db.test.ts`: hand-over (flag,
+  2-hour follow-up, notifications only to staff who assign leads, Centre count); documents searched only when
+  published, never pricing, edits and unpublishing applied, permission; messages need an email and consent,
+  approval needs `outreach.approve` and email set up, approved message queued once, sent with greeting and
+  unsubscribe link, logged on the lead, sent message immutable (trigger), not sent after an unsubscribe,
+  reject and cancel, AI draft waits for approval, automatic drafts off by default and once per stale lead.
+- E2E (production build): admin and designer specs 12 passed (new: text document upload → check → publish,
+  axe on the upload page). Chat specs run with `E2E_AI_MOCK=1 AI_PROVIDER=mock AI_MOCK_FOR_E2E=1`: chat and
+  AI-UI specs passed. `automation.spec.ts` "AI stays off" failed once in that same mock run (the quotation
+  page was cached by the build while the mock AI was on) and passed after a fresh build without the mock.
+- Browser check (dev): AI agent page shows Documents and the follow-up setting; the lead page's message
+  panel explains why a lead can't be emailed (no address).
+- Not tested: reading a real PDF with Claude, real email sending through Resend (no keys locally).
+
+## CRM and pipeline, Stage 3 (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 140 passed, including 6 new in `src/lib/lead-score.test.ts`.
+- Database (`npm run test:db`): 115 passed, including 9 new in `src/server/crm/crm.db.test.ts`: score
+  triggers (rating, stage, requirements, quotation-request measurements and area, cleared when won), the
+  database score equal to the staff breakdown for every stage and rating, last contact and next follow-up
+  triggers, filters and score sort, pipeline grouping, export columns, duplicate finder, merge (moves,
+  consent copy, archive, permission, later enquiries follow the merge, chained merges).
+- E2E (`npx playwright test e2e/admin.spec.ts e2e/designers.spec.ts`, production build): 11 passed,
+  11 skipped by design (desktop-only journeys). Pipeline board and duplicates pages pass axe; filter, sort
+  and CSV download tested; the designer journey uses the renamed "Stage" field.
+- Browser check (dev, local data): existing leads got scores from the migration (the local HOT chat
+  lead: 50 = HOT 40 + product 5 + location 5, matching its breakdown); pipeline board, customers list and
+  duplicates page render; no app errors.
+- Not tested: merging on real production data (none local), a large number of leads on the board.
+
+## AI Business Automation Centre, Stage 2 (2026-11-11)
+
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`: pass.
+- Unit (`npm test`): 134 passed, including 17 new in `src/server/automation/automation.test.ts` (status
+  rules, connection tests against fake Anthropic, Resend, R2 and Meta answers, Bahrain day boundary,
+  admin menu).
+- Database (`npm run test:db`): 106 passed, including 11 new in `automation.db.test.ts` (permissions,
+  stored and audited tests, changed key shows untested, rate limit, retry, payloads hidden, approval queue).
+- E2E (`npx playwright test e2e/admin.spec.ts`, production build): 7 passed, 7 skipped by design (admin
+  journeys run on desktop only). The four Centre pages pass axe; Arabic switch tested.
+- Browser check (dev, local data): overview figures match the existing dashboard; Arabic right-to-left
+  on desktop and at 375 px wide with no sideways scrolling; no console errors.
+- Not tested: a real "Test connection" against live services (no keys locally). Run it in production
+  once the keys are in Vercel.
+
 ## AI sales agent, Phase 8: testing and security fixes (2026-11-09)
 
 **Automated checks:** lint, typecheck and production build pass; 116 unit tests and 95 DB tests pass.

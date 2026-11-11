@@ -30,6 +30,23 @@ export const permissions = {
   "settings.manage": "Change contact details, opening hours and the WhatsApp number",
   "staff.manage": "Create staff accounts and change roles",
   "audit.read": "View the audit log",
+  "automation.read":
+    "Open the AI Business Automation Centre: overview, approvals queue, integration status and delivery log",
+  "marketing.manage":
+    "Use the marketing agent: add, import and score prospects, search Google Places, prepare email campaigns and submit them for approval",
+  "outreach.approve":
+    "Approve or reject messages to customers (written by staff or drafted by the AI) so they are sent, and switch automatic follow-up drafts on or off",
+  "social.manage":
+    "Use the social media agent: write posts (or have the AI draft them), plan the content calendar and send posts for approval",
+  "social.publish":
+    "Approve or reject social media posts, schedule and publish them, and mark posts made by hand as published",
+  "analytics.read":
+    "Open business reports (daily, weekly, monthly) and ask the analytics agent questions answered from the database",
+  "analytics.manage": "Choose which reports are emailed and to whom",
+  "workflows.manage":
+    "Switch automation workflows on or off, change their options, run them now and retry failed runs",
+  "integrations.manage":
+    "Test connections to outside services (Claude, email, storage, WhatsApp) and retry failed deliveries",
 } as const;
 
 export type Permission = keyof typeof permissions;
@@ -77,6 +94,10 @@ export const roleDefinitions: {
       "ai.use",
       "ai.review",
       "chat.manage",
+      "automation.read",
+      "marketing.manage",
+      "social.manage",
+      "analytics.read",
     ],
   },
   {
@@ -106,6 +127,7 @@ export const roleDefinitions: {
       "settings.manage",
       "ai.use",
       "ai.review",
+      "social.manage",
     ],
   },
 ];

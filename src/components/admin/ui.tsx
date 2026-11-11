@@ -95,10 +95,25 @@ export const leadStatusTone: Record<string, Tone> = {
   new: "info",
   contacted: "neutral",
   qualified: "warn",
+  site_visit: "warn",
+  measurement: "warn",
   quoted: "warn",
+  negotiation: "warn",
   won: "good",
   lost: "bad",
 };
+
+/** Lead score 0–100 (null once won or lost). */
+export function ScoreBadge({ value }: { value: number | null }) {
+  if (value === null) return <span className="text-xs text-ink-muted">—</span>;
+  const tone: Tone = value >= 60 ? "good" : value >= 30 ? "warn" : "neutral";
+  return (
+    <Badge tone={tone}>
+      <span className="tabular-nums">{value}</span>
+      <span className="sr-only"> out of 100</span>
+    </Badge>
+  );
+}
 
 const temperatureTone: Record<string, Tone> = { hot: "bad", warm: "warn", cold: "info" };
 

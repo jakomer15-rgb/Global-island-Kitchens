@@ -74,7 +74,16 @@ export type DesignerProgress =
   | "closed";
 
 export function designerProgress(input: {
-  leadStatus: "new" | "contacted" | "qualified" | "quoted" | "won" | "lost";
+  leadStatus:
+    | "new"
+    | "contacted"
+    | "qualified"
+    | "site_visit"
+    | "measurement"
+    | "quoted"
+    | "negotiation"
+    | "won"
+    | "lost";
   projectStage: string | null;
 }): DesignerProgress {
   if (input.leadStatus === "lost") return "closed";
@@ -82,7 +91,8 @@ export function designerProgress(input: {
   if (input.projectStage === "installation") return "installation";
   if (input.projectStage === "production") return "in_production";
   if (input.leadStatus === "won") return "approved";
-  if (input.leadStatus === "quoted") return "quotation_ready";
+  // Negotiation happens on a quotation the designer already has.
+  if (input.leadStatus === "quoted" || input.leadStatus === "negotiation") return "quotation_ready";
   if (input.leadStatus === "new") return "received";
   return "in_review";
 }

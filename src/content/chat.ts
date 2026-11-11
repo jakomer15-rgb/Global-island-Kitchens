@@ -85,7 +85,7 @@ export const chatCopy = {
       en: "Reference photos or drawings (optional, up to 5)",
       ar: "صور أو رسومات مرجعية (اختياري، حتى 5)",
     },
-    addPhotos: { en: "Add photos", ar: "إضافة صور" },
+    addPhotos: { en: "Add photos or drawings", ar: "إضافة صور أو رسومات" },
     uploading: { en: "Uploading…", ar: "جارٍ الرفع…" },
     remove: { en: "Remove", ar: "إزالة" },
     consentTitle: { en: "Updates (optional)", ar: "التحديثات (اختياري)" },

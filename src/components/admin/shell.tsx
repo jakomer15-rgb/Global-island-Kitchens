@@ -8,7 +8,10 @@ import { Wordmark } from "@/components/site/wordmark";
 
 export interface NavGroup {
   label: string;
-  items: { href: string; label: string }[];
+  /** Set when the group's labels are in a chosen language (Arabic is shown right-to-left). */
+  lang?: "en" | "ar";
+  /** `exact`: highlighted only on that page, not on the pages below it. */
+  items: { href: string; label: string; exact?: boolean }[];
 }
 
 /** Admin layout: sidebar (drawer on small screens), top bar with notifications and sign-out. */
@@ -27,8 +30,8 @@ export function AdminShell({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const active = (href: string) =>
-    href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+  const active = (href: string, exact?: boolean) =>
+    href === "/admin" || exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
   const sidebar = (
     <nav
@@ -37,14 +40,19 @@ export function AdminShell({
       onClick={(e) => (e.target as HTMLElement).closest("a") && setOpen(false)}
     >
       {nav.map((group) => (
-        <div key={group.label}>
+        <div
+          key={group.label}
+          lang={group.lang}
+          dir={group.lang === "ar" ? "rtl" : undefined}
+          className={group.lang === "ar" ? "centre-ar" : undefined}
+        >
           <p className="eyebrow text-walnut">{group.label}</p>
           <ul className="mt-2 space-y-0.5">
             {group.items.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  aria-current={active(item.href) ? "page" : undefined}
+                  aria-current={active(item.href, item.exact) ? "page" : undefined}
                   className="block px-3 py-2 text-sm transition-colors hover:bg-sand aria-[current=page]:bg-charcoal aria-[current=page]:text-ivory"
                 >
                   {item.label}

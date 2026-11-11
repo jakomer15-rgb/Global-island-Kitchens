@@ -74,6 +74,21 @@ model User {
   aiDraftsRequested  AiDraft[]            @relation("AiRequester")
   aiDraftsReviewed   AiDraft[]            @relation("AiReviewer")
   knowledgeEdited    KnowledgeEntry[]     @relation("KnowledgeEditor")
+  integrationChecks  IntegrationCheck[]   @relation("IntegrationChecker")
+  documentsCreated   KnowledgeDocument[]  @relation("DocumentCreator")
+  documentsUpdated   KnowledgeDocument[]  @relation("DocumentEditor")
+  messagesWritten    CustomerMessage[]    @relation("MessageAuthor")
+  messagesDecided    CustomerMessage[]    @relation("MessageDecider")
+  prospectsAssigned  Prospect[]           @relation("ProspectAssignee")
+  prospectsCreated   Prospect[]           @relation("ProspectCreator")
+  campaignsCreated   Campaign[]           @relation("CampaignCreator")
+  campaignsDecided   Campaign[]           @relation("CampaignDecider")
+  socialPostsCreated SocialPost[]         @relation("SocialPostCreator")
+  socialPostsDecided SocialPost[]         @relation("SocialPostDecider")
+  socialCampaigns    SocialCampaign[]     @relation("SocialCampaignCreator")
+  analyticsQuestions AnalyticsQuestion[]
+  workflowsChanged   WorkflowSetting[]
+  workflowRuns       WorkflowRun[]
 
   @@map("users")
 }
@@ -198,10 +213,17 @@ model Customer {
   company           String?
   preferredLanguage Locale       @default(en) @map("preferred_language")
   notes             String?
+  /// Area or town, e.g. "Riffa" (staff enter it; up to 120 characters).
+  location          String?
+  /// Set when staff merged this duplicate into another record (it is then archived). New enquiries
+  /// matching its phone or email go to that record.
+  mergedIntoId      String?      @map("merged_into_id")
   archivedAt        DateTime?    @map("archived_at") @db.Timestamptz(3)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  mergedInto        Customer?          @relation("CustomerMerge", fields: [mergedIntoId], references: [id], onDelete: SetNull)
+  mergedFrom        Customer[]         @relation("CustomerMerge")
   leads             Lead[]
   consultations     Consultation[]
   quotationRequests QuotationRequest[]
@@ -211,8 +233,10 @@ model Customer {
   projects          Project[]
   designerAccounts  DesignerAccount[]
   chats             ChatConversation[]
+  messages          CustomerMessage[]
 
   @@index([name])
+  @@index([mergedIntoId])
   @@map("customers")
 }
 
@@ -228,6 +252,8 @@ enum LeadSource {
   instagram
   /// GIK Smart Assistant, the website's AI sales chat.
   website_chat
+  /// A prospect from the marketing agent that became interested (Stage 5).
+  prospecting
   other
 }
 
@@ -239,34 +265,49 @@ enum LeadTemperature {
   cold
 }
 
+/// The owner's pipeline (2026-11-11): New Inquiry → Contacted → Qualified → Site Visit → Measurement →
+/// Quotation (`quoted`) → Negotiation → Won / Lost.
 enum LeadStatus {
   new
   contacted
   qualified
+  site_visit
+  measurement
   quoted
+  negotiation
   won
   lost
 }
 
 model Lead {
-  id                 String           @id @default(cuid())
+  id                  String           @id @default(cuid())
   /// Shown to the customer, e.g. GIK-Q-2026-00042 (sequence in migration).
-  reference          String           @unique
-  customerId         String           @map("customer_id")
-  source             LeadSource
+  reference           String           @unique
+  customerId          String           @map("customer_id")
+  source              LeadSource
   /// Product page key from src/config/routes.ts, when known.
-  category           String?
-  status             LeadStatus       @default(new)
-  lostReason         String?          @map("lost_reason")
-  assignedToId       String?          @map("assigned_to_id")
-  summary            String
-  locale             Locale           @default(en)
+  category            String?
+  status              LeadStatus       @default(new)
+  lostReason          String?          @map("lost_reason")
+  assignedToId        String?          @map("assigned_to_id")
+  summary             String
+  locale              Locale           @default(en)
   /// HOT / WARM / COLD: set by the sales chat's assistant, or by staff (then the assistant leaves it).
-  temperature        LeadTemperature?
-  temperatureByStaff Boolean          @default(false) @map("temperature_by_staff")
-  archivedAt         DateTime?        @map("archived_at") @db.Timestamptz(3)
-  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  temperature         LeadTemperature?
+  temperatureByStaff  Boolean          @default(false) @map("temperature_by_staff")
+  /// 0–100, kept by the database (function lead_score, triggers); null once won or lost. Never written
+  /// by the app. Breakdown: src/lib/lead-score.ts.
+  score               Int?
+  /// Latest call, email, WhatsApp message or meeting on the lead (trigger on lead_activities).
+  lastContactAt       DateTime?        @map("last_contact_at") @db.Timestamptz(3)
+  /// Earliest open follow-up (trigger on follow_ups).
+  nextFollowUpAt      DateTime?        @map("next_follow_up_at") @db.Timestamptz(3)
+  /// When a chat visitor asked to talk to a person or for a callback (Stage 4). Shown as waiting until
+  /// a contact is logged after it.
+  handoverRequestedAt DateTime?        @map("handover_requested_at") @db.Timestamptz(3)
+  archivedAt          DateTime?        @map("archived_at") @db.Timestamptz(3)
+  createdAt           DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   customer         Customer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
   assignedTo       User?              @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
@@ -278,11 +319,17 @@ model Lead {
   projects         Project[]
   aiDrafts         AiDraft[]
   requirements     LeadRequirement?
+  messages         CustomerMessage[]
   chats            ChatConversation[]
+  prospects        Prospect[]
 
   @@index([status, createdAt])
   @@index([assignedToId])
   @@index([temperature, createdAt])
+  @@index([score])
+  @@index([nextFollowUpAt])
+  @@index([lastContactAt])
+  @@index([handoverRequestedAt])
   @@map("leads")
 }
 
@@ -521,6 +568,7 @@ model FileAsset {
   categories       Category[]
   catalogItems     CatalogItem[]
   quotationPdfs    QuotationRevision[]
+  socialPosts      SocialPost[]
 
   @@index([status, createdAt])
   @@index([quotationRequestId])
@@ -1265,4 +1313,500 @@ model ChatMessage {
 
   @@index([conversationId, createdAt])
   @@map("chat_messages")
+}
+
+// ─── AI Business Automation Centre (Stage 2, 2026-11-11) ────────────────────
+
+/// One "Test connection" run in Admin → Automation Centre → Integrations (each run is also in the audit
+/// log). `configHash` is a keyed hash of the settings tested, so a changed key shows as untested; keys
+/// themselves are never stored. `message` is written by the app (provider bodies are never kept).
+model IntegrationCheck {
+  id          String   @id @default(cuid())
+  /// Integration key from src/server/automation/integrations.ts, e.g. "anthropic".
+  integration String
+  ok          Boolean
+  message     String
+  configHash  String   @map("config_hash")
+  durationMs  Int      @map("duration_ms")
+  checkedById String?  @map("checked_by_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  checkedBy User? @relation("IntegrationChecker", fields: [checkedById], references: [id], onDelete: SetNull)
+
+  @@index([integration, createdAt])
+  @@index([createdAt])
+  @@map("integration_checks")
+}
+
+// ─── AI Sales Agent (Stage 4, 2026-11-11) ───────────────────────────────────
+
+enum KnowledgeDocKind {
+  brochure
+  catalogue
+  product
+  company
+  policy
+  /// Kept for quotations later; never given to the chat (it may not quote prices).
+  pricing
+  other
+}
+
+enum KnowledgeDocStatus {
+  draft
+  published
+}
+
+/// A document staff upload to the knowledge base (PDF, image or text). Its text is read when it is
+/// uploaded (by Claude for PDFs and images) and checked by staff before it is published; only
+/// published documents (never pricing) are searched by the chat. The file itself is not kept.
+model KnowledgeDocument {
+  id            String             @id @default(cuid())
+  title         String
+  kind          KnowledgeDocKind   @default(other)
+  status        KnowledgeDocStatus @default(draft)
+  fileName      String             @map("file_name")
+  mimeType      String             @map("mime_type")
+  sizeBytes     Int                @map("size_bytes")
+  text          String
+  /// "text" for plain-text files, otherwise the model that read it.
+  extractedWith String             @map("extracted_with")
+  /// The reading stopped at its length limit: the end of the document may be missing.
+  truncated     Boolean            @default(false)
+  createdById   String?            @map("created_by_id")
+  updatedById   String?            @map("updated_by_id")
+  publishedAt   DateTime?          @map("published_at") @db.Timestamptz(3)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  createdBy User?            @relation("DocumentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?            @relation("DocumentEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+  chunks    KnowledgeChunk[]
+
+  @@index([status, kind])
+  @@map("knowledge_documents")
+}
+
+/// A passage of a published document, searched with Postgres full-text search (`tsv`, generated).
+model KnowledgeChunk {
+  id         String                   @id @default(cuid())
+  documentId String                   @map("document_id")
+  ordinal    Int
+  content    String
+  /// GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED (migration SQL; Prisma can't express it).
+  tsv        Unsupported("tsvector")? @default(dbgenerated("to_tsvector('simple'::regconfig, content)"))
+
+  document KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, ordinal])
+  @@index([tsv], type: Gin)
+  @@map("knowledge_chunks")
+}
+
+enum MessageChannel {
+  email
+  whatsapp
+}
+
+enum CustomerMessageStatus {
+  pending_approval
+  approved
+  sent
+  failed
+  rejected
+  cancelled
+}
+
+/// A message to a customer, written by staff or drafted by the AI. Nothing is sent until someone with
+/// `outreach.approve` approves it, and only to customers whose consent for that channel is on record.
+/// A sent message can't be changed (trigger).
+model CustomerMessage {
+  id           String                @id @default(cuid())
+  leadId       String                @map("lead_id")
+  customerId   String                @map("customer_id")
+  channel      MessageChannel        @default(email)
+  subject      String?
+  body         String
+  language     Locale                @default(en)
+  status       CustomerMessageStatus @default(pending_approval)
+  /// staff | ai | auto_follow_up
+  origin       String
+  createdById  String?               @map("created_by_id")
+  decidedById  String?               @map("decided_by_id")
+  decidedAt    DateTime?             @map("decided_at") @db.Timestamptz(3)
+  decisionNote String?               @map("decision_note")
+  sentAt       DateTime?             @map("sent_at") @db.Timestamptz(3)
+  error        String?
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdBy User?    @relation("MessageAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  decidedBy User?    @relation("MessageDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([leadId])
+  @@map("customer_messages")
+}
+
+// ─── AI Marketing and Lead Generation Agent (Stage 5, 2026-11-11) ──────────
+
+enum ProspectType {
+  interior_designer
+  architect
+  construction_company
+  real_estate_developer
+  property_management
+  renovation_contractor
+  commercial_contractor
+  homeowner_new_build
+  other
+}
+
+enum ProspectStatus {
+  new
+  contacted
+  interested
+  not_interested
+  converted
+  /// Asked not to be contacted (or unsubscribed): never emailed again.
+  do_not_contact
+}
+
+enum ProspectSource {
+  manual
+  import
+  google_places
+  referral
+  event
+  other
+}
+
+enum ProspectPriority {
+  high
+  medium
+  low
+}
+
+/// A business (or person) that may buy from GIK, found by staff, imported from a spreadsheet or picked
+/// from a Google Places search. Contact details are what staff entered from the business's own public
+/// information. Score and priority are worked out by the app (src/lib/prospect-score.ts).
+model Prospect {
+  id              String           @id @default(cuid())
+  companyName     String           @map("company_name")
+  contactName     String?          @map("contact_name")
+  contactRole     String?          @map("contact_role")
+  type            ProspectType     @default(other)
+  /// https://… only.
+  website         String?
+  /// Lower-cased; unique when present.
+  email           String?
+  /// E.164; unique when present.
+  phone           String?
+  /// BH, SA, AE, KW, QA or OM.
+  country         String           @default("BH")
+  area            String?
+  source          ProspectSource   @default(manual)
+  sourceNote      String?          @map("source_note")
+  /// Google Places id, when picked from a search (unique when present).
+  placeId         String?          @map("place_id")
+  status          ProspectStatus   @default(new)
+  score           Int              @default(0)
+  priority        ProspectPriority @default(low)
+  /// Why this business may need GIK (staff, or an AI suggestion staff kept).
+  opportunity     String?
+  notes           String?
+  assignedToId    String?          @map("assigned_to_id")
+  lastContactedAt DateTime?        @map("last_contacted_at") @db.Timestamptz(3)
+  /// Used the unsubscribe link (status is then do_not_contact).
+  unsubscribedAt  DateTime?        @map("unsubscribed_at") @db.Timestamptz(3)
+  convertedLeadId String?          @map("converted_lead_id")
+  createdById     String?          @map("created_by_id")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  assignedTo    User?             @relation("ProspectAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy     User?             @relation("ProspectCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  convertedLead Lead?             @relation(fields: [convertedLeadId], references: [id], onDelete: SetNull)
+  messages      CampaignMessage[]
+
+  @@index([status, score])
+  @@index([type, country])
+  @@index([createdAt])
+  @@map("prospects")
+}
+
+enum CampaignStatus {
+  draft
+  pending_approval
+  approved
+  sent
+  rejected
+  cancelled
+}
+
+enum CampaignMessageStatus {
+  draft
+  queued
+  sent
+  failed
+  skipped
+}
+
+/// An email campaign to prospects. Staff choose the audience and what it should say; the AI writes one
+/// email per prospect (staff can edit them); an approver (`outreach.approve`) approves the whole
+/// campaign; the outbox sends it a few at a time, each with an unsubscribe link.
+model Campaign {
+  id              String         @id @default(cuid())
+  name            String
+  /// What the emails should say (instructions for the AI and the approver).
+  brief           String
+  /// Template with {company}, {contact}, {area}, {type}; written by staff or the AI.
+  subjectTemplate String?        @map("subject_template")
+  bodyTemplate    String?        @map("body_template")
+  language        Locale         @default(en)
+  /// The audience filters when the emails were prepared.
+  audience        Json
+  status          CampaignStatus @default(draft)
+  createdById     String?        @map("created_by_id")
+  decidedById     String?        @map("decided_by_id")
+  decidedAt       DateTime?      @map("decided_at") @db.Timestamptz(3)
+  decisionNote    String?        @map("decision_note")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  createdBy User?             @relation("CampaignCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  decidedBy User?             @relation("CampaignDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  messages  CampaignMessage[]
+
+  @@index([status, createdAt])
+  @@map("campaigns")
+}
+
+/// One prospect's email in a campaign. A sent message can't be changed (trigger).
+model CampaignMessage {
+  id         String                @id @default(cuid())
+  campaignId String                @map("campaign_id")
+  prospectId String                @map("prospect_id")
+  subject    String
+  body       String
+  status     CampaignMessageStatus @default(draft)
+  sentAt     DateTime?             @map("sent_at") @db.Timestamptz(3)
+  error      String?
+  createdAt  DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  prospect Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, prospectId])
+  @@index([status])
+  @@index([prospectId])
+  @@map("campaign_messages")
+}
+
+// ───────────────────────────── Social media (Stage 6) ─────────────────────────────
+
+enum SocialPlatform {
+  instagram
+  facebook
+  linkedin
+  tiktok
+}
+
+enum SocialPostType {
+  image
+  text
+  reel
+  story
+}
+
+enum SocialPostStatus {
+  draft
+  pending_approval
+  approved
+  scheduled
+  published
+  failed
+}
+
+/// Which captions go out: English, Arabic, or both (Arabic first, then English).
+enum SocialLanguage {
+  en
+  ar
+  both
+}
+
+enum SocialTargetStatus {
+  /// Waiting to be published through the platform's API.
+  pending
+  published
+  failed
+  /// No publishing connection for this platform or post type: staff post it by hand and mark it.
+  manual
+}
+
+/// A group of posts with one aim (a promotion, a season, a launch).
+model SocialCampaign {
+  id          String    @id @default(cuid())
+  name        String
+  objective   String?
+  startsOn    DateTime? @map("starts_on") @db.Date
+  endsOn      DateTime? @map("ends_on") @db.Date
+  createdById String?   @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  createdBy User?        @relation("SocialCampaignCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  posts     SocialPost[]
+
+  @@index([createdAt])
+  @@map("social_campaigns")
+}
+
+/// A social media post: written by staff or drafted by the AI, approved by `social.publish`, then
+/// published through the official APIs (or posted by hand where there is no connection). While approved,
+/// scheduled, published or failed its content can't change (trigger); editing sends it back to draft.
+model SocialPost {
+  id                String           @id @default(cuid())
+  /// Internal name or topic, e.g. "Handleless kitchen in Riffa".
+  title             String
+  /// What the post is about (for the AI and the approver).
+  brief             String?
+  type              SocialPostType   @default(image)
+  platforms         SocialPlatform[]
+  language          SocialLanguage   @default(both)
+  captionEn         String?          @map("caption_en")
+  captionAr         String?          @map("caption_ar")
+  /// Without the "#".
+  hashtags          String[]         @default([])
+  /// Reel or video script.
+  script            String?
+  /// Brief for a designer (or Canva) to make the promotional image.
+  imageBrief        String?          @map("image_brief")
+  /// A published website image (portfolio photo with usage permission, or a website image).
+  imageFileId       String?          @map("image_file_id")
+  /// Photos suggested for the post (file ids), from the published portfolio.
+  suggestedImageIds String[]         @default([]) @map("suggested_image_ids")
+  /// Day and time planned in the calendar; for a scheduled post, when it is published.
+  plannedAt         DateTime?        @map("planned_at") @db.Timestamptz(3)
+  status            SocialPostStatus @default(draft)
+  campaignId        String?          @map("campaign_id")
+  createdById       String?          @map("created_by_id")
+  submittedAt       DateTime?        @map("submitted_at") @db.Timestamptz(3)
+  decidedById       String?          @map("decided_by_id")
+  approvedAt        DateTime?        @map("approved_at") @db.Timestamptz(3)
+  decisionNote      String?          @map("decision_note")
+  publishedAt       DateTime?        @map("published_at") @db.Timestamptz(3)
+  lastError         String?          @map("last_error")
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  image     FileAsset?         @relation(fields: [imageFileId], references: [id], onDelete: Restrict)
+  campaign  SocialCampaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdBy User?              @relation("SocialPostCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  decidedBy User?              @relation("SocialPostDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  targets   SocialPostTarget[]
+
+  @@index([plannedAt])
+  @@index([status, plannedAt])
+  @@index([campaignId])
+  @@map("social_posts")
+}
+
+/// One platform of an approved post: its publishing result and engagement figures.
+model SocialPostTarget {
+  id          String             @id @default(cuid())
+  postId      String             @map("post_id")
+  platform    SocialPlatform
+  status      SocialTargetStatus @default(pending)
+  /// The platform's id for the published post.
+  externalId  String?            @map("external_id")
+  permalink   String?
+  error       String?
+  publishedAt DateTime?          @map("published_at") @db.Timestamptz(3)
+  likes       Int?
+  comments    Int?
+  shares      Int?
+  metricsAt   DateTime?          @map("metrics_at") @db.Timestamptz(3)
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  post SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, platform])
+  @@index([status, publishedAt])
+  @@map("social_post_targets")
+}
+
+// ───────────────────────────── Analytics (Stage 7) ─────────────────────────────
+
+/// A management question answered by the AI from fixed database queries. Keeps the queries run, their
+/// results (the figures shown with the answer) and the answer, so every answer can be checked later.
+model AnalyticsQuestion {
+  id        String   @id @default(cuid())
+  question  String
+  /// [{ name, period }] chosen by the AI from the query catalogue.
+  queries   Json
+  /// The query results exactly as given to the AI.
+  results   Json
+  answer    String
+  model     String
+  askedById String?  @map("asked_by_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  askedBy User? @relation(fields: [askedById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("analytics_questions")
+}
+
+/// One emailed report per period (daily, weekly, monthly), so the scheduled job never sends it twice.
+model AnalyticsReportRun {
+  id          String   @id @default(cuid())
+  kind        String
+  periodStart DateTime @map("period_start") @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([kind, periodStart])
+  @@map("analytics_report_runs")
+}
+
+// ───────────────────────────── Workflows (Stage 8) ─────────────────────────────
+
+/// One row per workflow (src/server/workflows/registry.ts): its switch (for workflows without a setting of
+/// their own), its options and when the scheduler last looked at it.
+model WorkflowSetting {
+  key           String    @id
+  enabled       Boolean   @default(false)
+  config        Json      @default("{}")
+  lastCheckedAt DateTime? @map("last_checked_at") @db.Timestamptz(3)
+  updatedById   String?   @map("updated_by_id")
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("workflow_settings")
+}
+
+/// A workflow run that did something or failed (runs with nothing to do only update lastCheckedAt).
+model WorkflowRun {
+  id            String    @id @default(cuid())
+  workflow      String
+  /// schedule, manual, n8n or retry.
+  trigger       String
+  /// succeeded, failed or skipped (switched off or not set up when started by hand).
+  status        String
+  startedAt     DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt    DateTime? @map("finished_at") @db.Timestamptz(3)
+  result        Json?
+  error         String?
+  retryOfId     String?   @map("retry_of_id")
+  triggeredById String?   @map("triggered_by_id")
+
+  triggeredBy User? @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([workflow, startedAt])
+  @@index([status, startedAt])
+  @@map("workflow_runs")
 }

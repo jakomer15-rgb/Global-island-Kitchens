@@ -56,7 +56,34 @@ export interface ChatLead {
   unsubscribeUrl: string | null;
 }
 
+/** An approved message to a customer (Stage 4). The message itself stays in customer_messages. */
+export interface CustomerMessageApproved {
+  messageId: string;
+  leadId: string;
+}
+
+/** One approved campaign email to a prospect (Stage 5). */
+export interface CampaignMessageQueued {
+  campaignMessageId: string;
+  campaignId: string;
+}
+
+/** An approved social media post to publish now (Stage 6). */
+export interface SocialPostPublish {
+  postId: string;
+}
+
+/** A business report to email for a completed period (Stage 7). */
+export interface AnalyticsReportDue {
+  kind: "daily" | "weekly" | "monthly" | "campaigns";
+  periodStart: string;
+}
+
 export interface OutboxEvents {
+  "analytics.report": AnalyticsReportDue;
+  "social.publish": SocialPostPublish;
+  "customer.message": CustomerMessageApproved;
+  "campaign.message": CampaignMessageQueued;
   "enquiry.received": EnquiryReceived;
   "chat.lead": ChatLead;
   "lead.status_changed": LeadStatusChanged;

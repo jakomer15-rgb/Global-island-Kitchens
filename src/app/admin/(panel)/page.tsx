@@ -14,6 +14,8 @@ import {
 import { requireActor } from "@/server/auth/session";
 import { can } from "@/server/auth/staff";
 import { dashboard, recentActivity } from "@/server/crm/dashboard";
+import { leadStatusNames } from "@/server/crm/leads";
+import type { LeadStatus } from "@/generated/prisma/client";
 import { db } from "@/server/db";
 import { formatBhd } from "@/lib/money";
 import { salesFigures } from "@/server/quotations/dashboard";
@@ -137,7 +139,7 @@ export default async function DashboardPage() {
               <li key={status}>
                 <Link href={`/admin/leads?status=${status}`}>
                   <Badge tone={leadStatusTone[status]}>
-                    {label(status)} · {count}
+                    {leadStatusNames[status as LeadStatus] ?? label(status)} · {count}
                   </Badge>
                 </Link>
               </li>
@@ -172,7 +174,7 @@ export default async function DashboardPage() {
                     <span className="block text-ink-muted">{l.summary}</span>
                   </span>
                   <span className="shrink-0 text-end">
-                    <Badge tone={leadStatusTone[l.status]}>{label(l.status)}</Badge>
+                    <Badge tone={leadStatusTone[l.status]}>{leadStatusNames[l.status]}</Badge>
                     <span className="block text-xs text-ink-muted">{fmtDateTime(l.createdAt)}</span>
                   </span>
                 </li>

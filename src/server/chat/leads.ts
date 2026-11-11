@@ -7,6 +7,7 @@ import { createLead, findOrCreateCustomer, inTransaction, recordConsent } from "
 import { RuleError } from "@/server/errors";
 import { applyAnalysisToLead, storedAnalysis } from "./analysis";
 import { saveVisitorTurn } from "./conversation";
+import { HANDOVER_REASONS, requestHandover } from "./handover";
 
 /**
  * The sales chat's contact form → the CRM. One transaction: customer (found by phone, then email),
@@ -24,7 +25,15 @@ export const reasonLabel: Record<ContactReason, string> = {
 const contactLabel = { whatsapp: "WhatsApp", call: "Phone call", email: "Email" } as const;
 
 /** Leads still being worked: a new chat from the same customer joins them. */
-const OPEN_STATUSES = ["new", "contacted", "qualified", "quoted"] as const;
+const OPEN_STATUSES = [
+  "new",
+  "contacted",
+  "qualified",
+  "site_visit",
+  "measurement",
+  "quoted",
+  "negotiation",
+] as const;
 const REUSE_WINDOW_MS = 60 * 24 * 60 * 60 * 1000;
 
 export async function submitChatContact(
@@ -139,6 +148,9 @@ export async function submitChatContact(
           .join("\n"),
       },
     });
+    // "Talk to a person" / "call me back": the team is alerted and a follow-up is due within two hours.
+    if ((HANDOVER_REASONS as readonly string[]).includes(input.reason))
+      await requestHandover(tx, lead, input.reason, now);
     // Consent is recorded only for a customer this form created.
     if (!knownCustomer) await recordConsent(tx, customer.id, input, "website_chat", ctx.ipHash);
     // Sales-team email (and WhatsApp alert, once set up) and the n8n event, delivered by the outbox.

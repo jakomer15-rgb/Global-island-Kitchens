@@ -2,6 +2,7 @@
 
 import { looksLikeBot } from "@/lib/forms/common";
 import { unsubscribe } from "@/server/consent";
+import { unsubscribeProspect } from "@/server/marketing/prospects";
 import { db } from "@/server/db";
 import { AiError } from "@/server/ai/provider";
 import type { FurnitureAnswer } from "@/lib/furniture";
@@ -42,7 +43,10 @@ export async function unsubscribeAction(token: string): Promise<{ ok: boolean }>
   // Bounded so the link can't be used to flood the consent table.
   if (!(await rateLimit(db, `unsubscribe:${ipHash}`, 20, 60 * 60))) return { ok: false };
   try {
-    await unsubscribe(db, String(token).slice(0, 300), ipHash);
+    const t = String(token).slice(0, 300);
+    // Marketing emails to businesses carry a prospect link; customers' emails a consent link.
+    if (t.startsWith("prospect.")) return { ok: await unsubscribeProspect(db, t, ipHash) };
+    await unsubscribe(db, t, ipHash);
     return { ok: true };
   } catch {
     return { ok: false };

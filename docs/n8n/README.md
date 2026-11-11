@@ -21,12 +21,30 @@ retries, so the same `id` can arrive more than once: make workflows safe to repe
 | `whatsapp.received`   | A customer's WhatsApp message is logged                                    | `leadId`, `reference`, `newLead`                                                                                                                                       |
 | `chat.lead`           | A visitor sends the sales chat's contact form                              | `leadId`, `reference`, `conversationId`, `reason`, `newLead`, `locale`, `customer` (name, phone, email), `preferredContact`, `customerId`, `consent`, `unsubscribeUrl` |
 
+`customer.message` (`messageId`, `leadId`) is sent when staff approve a message to a customer; the platform
+emails it itself (consent checked again), so n8n only needs it for reporting.
+
 Only `enquiry.received` and `chat.lead` carry contact details (the customer asked to be contacted). The
 others carry references and statuses; look the lead up in the admin.
 
 `chat.lead` is also delivered by the platform itself: an email to the sales team (Admin → AI agent →
 “Email the sales team at”, or `NOTIFY_EMAILS`) and, once set up, a WhatsApp alert to staff numbers. n8n
 doesn't need to repeat those.
+
+Also sent since Stages 6–7: `social.publish` (`postId`) when an approved post is queued for publishing, and
+`analytics.report` (`kind`, `periodStart`) when a report email is queued.
+
+## Running and starting workflows (Stage 8)
+
+The nine workflows run inside the platform (Automation Centre → Workflows). n8n can drive them:
+
+- **Every few minutes:** a Schedule Trigger → HTTP Request `GET /api/cron/outbox` with
+  `Authorization: Bearer <CRON_SECRET>`. Each workflow still runs at most at its own interval.
+- **One workflow now:** `POST /api/automation/workflows` with `{"workflow":"<key>"}` (or `"due"`), signed exactly
+  like the events you receive (below), with `N8N_WEBHOOK_SECRET`. The answer is the run's status and counts.
+
+Starting a workflow never sends anything to a customer or publishes anything: they draft, queue and count, and
+people approve.
 
 ## Automated sales follow-ups (design, not built)
 
