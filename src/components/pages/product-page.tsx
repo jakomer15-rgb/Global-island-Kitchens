@@ -124,39 +124,41 @@ export async function ProductPage({
             </ul>
           </div>
 
-          <div className="lg:col-span-6 lg:col-start-7">
-            <h2 className="font-display text-display-lg">{t("materials")}</h2>
-            <div className="mt-8 space-y-10">
-              {p.materials.map((family) => (
-                <div key={family}>
-                  {family !== "aluminium" && (
-                    <ul className="grid grid-cols-4 gap-2">
-                      {familySwatches[family].map((s) => (
-                        <li
-                          key={s}
-                          className="aspect-square overflow-hidden shadow-[inset_0_0_0_1px_rgb(0_0_0/0.06)] transition-transform duration-500 ease-out-soft hover:-translate-y-1"
-                          title={tm(`swatches.${s}`)}
-                        >
-                          <Swatch name={s} />
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <h3 className="mt-4 font-display text-display-md">{familyLabel[family]}</h3>
-                  <p className="mt-2 text-ink-muted">
-                    {family === "aluminium" ? materialsPage.otherBody[locale] : tm(`${family}.body`)}
-                  </p>
-                </div>
-              ))}
+          {p.materials.length > 0 && (
+            <div className="lg:col-span-6 lg:col-start-7">
+              <h2 className="font-display text-display-lg">{t("materials")}</h2>
+              <div className="mt-8 space-y-10">
+                {p.materials.map((family) => (
+                  <div key={family}>
+                    {family !== "aluminium" && (
+                      <ul className="grid grid-cols-4 gap-2">
+                        {familySwatches[family].map((s) => (
+                          <li
+                            key={s}
+                            className="aspect-square overflow-hidden shadow-[inset_0_0_0_1px_rgb(0_0_0/0.06)] transition-transform duration-500 ease-out-soft hover:-translate-y-1"
+                            title={tm(`swatches.${s}`)}
+                          >
+                            <Swatch name={s} />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <h3 className="mt-4 font-display text-display-md">{familyLabel[family]}</h3>
+                    <p className="mt-2 text-ink-muted">
+                      {family === "aluminium" ? materialsPage.otherBody[locale] : tm(`${family}.body`)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-8 text-xs text-ink-muted">{t("swatchNote")}</p>
+              <Link
+                href={pathFor("materials")}
+                className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-medium underline decoration-walnut/50 underline-offset-[6px] hover:decoration-walnut"
+              >
+                {t("materialsLink")} <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+              </Link>
             </div>
-            <p className="mt-8 text-xs text-ink-muted">{t("swatchNote")}</p>
-            <Link
-              href={pathFor("materials")}
-              className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-medium underline decoration-walnut/50 underline-offset-[6px] hover:decoration-walnut"
-            >
-              {t("materialsLink")} <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
-            </Link>
-          </div>
+          )}
         </div>
       </section>
 

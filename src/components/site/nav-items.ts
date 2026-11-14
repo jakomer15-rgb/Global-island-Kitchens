@@ -10,6 +10,7 @@ export const productNavKeys = [
   "tvUnits",
   "wallCladding",
   "bathroomVanities",
+  "ceilingUmbrellas",
 ] as const satisfies readonly PageKey[];
 
 /** Top-level links after the products menu: [page, Nav message key]. */

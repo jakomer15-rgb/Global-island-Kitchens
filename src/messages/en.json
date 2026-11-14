@@ -139,6 +139,10 @@
       "bathroomVanities": {
         "name": "Bathroom vanities",
         "body": "Floating and tall-unit vanities."
+      },
+      "ceilingUmbrellas": {
+        "name": "Ceiling umbrellas",
+        "body": "Suspended curved ceiling features, in custom sizes and shapes."
       }
     },
     "more": "We also make laundry rooms, laminate doors with concealed hinges, Murphy beds and custom cabinets."
@@ -350,6 +354,7 @@
         "tvUnits": "TV unit",
         "wallCladding": "Wall cladding",
         "bathroomVanities": "Bathroom vanity",
+        "ceilingUmbrellas": "Ceiling umbrella",
         "bespoke": "Something else (laundry room, doors, cabinets)",
         "completeProject": "A complete project (several rooms)"
       },
