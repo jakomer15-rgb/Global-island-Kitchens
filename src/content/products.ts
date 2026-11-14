@@ -11,6 +11,7 @@ export type ProductKey = Extract<
   | "tvUnits"
   | "wallCladding"
   | "bathroomVanities"
+  | "ceilingUmbrellas"
 >;
 
 /** Scope tags used to match products with projects (src/content/projects.ts). */
@@ -383,6 +384,64 @@ export const products: Product[] = [
     ],
     materials: ["egger", "mdf"],
     scope: ["vanities"],
+  },
+  {
+    // Added on the owner's instruction (2026-11-14), from the owner's own product sheet. The body
+    // material isn't confirmed (OPEN_QUESTIONS), so no material family is named.
+    key: "ceilingUmbrellas",
+    name: { en: "Ceiling umbrellas", ar: "مظلات السقف" },
+    heading: {
+      en: "Custom ceiling umbrellas, made to measure in Bahrain",
+      ar: "مظلات سقف حسب الطلب، تُصنع على المقاس في البحرين",
+    },
+    metaTitle: { en: "Custom Ceiling Umbrellas in Bahrain", ar: "مظلات سقف حسب الطلب في البحرين" },
+    metaDescription: {
+      en: "Custom ceiling umbrellas with smooth curved designs, made to measure and installed on steel cable suspension for homes, offices and commercial spaces in Bahrain.",
+      ar: "مظلات سقف حسب الطلب بتصاميم منحنية ناعمة، تُصنع على المقاس وتُركَّب بنظام تعليق بكابلات فولاذية للمنازل والمكاتب والمساحات التجارية في البحرين.",
+    },
+    intro: {
+      en: "Ceiling umbrellas are suspended curved features that shape a ceiling. We design, manufacture and install them to your space, in the size and shape your design calls for.",
+      ar: "مظلات السقف عناصر منحنية معلّقة تُضفي شكلًا مميزًا على السقف. نصممها ونصنعها ونركّبها لتناسب مساحتكم، بالمقاس والشكل الذي يتطلبه تصميمكم.",
+    },
+    makes: {
+      en: [
+        "Custom sizes and shapes",
+        "Finish options: black, matte and satin",
+        "Steel cable suspension, professionally installed",
+        "For homes, offices and commercial spaces",
+      ],
+      ar: [
+        "مقاسات وأشكال حسب الطلب",
+        "خيارات تشطيب: أسود ومطفي وساتان",
+        "تعليق بكابلات فولاذية وتركيب احترافي",
+        "للمنازل والمكاتب والمساحات التجارية",
+      ],
+    },
+    details: [
+      {
+        title: { en: "Smooth curved design", ar: "تصميم منحنٍ ناعم" },
+        body: {
+          en: "Clean, flowing curves give a ceiling a modern look. Length, height and diameter all follow your design, so each umbrella is made for the room it hangs in.",
+          ar: "تمنح المنحنيات الانسيابية السقف مظهرًا عصريًا. ويتبع الطول والارتفاع والقطر تصميمكم، فتُصنع كل مظلة للغرفة التي تُعلَّق فيها.",
+        },
+      },
+      {
+        title: { en: "Suspension and finish", ar: "التعليق والتشطيب" },
+        body: {
+          en: "Each umbrella hangs on steel cables for a stable, secure installation, and has a powder-coated finish chosen to suit the space.",
+          ar: "تُعلَّق كل مظلة بكابلات فولاذية لتركيب ثابت وآمن، وتُشطَّب بطلاء بودرة يُختار ليناسب المساحة.",
+        },
+      },
+      {
+        title: { en: "What to tell us", ar: "ما نحتاج إلى معرفته" },
+        body: {
+          en: "Send us the rough size of the room, the ceiling height and a photo or drawing if you have one. We will advise on the shape and finish, then prepare a design and quotation.",
+          ar: "أرسلوا إلينا المقاس التقريبي للغرفة وارتفاع السقف وصورة أو مخططًا إن توفر لديكم. وسننصحكم بالشكل والتشطيب، ثم نعدّ التصميم وعرض السعر.",
+        },
+      },
+    ],
+    materials: [],
+    scope: [],
   },
 ];
 

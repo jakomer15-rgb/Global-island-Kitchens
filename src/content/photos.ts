@@ -83,6 +83,21 @@ export const photos = {
     "L-shaped kitchen with cream cabinets, a wood-grain tall unit and a stacked washer and dryer",
     "مطبخ على شكل حرف L بخزائن كريمية ووحدة عالية خشبية وغسالة ومجففة فوق بعضهما",
   ),
+  // Product pictures supplied by the owner on 2026-11-14 for these two product lines (not project photos).
+  aluminiumKitchen: photo(
+    "aluminium-kitchen",
+    1536,
+    1024,
+    "L-shaped kitchen in taupe with lit glass-fronted wall cabinets, a stone-look backsplash and built-in oven",
+    "مطبخ على شكل حرف L بلون رمادي بني بخزائن علوية بواجهات زجاجية مضاءة وخلفية بمظهر الحجر وفرن مدمج",
+  ),
+  ceilingUmbrella: photo(
+    "ceiling-umbrella",
+    940,
+    422,
+    "Black curved ceiling umbrella with two rings, hung from the ceiling on thin cables",
+    "مظلة سقف سوداء منحنية بحلقتين، معلّقة من السقف بكابلات رفيعة",
+  ),
 
   // Projects
   alFarisLiving: photo(
@@ -262,6 +277,8 @@ export const photos = {
 /** Product pages and cards that have a photo from the company profile; the others show a finish illustration. */
 export const productPhotos: Partial<Record<ProductKey, Photo>> = {
   woodenKitchens: photos.heroKitchen,
+  aluminiumKitchens: photos.aluminiumKitchen,
+  ceilingUmbrellas: photos.ceilingUmbrella,
   walkInClosets: photos.walkInCloset,
   tvUnits: photos.tvUnit,
   bathroomVanities: photos.vanity,

@@ -11,6 +11,7 @@ export const quoteCategories = [
   "tvUnits",
   "wallCladding",
   "bathroomVanities",
+  "ceilingUmbrellas",
   "bespoke",
   "completeProject",
 ] as const;

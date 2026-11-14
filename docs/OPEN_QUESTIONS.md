@@ -156,3 +156,8 @@ Until answered, the site leaves the item out (or shows it only inside the admin 
     mid-way aren't added to the cost figures; a WhatsApp alert to several staff numbers can be repeated
     when one number fails and the job retries; knowledge-base and catalogue text is trusted as staff
     wrote it (only staff with `chat.manage` can edit it). None blocks launch; fix before heavy use.
+80. **Ceiling umbrellas (added 2026-11-14 on the owner's instruction):** what the umbrellas are made of
+    (aluminium, steel or other), the finish colours on offer, and whether they're made in the Hamad Town
+    factory. The page names only what the owner's product sheet shows (custom sizes and shapes, steel
+    cable suspension, powder-coated finish, black/matte/satin options). The two product pictures supplied
+    the same day are shown as product pictures, not as project photos.

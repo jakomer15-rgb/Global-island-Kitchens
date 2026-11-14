@@ -14,6 +14,7 @@ export type PageKey =
   | "tvUnits"
   | "wallCladding"
   | "bathroomVanities"
+  | "ceilingUmbrellas"
   | "bespoke"
   | "materials"
   | "projects"
@@ -38,6 +39,8 @@ export const pages: Record<PageKey, { path: string; ready: boolean }> = {
   tvUnits: { path: "/tv-units", ready: true },
   wallCladding: { path: "/wall-cladding", ready: true },
   bathroomVanities: { path: "/bathroom-vanities", ready: true },
+  // Added on the owner's instruction, 2026-11-14.
+  ceilingUmbrellas: { path: "/ceiling-umbrellas", ready: true },
   // "More we make": profile products without their own page (approved 2026-10-25, ARCHITECTURE.md §9).
   bespoke: { path: "/bespoke", ready: true },
   materials: { path: "/materials", ready: true },

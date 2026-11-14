@@ -197,6 +197,7 @@ export const portal = {
       tvUnits: { en: "TV units", ar: "وحدات تلفزيون" },
       wallCladding: { en: "Wall cladding", ar: "تكسية جدران" },
       bathroomVanities: { en: "Bathroom vanities", ar: "وحدات حمامات" },
+      ceilingUmbrellas: { en: "Ceiling umbrellas", ar: "مظلات سقف" },
       bespoke: { en: "More we make (bespoke)", ar: "منتجات أخرى (حسب الطلب)" },
       completeProject: { en: "Complete project", ar: "مشروع متكامل" },
     },
