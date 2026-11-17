@@ -184,8 +184,11 @@ submission; the job covers retries.
 
 The same job runs the automation workflows that are due (Automation Centre → Workflows): each at most at its
 own interval (5 minutes to 6 hours), claimed with one atomic update so two overlapping calls never run it
-twice. On the Vercel Hobby plan the job runs once a day; to run workflows every few minutes without a paid plan,
-use n8n:
+twice. On the Vercel Hobby plan the job runs once a day. To run it every 10 minutes for free, use the GitHub
+Actions timer `.github/workflows/automation-timer.yml`: in GitHub → repository → Settings → Secrets and variables →
+Actions add `SITE_URL` (the live address, no trailing slash) and `CRON_SECRET` (the same value as in Vercel). Until
+both are set each run skips without failing; check Actions → "Automation timer" → Run workflow once to test it
+(the log shows `HTTP 200`). GitHub can start scheduled runs a few minutes late. Alternatively use n8n:
 
 1. In n8n add a **Schedule Trigger** (every 10 minutes) and an **HTTP Request** node: `GET
 https://<site>/api/cron/outbox`, header `Authorization: Bearer <CRON_SECRET>`.

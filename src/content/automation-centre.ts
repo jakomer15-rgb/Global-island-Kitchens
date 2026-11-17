@@ -74,8 +74,8 @@ export const centreText = {
     } as Record<string, Text>,
     timerTitle: t("How often workflows run", "كم مرة تعمل المسارات"),
     timer: t(
-      "Timer workflows run when the scheduled job is called. On the current Vercel plan that is once a day (06:00 Bahrain). To run them every few minutes, add an n8n Schedule trigger that calls the job (DEPLOYMENT.md, “Workflows”) or upgrade Vercel. Each workflow still runs at most at its own interval.",
-      "تعمل المسارات المؤقتة عند استدعاء المهمة المجدولة. على خطة Vercel الحالية يحدث ذلك مرة يوميًا (06:00 بتوقيت البحرين). لتشغيلها كل بضع دقائق أضيفوا مؤقت n8n يستدعي المهمة (DEPLOYMENT.md، «Workflows») أو رقّوا خطة Vercel. يبقى كل مسار مقيدًا بفترته الخاصة.",
+      "Timer workflows run when the scheduled job is called. Vercel calls it once a day (06:00 Bahrain). To run them every 10 minutes for free, add the SITE_URL and CRON_SECRET secrets in GitHub for the “Automation timer” (DEPLOYMENT.md, “Workflows”); an n8n timer or a paid Vercel plan also work. Each workflow still runs at most at its own interval.",
+      "تعمل المسارات المؤقتة عند استدعاء المهمة المجدولة. يستدعيها Vercel مرة يوميًا (06:00 بتوقيت البحرين). لتشغيلها كل 10 دقائق مجانًا أضيفوا السرّين SITE_URL وCRON_SECRET في GitHub لـ«Automation timer» (DEPLOYMENT.md، «Workflows»)؛ ويصلح أيضًا مؤقت n8n أو خطة Vercel مدفوعة. يبقى كل مسار مقيدًا بفترته الخاصة.",
     ),
     n8nTitle: t("Starting workflows from n8n", "تشغيل المسارات من n8n"),
     n8n: t(
@@ -349,8 +349,8 @@ export const centreText = {
     cron: {
       name: t("Scheduled job", "المهمة المجدولة"),
       purpose: t(
-        "Runs the workflows that are due, sends waiting emails and events and retries failures. On the current Vercel plan it runs once a day; an n8n Schedule trigger (or a paid plan) can call it every few minutes.",
-        "تشغّل المسارات المستحقة وترسل الرسائل والأحداث المنتظرة وتعيد المحاولات الفاشلة. تعمل مرة يوميًا على خطة Vercel الحالية؛ ويمكن لمؤقت n8n (أو خطة مدفوعة) استدعاؤها كل بضع دقائق.",
+        "Runs the workflows that are due, sends waiting emails and events and retries failures. Vercel runs it once a day; the free GitHub “Automation timer” (or n8n, or a paid plan) can call it every 10 minutes.",
+        "تشغّل المسارات المستحقة وترسل الرسائل والأحداث المنتظرة وتعيد المحاولات الفاشلة. يشغّلها Vercel مرة يوميًا؛ ويمكن لمؤقت GitHub المجاني «Automation timer» (أو n8n أو خطة مدفوعة) استدعاؤها كل 10 دقائق.",
       ),
     },
     meta: {

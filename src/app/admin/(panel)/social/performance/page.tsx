@@ -26,7 +26,7 @@ export default async function PerformancePage({ searchParams }: PageProps<"/admi
     <>
       <PageHeader
         title="Performance"
-        description="Posts published and the likes, comments and shares Meta reports for them. Figures are read from Facebook and Instagram once a day (and when you refresh); posts made by hand on other platforms are counted but have no figures."
+        description="Posts published and the likes, comments and shares Meta reports for them. Figures are read from Facebook and Instagram at most every 6 hours by the scheduled job (once a day without the GitHub timer) and when you refresh; posts made by hand on other platforms are counted but have no figures."
         actions={
           connected ? (
             <ActionForm
