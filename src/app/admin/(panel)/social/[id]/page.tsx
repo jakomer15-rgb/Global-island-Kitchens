@@ -42,7 +42,7 @@ import { statusTone, targetStatusNames, targetTone } from "../shared";
 export const metadata: Metadata = { title: "Social media post" };
 
 const dailyJobNote =
-  "Scheduled posts are published by the scheduled job. On the current hosting plan it runs once a day, so a post can go out up to a day after its time; for an exact time, use Publish now at that time (every few minutes comes with Stage 8).";
+  "Scheduled posts are published by the scheduled job. Vercel runs it once a day, so without the 10-minute GitHub timer (Automation Centre → Workflows) a post can go out up to a day after its time; for an exact time, use Publish now at that time.";
 
 export default async function SocialPostPage({ params }: PageProps<"/admin/social/[id]">) {
   const actor = await requireActor("social.manage");

@@ -11,7 +11,7 @@ import { runDueWorkflows } from "@/server/workflows/registry";
 /**
  * Scheduled job: runs the automation workflows that are due (each at its own interval, never twice at
  * once), delivers outbox events, and clears expired rate-limit buckets and abandoned uploads. Called by
- * Vercel Cron daily, and as often as every few minutes by an n8n Schedule trigger or a paid plan.
+ * Vercel Cron daily, and every 10 minutes by the GitHub "Automation timer" (or n8n, or a paid plan).
  * Requires `Authorization: Bearer CRON_SECRET`.
  */
 export async function GET(request: Request): Promise<Response> {
