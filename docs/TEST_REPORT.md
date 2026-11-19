@@ -1,5 +1,21 @@
 # Test report
 
+## Autopilot (2026-11-19)
+
+- **Review:** every new admin action calls `requireActor("workflows.manage")` and the services check again
+  (`assertCan`); approving the prospect template also needs `outreach.approve`. The page is read-only for
+  `automation.read`. The summary uses a parameterised insert; no new raw SQL otherwise.
+- **Customer-facing safety:** only AI drafts made by the workflows are sent automatically (a draft staff ask for
+  still waits for them). Every send re-checks consent, the unsubscribe link is kept, and the send-time check
+  sends an Autopilot item back to a person if Autopilot was switched off. Safety checker: unit-tested in both
+  languages (prices, promises, links, emails, placeholders, materials, claims). Remaining risk: a customer's
+  enquiry text reaches the AI, which could be talked into writing something odd; the checker and the "needs a
+  person" flag catch the listed cases, not every possible mistake. The morning summary is how the owner sees it.
+- Full suites: lint, format, typecheck and build pass; unit 187 passed; database 169 passed (9 new Autopilot
+  tests; stale items from earlier test runs were cleared from the test database, which had pushed new items out
+  of the 100-item approvals list); E2E 245 passed, 72 skipped, 1 failed on a local "network changed" error and
+  passed when run again.
+
 ## Release check, Stage 9 (2026-11-12): Stages 2–8 before release
 
 Security review of everything added since the last release (`df573a9..HEAD`, 125 files):
