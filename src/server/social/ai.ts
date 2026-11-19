@@ -10,6 +10,8 @@ import {
   socialPlatforms,
   socialPostTypes,
   type SocialLanguageKey,
+  type SocialPlatformKey,
+  type SocialPostTypeKey,
 } from "@/lib/social";
 import { aiAvailable } from "@/server/ai/drafts";
 import { groundingFacts, hardRules } from "@/server/ai/grounding";
@@ -79,7 +81,7 @@ export async function aiWritePost(
     task: "social_post",
     maxTokens: 2000,
     system: [
-      `You draft social media posts for ${company.legalName}. A person edits and approves every post before it is published.`,
+      `You draft social media posts for ${company.legalName}. Some posts are published without a person reading them first, so follow the rules exactly.`,
       `Post type: ${postTypeNames[post.type]}. Platforms: ${post.platforms.map((p) => platformNames[p]).join(", ")}. Captions needed: ${languageNames[lang]}.`,
       'Reply with JSON only: {"captionEn":"...","captionAr":"...","hashtags":["..."],"imageBrief":"...","script":"...","photoIds":["..."]}.',
       "Captions: 60–150 words each, no hashtags inside them. Leave a caption empty if that language isn't needed.",
@@ -169,6 +171,66 @@ const aiPlan = z.object({
 });
 
 /**
+ * Asks the AI for post ideas over the given Bahrain days: title, brief, type, platforms and time. Ideas in
+ * the past, on other days, of other types or for other platforms are dropped. Shared by the content plan
+ * (staff) and Autopilot.
+ */
+export async function aiPlanIdeas(
+  generate: AiGenerate,
+  p: {
+    days: string[];
+    max: number;
+    postsPerWeek: number;
+    platforms: SocialPlatformKey[];
+    types?: readonly SocialPostTypeKey[];
+    focus?: string | null;
+    campaign?: { name: string; objective: string | null } | null;
+    reviewed: boolean;
+    now: Date;
+  },
+) {
+  const types = p.types ?? socialPostTypes;
+  const { text } = await generate({
+    task: "social_plan",
+    maxTokens: 3000,
+    system: [
+      p.reviewed
+        ? `You plan social media content for ${company.legalName}. Each idea becomes a draft that the team writes, checks and approves.`
+        : `You plan social media content for ${company.legalName}. The posts are written and published automatically, so follow the rules exactly.`,
+      `Plan ${p.max} posts over ${p.days.length} days (dayOffset 0 = ${p.days[0]}, up to ${p.days.length - 1}), about ${p.postsPerWeek} per week, spread out, at times people in Bahrain are online (HH:MM, Bahrain time).`,
+      `Platforms to use: ${p.platforms.map((x) => platformNames[x]).join(", ")}. Types: ${types.join(", ")}. Mix project showcases, materials and finishes (EGGER décors, painted MDF), the factory and craft, design tips and showroom invitations.`,
+      `Reply with JSON only: {"ideas":[{"dayOffset":0,"time":"19:00","title":"...","brief":"...","type":"${types[0]}","platforms":["${p.platforms[0]}"]}]}. Titles in English; briefs say what to show and the angle.`,
+      "Facts you may use:",
+      groundingFacts(),
+      "Rules:",
+      hardRules,
+      socialRules,
+    ].join("\n\n"),
+    user: [
+      p.focus ? `Focus from the team: ${p.focus}` : "No particular focus: a balanced plan.",
+      p.campaign
+        ? `Campaign: ${p.campaign.name}${p.campaign.objective ? ` — ${p.campaign.objective}` : ""}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  });
+  const plan = parseAiJson(text, aiPlan);
+  return plan.ideas
+    .filter((i) => i.dayOffset < p.days.length && types.includes(i.type))
+    .slice(0, p.max)
+    .map((i) => {
+      const platforms = i.platforms.filter((x) => p.platforms.includes(x));
+      return {
+        ...i,
+        platforms: platforms.length ? platforms : p.platforms,
+        at: bahrainDateTime(p.days[i.dayOffset]!, i.time ?? "19:00")!,
+      };
+    })
+    .filter((i) => i.at > p.now);
+}
+
+/**
  * Proposes a content plan for a week or month and adds each idea to the calendar as a draft (title, brief,
  * day, type, platforms). Captions are written per post afterwards.
  */
@@ -186,41 +248,16 @@ export async function planContentWithAi(
   const { days } = calendarDays(p.view, p.anchorDay);
   // A month view includes days of the neighbouring months: plan only the month itself.
   const planDays = p.view === "month" ? days.filter((d) => d.startsWith(p.anchorDay.slice(0, 7))) : days;
-  const max = Math.ceil((planDays.length / 7) * p.postsPerWeek);
-  const { text } = await generate({
-    task: "social_plan",
-    maxTokens: 3000,
-    system: [
-      `You plan social media content for ${company.legalName}. Each idea becomes a draft that the team writes, checks and approves.`,
-      `Plan ${max} posts over ${planDays.length} days (dayOffset 0 = ${planDays[0]}, up to ${planDays.length - 1}), about ${p.postsPerWeek} per week, spread out, at times people in Bahrain are online (HH:MM, Bahrain time).`,
-      `Platforms to use: ${p.platforms.map((x) => platformNames[x]).join(", ")}. Types: image, text, reel, story. Mix project showcases, materials and finishes (EGGER décors, painted MDF), the factory and craft, design tips and showroom invitations.`,
-      'Reply with JSON only: {"ideas":[{"dayOffset":0,"time":"19:00","title":"...","brief":"...","type":"image","platforms":["instagram"]}]}. Titles in English; briefs say what to show and the angle.',
-      "Facts you may use:",
-      groundingFacts(),
-      "Rules:",
-      hardRules,
-      socialRules,
-    ].join("\n\n"),
-    user: [
-      p.focus ? `Focus from the team: ${p.focus}` : "No particular focus: a balanced plan.",
-      campaign ? `Campaign: ${campaign.name}${campaign.objective ? ` — ${campaign.objective}` : ""}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n"),
+  const ideas = await aiPlanIdeas(generate, {
+    days: planDays,
+    max: Math.ceil((planDays.length / 7) * p.postsPerWeek),
+    postsPerWeek: p.postsPerWeek,
+    platforms: p.platforms,
+    focus: p.focus,
+    campaign,
+    reviewed: true,
+    now,
   });
-  const plan = parseAiJson(text, aiPlan);
-  const ideas = plan.ideas
-    .filter((i) => i.dayOffset < planDays.length)
-    .slice(0, max)
-    .map((i) => {
-      const platforms = i.platforms.filter((x) => p.platforms.includes(x));
-      return {
-        ...i,
-        platforms: platforms.length ? platforms : p.platforms,
-        at: bahrainDateTime(planDays[i.dayOffset]!, i.time ?? "19:00")!,
-      };
-    })
-    .filter((i) => i.at > now);
   if (!ideas.length)
     throw new RuleError(
       "noIdeas",

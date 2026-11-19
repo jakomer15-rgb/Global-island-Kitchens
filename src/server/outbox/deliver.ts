@@ -1,3 +1,6 @@
+import { company } from "@/config/company";
+import { parseSetting } from "@/lib/site-settings";
+import type { Db, Tx } from "@/server/db/client";
 import type { Env } from "@/server/env";
 import type { EnquiryReceived } from "./events";
 import { signWebhook } from "./signature";
@@ -10,14 +13,39 @@ const kindLabel = {
   contact: { en: "message", ar: "رسالتكم" },
 } as const;
 
-export async function sendEmail(e: Env, to: string[], subject: string, text: string): Promise<void> {
+export type SendEmail = (
+  e: Env,
+  to: string[],
+  subject: string,
+  text: string,
+  options?: { replyTo?: string | null },
+) => Promise<void>;
+
+/**
+ * Sends one email through Resend. Emails to customers and prospects set Reply-To to the company's own
+ * inbox (the sending address has no mailbox), so answers reach the team.
+ */
+export const sendEmail: SendEmail = async (e, to, subject, text, options) => {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${e.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: e.EMAIL_FROM, to, subject, text }),
+    body: JSON.stringify({
+      from: e.EMAIL_FROM,
+      to,
+      subject,
+      text,
+      ...(options?.replyTo ? { reply_to: options.replyTo } : {}),
+    }),
     signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`Email provider responded ${res.status}`);
+};
+
+/** Where customers' replies go: the company email in Settings → Contact (the public company address). */
+export async function replyToAddress(db?: Db | Tx): Promise<string> {
+  if (!db) return company.email;
+  const row = await db.siteSetting.findUnique({ where: { key: "contact" } });
+  return parseSetting("contact", row?.value).email;
 }
 
 const emailReady = (e: Env) => Boolean(e.RESEND_API_KEY && e.EMAIL_FROM);
@@ -48,7 +76,11 @@ export async function notifyStaff(e: Env, event: EnquiryReceived, siteUrl: strin
 }
 
 /** Confirms receipt to the customer when they gave an email address. */
-export async function confirmToCustomer(e: Env, event: EnquiryReceived): Promise<ChannelResult> {
+export async function confirmToCustomer(
+  e: Env,
+  event: EnquiryReceived,
+  replyTo: string = company.email,
+): Promise<ChannelResult> {
   if (!event.customer.email) return "skipped";
   if (!emailReady(e)) return "not_configured";
   const ar = event.locale === "ar";
@@ -59,7 +91,7 @@ export async function confirmToCustomer(e: Env, event: EnquiryReceived): Promise
   const text = ar
     ? `مرحبًا،\n\nشكرًا لتواصلكم مع Global Island Kitchens. استلمنا ${label} برقم المرجع ${event.reference}، وسيتواصل معكم فريقنا قريبًا.\n\nللاستفسار: 3459 7636 / 7790 1988\nglobalkitchen.bh@gmail.com`
     : `Hello,\n\nThank you for contacting Global Island Kitchens. We received your ${label}, reference ${event.reference}, and our team will be in touch.\n\nQuestions: 3459 7636 / 7790 1988\nglobalkitchen.bh@gmail.com`;
-  await sendEmail(e, [event.customer.email], subject, text);
+  await sendEmail(e, [event.customer.email], subject, text, { replyTo });
   return "sent";
 }
 

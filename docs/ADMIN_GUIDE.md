@@ -37,9 +37,31 @@ top right switches the Centre between English and Arabic; the rest of the admin 
   (On, Off, Always on, Partly built, Not set up) and what it still needs, when it last ran and its results in
   the last 7 days. The owner and general manager switch them on or off, change their options (days before a
   follow-up, whether the AI writes project-photo posts), press **Run now**, and **Run again** on a failed run.
-  The run log lists every run that did something or failed. On the current hosting plan timer workflows run
-  each morning; with an n8n timer, every few minutes (DEPLOYMENT.md, "Workflows"). Workflows only prepare drafts,
-  follow-ups and reports: anything for customers or social media still waits for approval.
+  The run log lists every run that did something or failed. Timer workflows run when the GitHub "Automation
+  timer" calls the site (about every hour in practice) and each morning from Vercel (DEPLOYMENT.md,
+  "Workflows"). Anything for customers or social media waits for approval unless Autopilot is on.
+- **Autopilot** (owner and general manager): the AI acts by itself, without approving each item.
+  - **Turn Autopilot on** also switches on the AI assistants, the enquiry reply and follow-up workflows and
+    post publishing. **STOP everything now** switches it off at once: emails and posts it approved but hasn't
+    sent go back to Approvals, and queued prospect emails are dropped.
+  - **Replies to customers:** first replies to new website enquiries and follow-ups to customers who stopped
+    replying (at most the daily number, and the number of automatic follow-ups per customer). Only to
+    customers who agreed to email. Customers' replies arrive in the company email (Settings → Contact).
+  - **Introduction emails to prospects:** each day, up to the daily number, the highest-scored new prospects
+    with an email address get the template you approved (Marketing → Campaigns shows them as
+    "Autopilot <date>"). Write the template yourself or press **Let the AI write it**, read it, then
+    **Approve this template**; a template with a price, a promise, a link and so on is refused. It pauses
+    itself if 3 emails fail in a day or more than 1 in 10 prospects unsubscribe in a week; switch it on again
+    after checking. Google doesn't give email addresses, so prospects need one from Marketing (added or
+    imported).
+  - **Social media posts:** keeps the chosen number of posts scheduled for the coming week on Facebook and
+    Instagram, written by the AI with photos from the published portfolio. Needs the Meta connection; photo
+    posts also need file storage.
+  - **Safety rules:** anything with a price, cost or discount, a time, delivery or warranty promise, a link to
+    another site, an email address, an unfinished placeholder, a material or brand we don't use, or numbers of
+    projects or clients is **held for a person** (listed under "Waiting for a person", and in Approvals),
+    as is anything the AI itself says needs a person (a complaint, a price question).
+  - **Morning summary:** an email every morning from 07:00 with what it sent, published and held the day before.
 - **System log:** every automated email, WhatsApp alert and n8n event with its result per channel. A
   delivery that kept failing shows **Retry** (owner and general manager): channels that already worked are
   not repeated. Customer details are not shown here.

@@ -57,6 +57,7 @@ const pages = [
   ["/admin/automation/approvals", "Approvals"],
   ["/admin/automation/integrations", "Integrations"],
   ["/admin/automation/workflows", "Workflows"],
+  ["/admin/automation/autopilot", "Autopilot"],
   ["/admin/automation/logs", "System log"],
 ] as const;
 
@@ -355,7 +356,7 @@ test.describe("admin portal", () => {
   test("a workflow is switched on, run by hand and logged, then switched off", async ({ page }) => {
     await signIn(page);
     await page.goto("/admin/automation/workflows");
-    await expect(page.locator("main li[id]")).toHaveCount(9); // the brief's nine workflows
+    await expect(page.locator("main li[id]")).toHaveCount(12); // the brief's nine and Autopilot's three
     const card = page.locator("#qualified_follow_up");
     await card.getByRole("checkbox", { name: "Switched on" }).check();
     await card.getByLabel("Follow up after (days)").fill("2");
@@ -370,6 +371,36 @@ test.describe("admin portal", () => {
     await card.getByRole("checkbox", { name: "Switched on" }).uncheck();
     await card.getByRole("button", { name: "Save" }).click();
     await expect(card.getByText("Saved.")).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test("Autopilot: options are saved and the prospect template must be safe to approve", async ({ page }) => {
+    await signIn(page);
+    await page.goto("/admin/automation/autopilot");
+    // Left off here: turning it on would switch on the AI for the other tests running alongside.
+    await expect(page.getByText("Autopilot is OFF")).toBeVisible();
+    await page.getByLabel("Posts per week").fill("2");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
+    await page.reload();
+    await expect(page.getByLabel("Posts per week")).toHaveValue("2");
+
+    await page.getByLabel("Subject").fill("Kitchens for {company}");
+    await page
+      .getByLabel("Email", { exact: true })
+      .fill("Kitchens from 900 BHD with a 10% discount for partners in {area}.");
+    await page.getByRole("button", { name: "Approve this template" }).click();
+    await expect(page.getByText(/mentions a price/)).toBeVisible();
+    await page
+      .getByLabel("Email", { exact: true })
+      .fill(
+        "We manufacture kitchens, wardrobes and interior joinery in Bahrain. Would a short call or a showroom visit be useful for your projects in {area}?",
+      );
+    await page.getByRole("button", { name: "Approve this template" }).click();
+    await expect(page.getByText("Template approved.")).toBeVisible();
+    await page.getByLabel("Posts per week").fill("3");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 

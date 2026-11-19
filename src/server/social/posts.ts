@@ -12,8 +12,10 @@ import {
   type SocialPostTypeKey,
   type SocialStatusKey,
 } from "@/lib/social";
+import { AUTOPILOT_HELD, isAutopilotDecision } from "@/lib/autopilot";
 import { audit } from "@/server/audit";
 import { assertCan, type Actor } from "@/server/auth/staff";
+import { partActive, readAutopilot } from "@/server/autopilot/state";
 import { notify, paged, pageArgs } from "@/server/crm/shared";
 import type { Db, Tx } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
@@ -504,6 +506,22 @@ export async function publishSocialPost(
     return "skipped";
   const due = post.targets.filter((t) => t.status === "pending");
   if (!due.length) return "skipped";
+  // Scheduled by Autopilot, which was switched off since: back to a person (nothing published yet).
+  if (isAutopilotDecision(post.decisionNote) && !partActive(await readAutopilot(db), "social")) {
+    if (!post.targets.some((t) => t.status === "published"))
+      await db.$transaction(async (tx) => {
+        await tx.socialPostTarget.deleteMany({ where: { postId } });
+        await tx.socialPost.update({
+          where: { id: postId },
+          data: {
+            status: "pending_approval",
+            approvedAt: null,
+            decisionNote: `${AUTOPILOT_HELD}: Autopilot was switched off before it was published`,
+          },
+        });
+      });
+    return "skipped";
+  }
   const caption = composeCaption(post);
   let imageUrl: string | null = null;
   if (post.image) {

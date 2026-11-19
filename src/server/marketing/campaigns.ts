@@ -11,7 +11,9 @@ import { notify } from "@/server/crm/shared";
 import type { Db, Tx } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { NotFoundError, RuleError } from "@/server/errors";
-import { sendEmail, type ChannelResult } from "@/server/outbox/deliver";
+import { isAutopilotDecision } from "@/lib/autopilot";
+import { partActive, readAutopilot } from "@/server/autopilot/state";
+import { replyToAddress, sendEmail, type ChannelResult, type SendEmail } from "@/server/outbox/deliver";
 import { enqueue } from "@/server/outbox/events";
 import { emailReady } from "@/server/outreach/messages";
 import { rateLimit } from "@/server/rate-limit";
@@ -393,14 +395,28 @@ export async function sendCampaignMessage(
   db: Db,
   e: Env,
   messageId: string,
-  send = sendEmail,
+  send: SendEmail = sendEmail,
 ): Promise<ChannelResult> {
   const m = await db.campaignMessage.findUnique({
     where: { id: messageId },
-    include: { prospect: true, campaign: { select: { id: true, language: true } } },
+    include: {
+      prospect: true,
+      campaign: { select: { id: true, language: true, decisionNote: true } },
+    },
   });
   if (!m || m.status !== "queued") return "skipped";
   if (!emailReady(e)) throw new Error("email not configured");
+  // Queued by Autopilot, which was switched off (or paused) since: not sent.
+  if (
+    isAutopilotDecision(m.campaign.decisionNote) &&
+    !partActive(await readAutopilot(db), "prospectEmails")
+  ) {
+    await db.campaignMessage.update({
+      where: { id: m.id },
+      data: { status: "skipped", error: "Autopilot was switched off before it was sent." },
+    });
+    return "skipped";
+  }
   const p = m.prospect;
   if (!p.email || p.unsubscribedAt || !["new", "contacted", "interested"].includes(p.status)) {
     await db.campaignMessage.update({
@@ -410,7 +426,9 @@ export async function sendCampaignMessage(
     return "skipped";
   }
   try {
-    await send(e, [p.email], m.subject, composeProspectEmail(m.body, p, m.campaign.language));
+    await send(e, [p.email], m.subject, composeProspectEmail(m.body, p, m.campaign.language), {
+      replyTo: await replyToAddress(db),
+    });
   } catch (error) {
     await db.campaignMessage.update({
       where: { id: m.id },

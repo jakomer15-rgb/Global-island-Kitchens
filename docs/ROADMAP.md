@@ -73,8 +73,20 @@ without credentials show "Awaiting credentials" and are never shown as connected
 
 Open decisions for the owner (asked 2026-11-11): pricing rates for automatic quotation drafts; whether
 the forms' consent wording covers marketing; paying per search for Google Places. Frequent jobs (2026-11-18): a
-free GitHub Actions timer (`automation-timer.yml`) calls the scheduled job every 10 minutes once the `SITE_URL`
-and `CRON_SECRET` repository secrets are set; a Vercel paid plan or n8n is no longer needed for this.
+free GitHub Actions timer (`automation-timer.yml`) calls the scheduled job (set up 2026-11-18; GitHub runs it
+about hourly in practice, not every 10 minutes).
+
+**Autopilot (2026-11-19, owner's request "I want the AI to do it all"; defaults 20 prospect emails a day, 3
+posts a week).** Automation Centre → Autopilot: a master switch and an emergency stop; AI replies to new website
+enquiries and no-response follow-ups sent without per-item approval (daily limit, follow-ups per customer);
+introduction emails to prospects from a template the owner approves once (daily limit, pauses itself on failures
+or unsubscribes); social posts planned, written and scheduled to keep N per week (needs Meta; photos need R2);
+a morning summary email. Safety checks (`src/lib/autopilot.ts`) hold anything with prices, promises, links, other
+materials, placeholders or claims, and anything the AI flags for a person. Everything it approves carries the note
+"Approved automatically by Autopilot"; sending re-checks that Autopilot is still on. Customer and prospect emails
+now set Reply-To to the company email. Not built: AI reading customers' email replies (needs an inbox on the
+domain), automatic Google Places searches (Google gives no email addresses). Migration `20261119120000_autopilot`.
+Live domain from 2026-11-19: www.globalislandkitchens.com (email from sales@globalislandkitchens.com via Resend).
 
 Phase 7 (built after Phase 9 at the owner's request): designers register at `/designers/register`,
 staff approve them in Admin → Designers (after calling them), approved designers send projects

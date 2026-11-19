@@ -79,7 +79,13 @@ export interface AnalyticsReportDue {
   periodStart: string;
 }
 
+/** The Autopilot morning summary for one Bahrain day (2026-11-19). */
+export interface AutopilotSummaryDue {
+  periodStart: string;
+}
+
 export interface OutboxEvents {
+  "autopilot.summary": AutopilotSummaryDue;
   "analytics.report": AnalyticsReportDue;
   "social.publish": SocialPostPublish;
   "customer.message": CustomerMessageApproved;

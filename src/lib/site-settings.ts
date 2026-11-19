@@ -157,6 +157,46 @@ export const settingSchemas = {
       .max(10, "At most 10 addresses.")
       .default([]),
   }),
+  /**
+   * Autopilot (owner's request, 2026-11-19): the AI replies to customers, emails prospects and publishes
+   * social media posts without a person approving each one, within the limits below. `enabled` is the
+   * master switch: off stops everything at once. Text that breaks a safety rule (prices, promises, other
+   * materials, links…) is held for a person instead. Off by default.
+   */
+  autopilot: z.object({
+    enabled: z.boolean().default(false),
+    /** Replies to new website enquiries and follow-ups to customers who stopped replying. */
+    replies: z.boolean().default(true),
+    customerEmailsPerDay: z.number().int().min(1).max(100).default(30),
+    /** Automatic follow-ups per lead before a person must take over. */
+    followUpsPerLead: z.number().int().min(0).max(5).default(2),
+    /** Introduction emails to prospects in the list, from the approved template. */
+    prospectEmails: z.boolean().default(false),
+    prospectEmailsPerDay: z.number().int().min(1).max(50).default(20),
+    prospectTemplate: z
+      .object({
+        subject: z.string().trim().min(3).max(200),
+        body: z.string().trim().min(20).max(3000),
+        language: z.enum(["en", "ar"]),
+        approvedById: z.string().nullable(),
+        approvedByName: z.string().nullable(),
+        approvedAt: z.string().nullable(),
+      })
+      .nullable()
+      .default(null),
+    /** Set when the safety checks paused prospect emails (bounces or unsubscribes); cleared when switched on. */
+    prospectPausedReason: z.string().max(300).nullable().default(null),
+    /** Social media posts planned, written and scheduled by the AI. */
+    social: z.boolean().default(true),
+    postsPerWeek: z.number().int().min(1).max(7).default(3),
+    socialPlatforms: z
+      .array(z.enum(["instagram", "facebook"]))
+      .min(1)
+      .default(["instagram", "facebook"]),
+    socialLanguage: z.enum(["en", "ar", "both"]).default("both"),
+    /** A morning email to the owner with everything the AI did the day before. */
+    dailySummary: z.boolean().default(true),
+  }),
   seo: z.object({
     titleEn: optionalText(60),
     descriptionEn: optionalText(160),
@@ -212,6 +252,21 @@ export const settingDefaults: Settings = {
   },
   salesFollowUp: { autoDraft: false, afterDays: 4 },
   analyticsReports: { daily: false, weekly: false, monthly: false, emails: [] },
+  autopilot: {
+    enabled: false,
+    replies: true,
+    customerEmailsPerDay: 30,
+    followUpsPerLead: 2,
+    prospectEmails: false,
+    prospectEmailsPerDay: 20,
+    prospectTemplate: null,
+    prospectPausedReason: null,
+    social: true,
+    postsPerWeek: 3,
+    socialPlatforms: ["instagram", "facebook"],
+    socialLanguage: "both",
+    dailySummary: true,
+  },
   quotation: {
     vatEnabled: false,
     vatRateBasisPoints: 1000,

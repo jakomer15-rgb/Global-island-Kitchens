@@ -1,8 +1,10 @@
 import type { Prisma } from "@/generated/prisma/client";
 import type { Db } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
-import { confirmToCustomer, notifyStaff, postToN8n, type ChannelResult } from "./deliver";
+import { confirmToCustomer, notifyStaff, postToN8n, replyToAddress, type ChannelResult } from "./deliver";
+import { sendAutopilotSummary } from "@/server/autopilot/summary";
 import type {
+  AutopilotSummaryDue,
   AnalyticsReportDue,
   CampaignMessageQueued,
   ChatLead,
@@ -46,7 +48,7 @@ export function defaultDelivery(e: Env, siteUrl: string, db?: Db): Delivery {
     if ((event.type as OutboxType) === "enquiry.received") {
       const payload = event.payload as EnquiryReceived;
       await run("staffEmail", () => notifyStaff(e, payload, siteUrl));
-      await run("customerEmail", () => confirmToCustomer(e, payload));
+      await run("customerEmail", async () => confirmToCustomer(e, payload, await replyToAddress(db)));
     }
     // The sales chat: the team only (the visitor saw their reference in the chat).
     if ((event.type as OutboxType) === "chat.lead" && db) {
@@ -73,6 +75,11 @@ export function defaultDelivery(e: Env, siteUrl: string, db?: Db): Delivery {
     if ((event.type as OutboxType) === "analytics.report" && db) {
       const payload = event.payload as AnalyticsReportDue;
       await run("staffEmail", () => sendReportEmail(db, e, payload.kind, payload.periodStart, siteUrl));
+    }
+    // The Autopilot morning summary to the owner.
+    if ((event.type as OutboxType) === "autopilot.summary" && db) {
+      const payload = event.payload as AutopilotSummaryDue;
+      await run("staffEmail", () => sendAutopilotSummary(db, e, payload.periodStart, siteUrl));
     }
     await run("n8n", () => postToN8n(e, event.type, event.id, event.payload));
     if (errors.length) throw new DeliveryError(errors.join("; "), result);
