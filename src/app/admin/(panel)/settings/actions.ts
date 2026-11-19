@@ -24,8 +24,11 @@ const list = (formData: FormData, name: string) =>
     .map((v) => v.trim())
     .filter(Boolean);
 
-/** Form fields → the stored shape of each setting (validated by its schema in updateSetting). */
-const fromForm: Record<SettingKey, (f: FormData) => unknown> = {
+/**
+ * Form fields → the stored shape of each setting (validated by its schema in updateSetting). Autopilot has
+ * its own page and actions (Automation Centre → Autopilot), so it isn't saved from here.
+ */
+const fromForm: Record<Exclude<SettingKey, "autopilot">, (f: FormData) => unknown> = {
   contact: (f) => ({
     phones: [1, 2, 3]
       .map((n) => str(f, `phone${n}`))
@@ -106,7 +109,7 @@ export async function saveSettingAction(
   formData: FormData,
 ): Promise<ActionState> {
   // Bound arguments come back from the browser: accept only known keys (not inherited names).
-  if (!Object.hasOwn(fromForm, key)) return { error: "Unknown setting." };
+  if (!Object.hasOwn(fromForm, key) || key === "autopilot") return { error: "Unknown setting." };
   const actor = await requireActor(settingPermission[key]);
   const value = fromForm[key](formData);
   const check = settingSchemas[key].safeParse(value);

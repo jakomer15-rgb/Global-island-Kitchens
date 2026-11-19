@@ -13,6 +13,10 @@ import { draftNewEnquiryReplies, draftNoResponseFollowUps } from "@/server/outre
 import { updateSetting } from "@/server/settings/update";
 import { instagramReady, metaReady } from "@/server/social/meta";
 import { queueDuePosts, refreshEngagement } from "@/server/social/posts";
+import { readAutopilot } from "@/server/autopilot/state";
+import { runProspectAutopilot } from "@/server/autopilot/prospects";
+import { runSocialAutopilot, socialNeeds } from "@/server/autopilot/social";
+import { queueAutopilotSummary } from "@/server/autopilot/summary";
 import { projectPhotoDrafts, qualifiedFollowUps } from "./tasks";
 
 /**
@@ -20,7 +24,8 @@ import { projectPhotoDrafts, qualifiedFollowUps } from "./tasks";
  * start them through a signed request and receives every event through the signed webhook. Workflows with
  * work to do on a timer run when the scheduler is called (`/api/cron/outbox`: daily on the current Vercel
  * plan, every few minutes with an n8n timer or a paid plan), each at most every `everyMinutes`. A run that
- * did something or failed is logged; nothing a person must approve is ever sent or published by a workflow.
+ * did something or failed is logged. Customer emails and posts are approved by a person, or by Autopilot
+ * (Automation Centre → Autopilot) when the owner switched it on, within its limits and safety checks.
  */
 
 export type WorkflowKey =
@@ -32,7 +37,10 @@ export type WorkflowKey =
   | "project_photo_social"
   | "approved_post_publishing"
   | "weekly_campaign_report"
-  | "management_reports";
+  | "management_reports"
+  | "autopilot_prospect_emails"
+  | "autopilot_social"
+  | "autopilot_summary";
 
 type Ctx = { db: Db; e: Env; now: Date; config: Record<string, unknown> };
 
@@ -103,7 +111,7 @@ export const workflows: readonly WorkflowDef[] = [
       "The enquiry is saved as a customer and lead (always)",
       "The website chat answers with the AI (its own switch: AI agent)",
       "For forms: the AI drafts a first reply email (this switch)",
-      "The reply waits for approval, then is sent by email",
+      "Sent by Autopilot when it is on and the reply passes the safety checks; otherwise it waits for approval",
     ],
     kind: "timer",
     everyMinutes: 10,
@@ -179,8 +187,8 @@ export const workflows: readonly WorkflowDef[] = [
     trigger: "An open lead with no contact for a number of days",
     steps: [
       "The AI drafts a follow-up email (customers who agreed to email only)",
-      "It waits on the lead and in Approvals",
-      "Sent by email only after approval",
+      "Sent by Autopilot when it is on (up to its limit per customer); otherwise it waits in Approvals",
+      "Sent by email; replies go to the company inbox",
     ],
     kind: "timer",
     everyMinutes: 360,
@@ -297,6 +305,73 @@ export const workflows: readonly WorkflowDef[] = [
     },
     async run({ db, now }) {
       return queueDueReports(db, now);
+    },
+  },
+  {
+    key: "autopilot_prospect_emails",
+    name: "Autopilot → introduction emails to prospects",
+    trigger: "Every 30 minutes while Autopilot and its prospect emails are on",
+    steps: [
+      "The highest-scored new prospects with an email address are picked, up to the daily limit",
+      "Each gets the template the owner approved, filled with their company, area and type",
+      "Sent with an unsubscribe link; paused automatically if emails fail or many unsubscribe",
+    ],
+    kind: "timer",
+    everyMinutes: 30,
+    switchable: false,
+    events: ["campaign.message"],
+    async state({ db, e }) {
+      const s = await readAutopilot(db);
+      const needs = [...needEmail(e)];
+      if (!s.prospectTemplate?.approvedAt)
+        needs.push("Approved email template (Automation Centre → Autopilot)");
+      if (s.prospectPausedReason) needs.push(`Paused: ${s.prospectPausedReason}`);
+      return { enabled: s.enabled && s.prospectEmails, needs };
+    },
+    async run({ db, e, now }) {
+      return runProspectAutopilot(db, { now, env: e });
+    },
+  },
+  {
+    key: "autopilot_social",
+    name: "Autopilot → social media posts",
+    trigger: "Every 6 hours while Autopilot and its social media part are on",
+    steps: [
+      "Keeps the chosen number of posts planned for the coming 7 days",
+      "The AI picks the idea, writes the captions and hashtags and chooses a portfolio photo",
+      "Scheduled and published through Meta; a post that breaks a safety rule waits for a person",
+    ],
+    kind: "timer",
+    everyMinutes: 360,
+    switchable: false,
+    events: ["social.publish"],
+    async state({ db, e }) {
+      const s = await readAutopilot(db);
+      return { enabled: s.enabled && s.social, needs: await socialNeeds(db, e) };
+    },
+    async run({ db, e, now }) {
+      return runSocialAutopilot(db, { now, env: e });
+    },
+  },
+  {
+    key: "autopilot_summary",
+    name: "Autopilot → morning summary to the owner",
+    trigger: "Every morning from 07:00 while Autopilot is on",
+    steps: [
+      "Everything the AI sent, published or held for a person the day before",
+      "Emailed to the report addresses (Business analytics) or NOTIFY_EMAILS",
+      "Once per day",
+    ],
+    kind: "timer",
+    everyMinutes: 60,
+    switchable: false,
+    events: ["autopilot.summary"],
+    async state({ db, e }) {
+      const s = await readAutopilot(db);
+      return { enabled: s.enabled && s.dailySummary, needs: needEmail(e) };
+    },
+    async run({ db, now }) {
+      return queueAutopilotSummary(db, now);
     },
   },
 ];

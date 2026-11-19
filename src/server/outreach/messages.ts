@@ -1,7 +1,16 @@
 import { z } from "zod";
 import { company } from "@/config/company";
 import type { CustomerMessageStatus } from "@/generated/prisma/client";
+import {
+  AUTOPILOT_HELD,
+  AUTOPILOT_NOTE,
+  bahrainDayStarted,
+  heldReasons,
+  holdText,
+  isAutopilotDecision,
+} from "@/lib/autopilot";
 import { parseSetting } from "@/lib/site-settings";
+import { partActive, readAutopilot } from "@/server/autopilot/state";
 import { aiAvailable, leadContext } from "@/server/ai/drafts";
 import { groundingFacts, hardRules, redactContact } from "@/server/ai/grounding";
 import { aiConfigured, aiGenerate, parseAiJson, type AiGenerate } from "@/server/ai/provider";
@@ -12,7 +21,7 @@ import { notify } from "@/server/crm/shared";
 import type { Db, Tx } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { NotFoundError, RuleError } from "@/server/errors";
-import { sendEmail, type ChannelResult } from "@/server/outbox/deliver";
+import { replyToAddress, sendEmail, type ChannelResult, type SendEmail } from "@/server/outbox/deliver";
 import { enqueue } from "@/server/outbox/events";
 import { rateLimit } from "@/server/rate-limit";
 
@@ -21,8 +30,9 @@ import { rateLimit } from "@/server/rate-limit";
  * with `outreach.approve`; approving queues it and the outbox sends it by email. Rules enforced here
  * and checked again at sending time:
  * - only to customers with an email address and email consent on record (latest record wins);
- * - every email carries an unsubscribe link;
- * - nothing is sent without a person's approval; a sent message can't be changed (DB trigger).
+ * - every email carries an unsubscribe link, and replies go to the company inbox;
+ * - a person approves it, or Autopilot does (owner's choice, 2026-11-19) for the AI's replies and
+ *   follow-ups that pass the safety checks and limits; a sent message can't be changed (DB trigger).
  * WhatsApp messages to customers need Meta-approved templates and are not sent from here yet.
  */
 
@@ -134,7 +144,11 @@ const aiMessageSchema = z.object({
   language: z.enum(["en", "ar"]),
   subject: z.string().trim().min(3).max(200),
   body: z.string().trim().min(10).max(2500),
+  /** The AI's own judgement that a person should answer (prices, complaints, anything not in the facts). */
+  needsPerson: z.boolean().default(false),
+  personReason: z.string().trim().max(200).default(""),
 });
+type AiMessage = z.infer<typeof aiMessageSchema>;
 
 async function generateMessage(db: Db, leadId: string, instruction: string, generate: AiGenerate) {
   const { lead, text } = await leadContext(db, leadId);
@@ -142,8 +156,9 @@ async function generateMessage(db: Db, leadId: string, instruction: string, gene
     task: "customer_message",
     maxTokens: 900,
     system: [
-      `You write emails for the sales team of ${company.legalName} in Bahrain. A person reviews every email before it is sent.`,
-      'Write a short, warm, professional follow-up email to the customer in their preferred language: remind them of their enquiry, offer the next step (a call, a showroom, site or online consultation, or sending measurements or drawings) and invite them to reply. Do not start with a greeting line or end with a signature: they are added automatically. Reply with JSON only: {"language":"en"|"ar","subject":"...","body":"..."}.',
+      `You write emails for the sales team of ${company.legalName} in Bahrain. Some emails are sent without a person reading them first, so follow the rules exactly.`,
+      'Write a short, warm, professional follow-up email to the customer in their preferred language: remind them of their enquiry, offer the next step (a call, a showroom, site or online consultation, or sending measurements or drawings) and invite them to reply. Do not start with a greeting line or end with a signature: they are added automatically. Do not include links, email addresses or phone numbers. Reply with JSON only: {"language":"en"|"ar","subject":"...","body":"...","needsPerson":false,"personReason":""}.',
+      "Set needsPerson to true (and give a short reason in English in personReason) when the customer asks for a price, a discount, a delivery or installation date, a warranty, complains, is unhappy, or asks something the facts don't answer. Then the email should only thank them and say a member of the team will reply personally.",
       "Facts you may use:",
       groundingFacts(),
       "Rules:",
@@ -152,6 +167,78 @@ async function generateMessage(db: Db, leadId: string, instruction: string, gene
     user: `${text}${instruction ? `\n\nStaff instruction: ${redactContact(instruction.replace(/\s+/g, " ").slice(0, 300))}` : ""}`,
   });
   return { lead, draft: parseAiJson(answer, aiMessageSchema) };
+}
+
+const textOf = (d: AiMessage) => ({ subject: d.subject, body: d.body, language: d.language });
+
+/**
+ * Autopilot's decision on a message the AI just drafted: approve and queue it, or hold it for a person
+ * with the reason (shown on the lead and in Approvals). Held when the AI asked for a person, the text
+ * breaks a safety rule, the day's limit is reached, the lead already had its automatic follow-ups, or
+ * the customer can't be emailed. Does nothing while Autopilot (or its replies) is off.
+ */
+export async function autopilotDecideMessage(
+  db: Db,
+  messageId: string,
+  flags: { needsPerson: boolean; personReason: string },
+  now = new Date(),
+): Promise<"queued" | "held" | "off"> {
+  const s = await readAutopilot(db);
+  if (!partActive(s, "replies")) return "off";
+  return db.$transaction(async (tx) => {
+    const m = await tx.customerMessage.findUnique({ where: { id: messageId } });
+    if (!m || m.status !== "pending_approval") return "off" as const;
+    const reasons: string[] = [];
+    if (flags.needsPerson)
+      reasons.push(`the customer needs a person${flags.personReason ? ` (${flags.personReason})` : ""}`);
+    const unsafe = heldReasons(`${m.subject ?? ""}\n${m.body}`);
+    if (unsafe.length) reasons.push(`the email ${holdText(unsafe)}`);
+    const dayStart = bahrainDayStarted(now);
+    const today = await tx.customerMessage.count({
+      where: {
+        decisionNote: AUTOPILOT_NOTE,
+        decidedAt: { gte: dayStart, lt: new Date(dayStart.getTime() + 24 * 60 * 60 * 1000) },
+      },
+    });
+    if (today >= s.customerEmailsPerDay)
+      reasons.push(`today's limit of ${s.customerEmailsPerDay} automatic emails is reached`);
+    if (m.origin === "auto_follow_up") {
+      const sent = await tx.customerMessage.count({
+        where: { leadId: m.leadId, origin: "auto_follow_up", status: { in: ["approved", "sent"] } },
+      });
+      if (sent >= s.followUpsPerLead)
+        reasons.push(`${sent} automatic follow-up(s) already went to this customer`);
+    }
+    const eligible = await emailEligibility(tx, m.customerId);
+    if (!eligible.ok) reasons.push(eligible.reason);
+    if (reasons.length) {
+      await tx.customerMessage.update({
+        where: { id: m.id },
+        data: { decisionNote: `${AUTOPILOT_HELD}: ${reasons.join("; ")}`.slice(0, 500) },
+      });
+      await audit(tx, {
+        actorId: null,
+        action: "customer_message.autopilot_held",
+        entityType: "customer_message",
+        entityId: m.id,
+        changes: { reasons },
+      });
+      return "held" as const;
+    }
+    await tx.customerMessage.update({
+      where: { id: m.id },
+      data: { status: "approved", decidedAt: now, decisionNote: AUTOPILOT_NOTE },
+    });
+    await enqueue(tx, "customer.message", { messageId: m.id, leadId: m.leadId });
+    await audit(tx, {
+      actorId: null,
+      action: "customer_message.auto_approved",
+      entityType: "customer_message",
+      entityId: m.id,
+      changes: { origin: m.origin },
+    });
+    return "queued" as const;
+  });
 }
 
 /** Staff ask the AI for a draft; it is saved as a message waiting for approval (staff can edit or reject it). */
@@ -177,7 +264,7 @@ export async function draftMessageWithAi(
   if (!eligible.ok) throw new RuleError("noConsent", eligible.reason);
   const { draft } = await generateMessage(db, leadId, instruction, generate);
   return db.$transaction((tx) =>
-    createMessage(tx, { leadId, ...draft, origin: "ai", createdById: actor.id }),
+    createMessage(tx, { leadId, ...textOf(draft), origin: "ai", createdById: actor.id }),
   );
 }
 
@@ -297,11 +384,23 @@ export async function sendCustomerMessage(
   db: Db,
   e: Env,
   messageId: string,
-  send = sendEmail,
+  send: SendEmail = sendEmail,
 ): Promise<ChannelResult> {
   const m = await db.customerMessage.findUnique({ where: { id: messageId }, include: { customer: true } });
   if (!m || m.status !== "approved") return "skipped";
   if (!emailReady(e)) throw new Error("email not configured");
+  // Approved by Autopilot, which was switched off since: back to a person.
+  if (isAutopilotDecision(m.decisionNote) && !partActive(await readAutopilot(db), "replies")) {
+    await db.customerMessage.update({
+      where: { id: m.id },
+      data: {
+        status: "pending_approval",
+        decidedAt: null,
+        decisionNote: `${AUTOPILOT_HELD}: Autopilot was switched off before it was sent`,
+      },
+    });
+    return "skipped";
+  }
   const eligible = await emailEligibility(db, m.customerId);
   if (!eligible.ok) {
     await db.customerMessage.update({
@@ -311,7 +410,9 @@ export async function sendCustomerMessage(
     return "skipped";
   }
   try {
-    await send(e, [eligible.email], m.subject ?? "Global Island Kitchens", composeEmail(m, m.customer.name));
+    await send(e, [eligible.email], m.subject ?? "Global Island Kitchens", composeEmail(m, m.customer.name), {
+      replyTo: await replyToAddress(db),
+    });
   } catch (error) {
     await db.customerMessage.update({
       where: { id: m.id },
@@ -330,7 +431,10 @@ export async function sendCustomerMessage(
         kind: "email",
         internal: false,
         authorId: m.decidedById,
-        body: `Email sent (approved): ${m.subject}\n\n${m.body}`.slice(0, 6000),
+        body: `Email sent (${isAutopilotDecision(m.decisionNote) ? "sent by Autopilot" : "approved"}): ${m.subject}\n\n${m.body}`.slice(
+          0,
+          6000,
+        ),
       },
     });
   });
@@ -368,20 +472,30 @@ export async function draftNoResponseFollowUps(
     select: { id: true, customerId: true },
   });
   let drafted = 0;
+  let sentAuto = 0;
+  let held = 0;
   for (const lead of candidates) {
     if (drafted >= (options.limit ?? 10)) break;
     if (!(await emailEligibility(db, lead.customerId)).ok) continue;
     try {
       const { draft } = await generateMessage(db, lead.id, "", options.generate ?? aiGenerate);
-      await db.$transaction((tx) =>
-        createMessage(tx, { leadId: lead.id, ...draft, origin: "auto_follow_up", createdById: null }),
+      const message = await db.$transaction((tx) =>
+        createMessage(tx, {
+          leadId: lead.id,
+          ...textOf(draft),
+          origin: "auto_follow_up",
+          createdById: null,
+        }),
       );
       drafted++;
+      const decision = await autopilotDecideMessage(db, message.id, draft, now);
+      if (decision === "queued") sentAuto++;
+      if (decision === "held") held++;
     } catch (error) {
       console.warn("Follow-up draft failed for a lead:", error instanceof Error ? error.message : "unknown");
     }
   }
-  return { drafted, skipped: null };
+  return { drafted, sentAuto, held, skipped: null };
 }
 
 const WEBSITE_SOURCES = ["website_quote", "website_consultation", "website_contact", "website_chat"] as const;
@@ -415,6 +529,8 @@ export async function draftNewEnquiryReplies(
   });
   let drafted = 0;
   let failed = 0;
+  let sentAuto = 0;
+  let held = 0;
   for (const lead of leads) {
     if (drafted >= limit) break;
     if (!(await emailEligibility(db, lead.customerId)).ok) continue;
@@ -425,16 +541,19 @@ export async function draftNewEnquiryReplies(
         "This is the first reply to the customer's new enquiry: thank them, confirm what they asked about, and ask for the missing details (measurements, location, timeline) or offer a showroom visit or call.",
         options.generate ?? aiGenerate,
       );
-      await db.$transaction((tx) =>
-        createMessage(tx, { leadId: lead.id, ...draft, origin: "ai", createdById: null }),
+      const message = await db.$transaction((tx) =>
+        createMessage(tx, { leadId: lead.id, ...textOf(draft), origin: "ai", createdById: null }),
       );
       drafted++;
+      const decision = await autopilotDecideMessage(db, message.id, draft, options.now);
+      if (decision === "queued") sentAuto++;
+      if (decision === "held") held++;
     } catch (error) {
       failed++;
       console.warn("Enquiry reply draft failed:", error instanceof Error ? error.message : "unknown");
     }
   }
-  return { drafted, failed, skipped: null };
+  return { drafted, failed, sentAuto, held, skipped: null };
 }
 
 export const messageStatusNames: Record<CustomerMessageStatus, string> = {

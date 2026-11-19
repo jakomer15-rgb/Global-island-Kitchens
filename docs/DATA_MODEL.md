@@ -184,6 +184,16 @@ qualified or quoted) from the last 60 days, is added to that lead instead of cre
 Also: permission `workflows.manage` (owner, general manager); `analytics_report_runs.kind` may be `campaigns`
 (weekly campaign report); `/api/automation/workflows` (signed POST for n8n).
 
+### Autopilot (2026-11-19, migration `20261119120000_autopilot`)
+
+No new tables. The `autopilot` site setting holds the master switch, each part's switch and limits, the prospect
+template (with who approved it and when) and a pause reason. What Autopilot approves is marked in the existing
+`decision_note` column: customer messages and social posts "Approved automatically by Autopilot" (no
+`decided_by`), held ones "Held by Autopilot for a person: <reasons>" (still `pending_approval`); each day's
+prospect emails form one campaign "Autopilot YYYY-MM-DD" with the same note. `analytics_report_runs.kind` may
+be `autopilot` (one morning summary per day; outbox event `autopilot.summary`). Three timer workflows:
+`autopilot_prospect_emails`, `autopilot_social`, `autopilot_summary` (switched from the Autopilot page).
+
 ### AI Business Analytics Agent (Stage 7, 2026-11-11, migration `20261111220000_analytics_agent`)
 
 | Model                | Key fields                                                                                                                 | Rules                                                                                                                           |

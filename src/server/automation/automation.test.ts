@@ -184,6 +184,7 @@ describe("admin navigation", () => {
       "/admin/analytics",
       "/admin/automation/integrations",
       "/admin/automation/workflows",
+      "/admin/automation/autopilot",
       "/admin/automation/logs",
     ]);
   });

@@ -91,8 +91,8 @@ afterAll(async () => {
 });
 
 describe("workflow registry", () => {
-  it("has the brief's nine workflows, each with steps", async () => {
-    expect(workflows).toHaveLength(9);
+  it("has the brief's nine workflows and Autopilot's three, each with steps", async () => {
+    expect(workflows).toHaveLength(12);
     const list = await workflowOverview(db, sales, mailEnv);
     expect(list.map((w) => w.key)).toEqual(workflows.map((w) => w.key));
     expect(list.find((w) => w.key === "whatsapp_enquiry")).toMatchObject({
