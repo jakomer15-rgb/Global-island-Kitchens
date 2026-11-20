@@ -13,7 +13,13 @@ import { env as readEnv, type Env } from "@/server/env";
 import { NotFoundError, RuleError } from "@/server/errors";
 import { isAutopilotDecision } from "@/lib/autopilot";
 import { partActive, readAutopilot } from "@/server/autopilot/state";
-import { replyToAddress, sendEmail, type ChannelResult, type SendEmail } from "@/server/outbox/deliver";
+import {
+  ownerCopy,
+  replyToAddress,
+  sendEmail,
+  type ChannelResult,
+  type SendEmail,
+} from "@/server/outbox/deliver";
 import { enqueue } from "@/server/outbox/events";
 import { emailReady } from "@/server/outreach/messages";
 import { rateLimit } from "@/server/rate-limit";
@@ -297,6 +303,7 @@ export async function submitCampaign(db: Db, actor: Actor, id: string) {
           `/admin/marketing/campaigns/${id}`,
           `${count} email(s)`,
         );
+    await enqueue(tx, "approval.requested", { kind: "campaign", id });
     await audit(tx, {
       actorId: actor.id,
       action: "campaign.submitted",
@@ -428,6 +435,7 @@ export async function sendCampaignMessage(
   try {
     await send(e, [p.email], m.subject, composeProspectEmail(m.body, p, m.campaign.language), {
       replyTo: await replyToAddress(db),
+      bcc: await ownerCopy(db, e, [p.email]),
     });
   } catch (error) {
     await db.campaignMessage.update({

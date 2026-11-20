@@ -84,7 +84,14 @@ export interface AutopilotSummaryDue {
   periodStart: string;
 }
 
+/** Something now waits for a person's approval; the owner is emailed (2026-11-20). */
+export interface ApprovalRequested {
+  kind: "customer_message" | "campaign" | "social_post";
+  id: string;
+}
+
 export interface OutboxEvents {
+  "approval.requested": ApprovalRequested;
   "autopilot.summary": AutopilotSummaryDue;
   "analytics.report": AnalyticsReportDue;
   "social.publish": SocialPostPublish;

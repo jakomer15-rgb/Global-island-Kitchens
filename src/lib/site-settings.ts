@@ -165,6 +165,15 @@ export const settingSchemas = {
    */
   autopilot: z.object({
     enabled: z.boolean().default(false),
+    /**
+     * "approve" (default, owner's choice 2026-11-20): the AI prepares everything and each email, campaign and
+     * post waits for a person's approval. "auto": what passes the safety checks is sent without approval.
+     */
+    mode: z.enum(["approve", "auto"]).default("approve"),
+    /** Email the owner (report addresses, else NOTIFY_EMAILS) as soon as anything waits for approval. */
+    approvalEmails: z.boolean().default(true),
+    /** A hidden copy of every email sent to customers and prospects goes to the same addresses. */
+    copyEmails: z.boolean().default(true),
     /** Replies to new website enquiries and follow-ups to customers who stopped replying. */
     replies: z.boolean().default(true),
     customerEmailsPerDay: z.number().int().min(1).max(100).default(30),
@@ -254,6 +263,9 @@ export const settingDefaults: Settings = {
   analyticsReports: { daily: false, weekly: false, monthly: false, emails: [] },
   autopilot: {
     enabled: false,
+    mode: "approve",
+    approvalEmails: true,
+    copyEmails: true,
     replies: true,
     customerEmailsPerDay: 30,
     followUpsPerLead: 2,

@@ -7,9 +7,10 @@ import type { Db } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { aiPlanIdeas, aiWritePost } from "@/server/social/ai";
 import { instagramReady, metaReady } from "@/server/social/meta";
-import { targetStatus } from "@/server/social/posts";
+import { enqueue } from "@/server/outbox/events";
+import { targetStatus, usableImages } from "@/server/social/posts";
 import { getStorage } from "@/server/storage/driver";
-import { notifyHolders, partActive, readAutopilot } from "./state";
+import { autoSends, notifyHolders, partActive, readAutopilot } from "./state";
 
 /**
  * Autopilot's social media: keeps `postsPerWeek` posts planned for the coming seven days. For each missing
@@ -45,7 +46,9 @@ export async function runSocialAutopilot(
   if (!partActive(s, "social")) return { scheduled: 0, skipped: "off" };
   if (!aiConfigured(e) || !(await aiAvailable(db, "contentAssistant")))
     return { scheduled: 0, skipped: "aiOff" };
-  if (!metaReady(e)) return { scheduled: 0, skipped: "metaOff" };
+  const auto = autoSends(s);
+  // Asking first, posts can still be prepared without Meta (approved ones are then posted by hand).
+  if (auto && !metaReady(e)) return { scheduled: 0, skipped: "metaOff" };
 
   const weekEnd = new Date(now.getTime() + 7 * DAY);
   const planned = await db.socialPost.count({
@@ -57,9 +60,13 @@ export async function runSocialAutopilot(
   const need = s.postsPerWeek - planned;
   if (need <= 0) return { scheduled: 0 };
 
-  const photos = Boolean(getStorage());
-  const platforms = s.socialPlatforms.filter((p) =>
-    p === "instagram" ? instagramReady(e) && photos : true,
+  // Photo posts need a photo: one the platforms can fetch (storage) when publishing by itself, or any
+  // published portfolio photo when a person approves and may post it by hand.
+  const photos = auto ? Boolean(getStorage()) : (await usableImages(db, 1)).length > 0;
+  const platforms = (
+    auto
+      ? s.socialPlatforms.filter((p) => (p === "instagram" ? instagramReady(e) && photos : true))
+      : s.socialPlatforms
   ) as SocialPlatformKey[];
   if (!platforms.length) return { scheduled: 0, skipped: "noPlatform" };
   const today = bahrainDay(now);
@@ -76,6 +83,7 @@ export async function runSocialAutopilot(
 
   let scheduled = 0;
   let held = 0;
+  let forApproval = 0;
   for (const idea of ideas.slice(0, need)) {
     // Text posts go to Facebook only (Instagram needs a photo).
     const targets = idea.type === "text" ? idea.platforms.filter((p) => p === "facebook") : idea.platforms;
@@ -129,6 +137,7 @@ export async function runSocialAutopilot(
           `/admin/social/${p.id}`,
           reason,
         );
+        await enqueue(tx, "approval.requested", { kind: "social_post", id: p.id });
         await audit(tx, {
           actorId: null,
           action: "social_post.autopilot_held",
@@ -138,6 +147,29 @@ export async function runSocialAutopilot(
         });
       });
       held++;
+      continue;
+    }
+    if (!auto) {
+      await db.$transaction(async (tx) => {
+        await tx.socialPost.update({
+          where: { id: p.id },
+          data: { status: "pending_approval", submittedAt: now },
+        });
+        await notifyHolders(
+          tx,
+          "social.publish",
+          `Social media post to approve: ${p.title}`,
+          `/admin/social/${p.id}`,
+        );
+        await enqueue(tx, "approval.requested", { kind: "social_post", id: p.id });
+        await audit(tx, {
+          actorId: null,
+          action: "social_post.autopilot_prepared",
+          entityType: "social_post",
+          entityId: p.id,
+        });
+      });
+      forApproval++;
       continue;
     }
     await db.$transaction(async (tx) => {
@@ -162,5 +194,5 @@ export async function runSocialAutopilot(
     });
     scheduled++;
   }
-  return { scheduled, held };
+  return { scheduled, held, forApproval };
 }

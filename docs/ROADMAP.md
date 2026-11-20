@@ -86,6 +86,10 @@ materials, placeholders or claims, and anything the AI flags for a person. Every
 "Approved automatically by Autopilot"; sending re-checks that Autopilot is still on. Customer and prospect emails
 now set Reply-To to the company email. Not built: AI reading customers' email replies (needs an inbox on the
 domain), automatic Google Places searches (Google gives no email addresses). Migration `20261119120000_autopilot`.
+2026-11-20, owner's choice "ask my approval before sending any email or post": Autopilot gained the mode **Ask me
+first** (default; everything it prepares waits for approval, social posts even before Meta is connected) besides
+**Send by itself**; every approval request is emailed to the owner (outbox event `approval.requested`) and every
+email to customers and prospects is copied (BCC) to the owner. WhatsApp approval alerts wait for WhatsApp Business.
 Live domain from 2026-11-19: www.globalislandkitchens.com (email from sales@globalislandkitchens.com via Resend).
 
 Phase 7 (built after Phase 9 at the owner's request): designers register at `/designers/register`,

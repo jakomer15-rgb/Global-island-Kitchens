@@ -40,7 +40,14 @@ top right switches the Centre between English and Arabic; the rest of the admin 
   The run log lists every run that did something or failed. Timer workflows run when the GitHub "Automation
   timer" calls the site (about every hour in practice) and each morning from Vercel (DEPLOYMENT.md,
   "Workflows"). Anything for customers or social media waits for approval unless Autopilot is on.
-- **Autopilot** (owner and general manager): the AI acts by itself, without approving each item.
+- **Autopilot** (owner and general manager): the AI does the work. **How it works** chooses between **Ask me
+  first** (the default, the owner's choice: every email, campaign and post the AI prepares waits for approval) and
+  **Send by itself** (what passes the safety checks goes out without asking; the points below about sending by
+  itself apply only then).
+  - **Messages to you:** an email for every approval request (emails, campaigns, social posts) with the full
+    text and the link to approve it, and a hidden copy of every email sent to customers and businesses. They go
+    to the report addresses (Business analytics), else the sales alert addresses. WhatsApp follows once WhatsApp
+    Business is connected.
   - **Turn Autopilot on** also switches on the AI assistants, the enquiry reply and follow-up workflows and
     post publishing. **STOP everything now** switches it off at once: emails and posts it approved but hasn't
     sent go back to Approvals, and queued prospect emails are dropped.

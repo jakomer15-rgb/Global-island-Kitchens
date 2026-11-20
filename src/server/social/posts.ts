@@ -215,6 +215,7 @@ export async function submitPost(db: Db, actor: Actor, id: string, now = new Dat
     for (const a of await approvers(tx))
       if (a.id !== actor.id)
         await notify(tx, a.id, `Social media post to approve: ${post.title}`, `/admin/social/${id}`);
+    await enqueue(tx, "approval.requested", { kind: "social_post", id });
     await audit(tx, {
       actorId: actor.id,
       action: "social_post.submitted",

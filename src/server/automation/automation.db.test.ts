@@ -179,7 +179,8 @@ describe("overview and approvals", () => {
         requestedById: owner.id,
       },
     });
-    const queue = await approvalQueue(db, owner);
+    // The whole list: the shared test database keeps items waiting from earlier runs.
+    const queue = await approvalQueue(db, owner, 100_000);
     const item = queue.items.find((i) => i.id === draft.id);
     expect(item).toMatchObject({ kind: "ai_draft", title: "blog_post", detail: "Caring for painted MDF" });
     expect(queue.counts.ai_draft).toBeGreaterThan(0);

@@ -10,7 +10,7 @@ import {
   isAutopilotDecision,
 } from "@/lib/autopilot";
 import { parseSetting } from "@/lib/site-settings";
-import { partActive, readAutopilot } from "@/server/autopilot/state";
+import { autoSends, partActive, readAutopilot } from "@/server/autopilot/state";
 import { aiAvailable, leadContext } from "@/server/ai/drafts";
 import { groundingFacts, hardRules, redactContact } from "@/server/ai/grounding";
 import { aiConfigured, aiGenerate, parseAiJson, type AiGenerate } from "@/server/ai/provider";
@@ -21,7 +21,13 @@ import { notify } from "@/server/crm/shared";
 import type { Db, Tx } from "@/server/db/client";
 import { env as readEnv, type Env } from "@/server/env";
 import { NotFoundError, RuleError } from "@/server/errors";
-import { replyToAddress, sendEmail, type ChannelResult, type SendEmail } from "@/server/outbox/deliver";
+import {
+  ownerCopy,
+  replyToAddress,
+  sendEmail,
+  type ChannelResult,
+  type SendEmail,
+} from "@/server/outbox/deliver";
 import { enqueue } from "@/server/outbox/events";
 import { rateLimit } from "@/server/rate-limit";
 
@@ -111,6 +117,8 @@ async function createMessage(
         `/admin/leads/${lead.id}#messages`,
         input.subject,
       );
+  // Emailed to the owner when it is sent (skipped if it's decided by then, e.g. by Autopilot).
+  await enqueue(tx, "approval.requested", { kind: "customer_message", id: message.id });
   await audit(tx, {
     actorId: input.createdById,
     action: "customer_message.created",
@@ -175,14 +183,15 @@ const textOf = (d: AiMessage) => ({ subject: d.subject, body: d.body, language: 
  * Autopilot's decision on a message the AI just drafted: approve and queue it, or hold it for a person
  * with the reason (shown on the lead and in Approvals). Held when the AI asked for a person, the text
  * breaks a safety rule, the day's limit is reached, the lead already had its automatic follow-ups, or
- * the customer can't be emailed. Does nothing while Autopilot (or its replies) is off.
+ * the customer can't be emailed. In "ask me first" mode it only adds the warnings: every message waits
+ * for approval. Does nothing while Autopilot (or its replies) is off.
  */
 export async function autopilotDecideMessage(
   db: Db,
   messageId: string,
   flags: { needsPerson: boolean; personReason: string },
   now = new Date(),
-): Promise<"queued" | "held" | "off"> {
+): Promise<"queued" | "held" | "approval" | "off"> {
   const s = await readAutopilot(db);
   if (!partActive(s, "replies")) return "off";
   return db.$transaction(async (tx) => {
@@ -225,6 +234,7 @@ export async function autopilotDecideMessage(
       });
       return "held" as const;
     }
+    if (!autoSends(s)) return "approval" as const;
     await tx.customerMessage.update({
       where: { id: m.id },
       data: { status: "approved", decidedAt: now, decisionNote: AUTOPILOT_NOTE },
@@ -412,6 +422,7 @@ export async function sendCustomerMessage(
   try {
     await send(e, [eligible.email], m.subject ?? "Global Island Kitchens", composeEmail(m, m.customer.name), {
       replyTo: await replyToAddress(db),
+      bcc: await ownerCopy(db, e, [eligible.email]),
     });
   } catch (error) {
     await db.customerMessage.update({

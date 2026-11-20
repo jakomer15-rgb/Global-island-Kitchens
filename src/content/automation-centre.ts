@@ -122,8 +122,34 @@ export const centreText = {
   autopilot: {
     title: t("Autopilot", "الطيار الآلي"),
     description: t(
-      "The AI answers customers, emails prospects and publishes social media posts by itself, without you approving each one. Safety rules stop anything with a price, a promise, another material, a link or an unfinished part: those wait for a person. Every morning you get an email listing everything it did.",
-      "يرد الذكاء الاصطناعي على العملاء ويراسل العملاء المحتملين وينشر على وسائل التواصل بنفسه، دون أن توافقوا على كل رسالة. قواعد الأمان توقف أي نص فيه سعر أو وعد أو مادة أخرى أو رابط أو جزء ناقص، فينتظر شخصًا. وكل صباح يصلكم بريد بكل ما قام به.",
+      "The AI does the work: it answers customers, writes emails to prospects and prepares social media posts. Choose whether it asks you before anything goes out, or sends by itself. Safety rules flag anything with a price, a promise, another material, a link or an unfinished part. Every morning you get an email listing everything it did.",
+      "يقوم الذكاء الاصطناعي بالعمل: يرد على العملاء ويكتب رسائل العملاء المحتملين ويجهّز منشورات وسائل التواصل. اختاروا أن يسألكم قبل خروج أي شيء أو أن يرسل بنفسه. قواعد الأمان تنبّه على أي نص فيه سعر أو وعد أو مادة أخرى أو رابط أو جزء ناقص. وكل صباح يصلكم بريد بكل ما قام به.",
+    ),
+    modeTitle: t("How it works", "طريقة العمل"),
+    modeApprove: t("Ask me first (recommended)", "اسألني أولًا (موصى به)"),
+    modeApproveText: t(
+      "The AI prepares every email, campaign and post; each one waits for your approval and is sent or published only after you approve it.",
+      "يجهّز الذكاء الاصطناعي كل رسالة وحملة ومنشور؛ وينتظر كلٌّ منها موافقتكم ولا يُرسل أو يُنشر إلا بعدها.",
+    ),
+    modeAuto: t("Send by itself", "يرسل بنفسه"),
+    modeAutoText: t(
+      "What passes the safety checks is sent and published without asking; the rest waits for you.",
+      "ما يجتاز فحوص الأمان يُرسل ويُنشر دون سؤال؛ والباقي ينتظركم.",
+    ),
+    modeApproveShort: t("asks you first", "يسألكم أولًا"),
+    modeAutoShort: t("sends by itself", "يرسل بنفسه"),
+    toYouTitle: t("Messages to you", "رسائل إليكم"),
+    toYouText: t(
+      "Sent to the report addresses in Business analytics, or the sales alert addresses (NOTIFY_EMAILS). WhatsApp messages come once WhatsApp Business is connected.",
+      "تُرسل إلى عناوين التقارير في تحليلات الأعمال أو عناوين تنبيهات المبيعات (NOTIFY_EMAILS). ورسائل واتساب بعد ربط واتساب للأعمال.",
+    ),
+    approvalEmails: t(
+      "Email me every approval request (emails, campaigns, social posts), with the full text",
+      "أرسلوا لي بالبريد كل طلب موافقة (رسائل، حملات، منشورات) مع النص كاملًا",
+    ),
+    copyEmails: t(
+      "Send me a hidden copy of every email sent to customers and businesses",
+      "أرسلوا لي نسخة مخفية من كل رسالة تُرسل للعملاء والشركات",
     ),
     statusOn: t("Autopilot is ON", "الطيار الآلي يعمل"),
     statusOff: t("Autopilot is OFF", "الطيار الآلي متوقف"),
