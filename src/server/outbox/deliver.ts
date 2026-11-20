@@ -18,7 +18,7 @@ export type SendEmail = (
   to: string[],
   subject: string,
   text: string,
-  options?: { replyTo?: string | null },
+  options?: { replyTo?: string | null; bcc?: string[] },
 ) => Promise<void>;
 
 /**
@@ -35,11 +35,31 @@ export const sendEmail: SendEmail = async (e, to, subject, text, options) => {
       subject,
       text,
       ...(options?.replyTo ? { reply_to: options.replyTo } : {}),
+      ...(options?.bcc?.length ? { bcc: options.bcc } : {}),
     }),
     signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`Email provider responded ${res.status}`);
 };
+
+/** The owner's addresses for reports and alerts: Business analytics → report addresses, else NOTIFY_EMAILS. */
+export async function ownerAddresses(db: Db | Tx, e: Pick<Env, "NOTIFY_EMAILS">): Promise<string[]> {
+  const row = await db.siteSetting.findUnique({ where: { key: "analyticsReports" } });
+  const reports = parseSetting("analyticsReports", row?.value);
+  if (reports.emails.length) return reports.emails;
+  return (e.NOTIFY_EMAILS ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+/** The hidden copy of an email to a customer or prospect (Autopilot page → "copy of every email"). */
+export async function ownerCopy(db: Db | Tx, e: Pick<Env, "NOTIFY_EMAILS">, to: string[]): Promise<string[]> {
+  const row = await db.siteSetting.findUnique({ where: { key: "autopilot" } });
+  if (!parseSetting("autopilot", row?.value).copyEmails) return [];
+  const lower = new Set(to.map((t) => t.toLowerCase()));
+  return (await ownerAddresses(db, e)).filter((a) => !lower.has(a.toLowerCase()));
+}
 
 /** Where customers' replies go: the company email in Settings → Contact (the public company address). */
 export async function replyToAddress(db?: Db | Tx): Promise<string> {
@@ -80,6 +100,7 @@ export async function confirmToCustomer(
   e: Env,
   event: EnquiryReceived,
   replyTo: string = company.email,
+  bcc: string[] = [],
 ): Promise<ChannelResult> {
   if (!event.customer.email) return "skipped";
   if (!emailReady(e)) return "not_configured";
@@ -91,7 +112,7 @@ export async function confirmToCustomer(
   const text = ar
     ? `مرحبًا،\n\nشكرًا لتواصلكم مع Global Island Kitchens. استلمنا ${label} برقم المرجع ${event.reference}، وسيتواصل معكم فريقنا قريبًا.\n\nللاستفسار: 3459 7636 / 7790 1988\nglobalkitchen.bh@gmail.com`
     : `Hello,\n\nThank you for contacting Global Island Kitchens. We received your ${label}, reference ${event.reference}, and our team will be in touch.\n\nQuestions: 3459 7636 / 7790 1988\nglobalkitchen.bh@gmail.com`;
-  await sendEmail(e, [event.customer.email], subject, text, { replyTo });
+  await sendEmail(e, [event.customer.email], subject, text, { replyTo, bcc });
   return "sent";
 }
 

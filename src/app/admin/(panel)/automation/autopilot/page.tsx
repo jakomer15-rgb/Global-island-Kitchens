@@ -48,6 +48,7 @@ export default async function AutopilotPage() {
           <p className="font-display text-2xl">
             <Badge tone={s.enabled ? "good" : "neutral"}>
               {tr(s.enabled ? T.statusOn : T.statusOff, lang)}
+              {s.enabled && ` · ${tr(s.mode === "auto" ? T.modeAutoShort : T.modeApproveShort, lang)}`}
             </Badge>
           </p>
           {manage &&
@@ -90,7 +91,48 @@ export default async function AutopilotPage() {
       {manage && (
         <Panel className="mt-6">
           <ActionForm action={saveAutopilotOptionsAction} submitLabel={tr(T.save, lang)}>
-            <section className="space-y-2">
+            <fieldset className="space-y-2">
+              <legend className="font-display text-xl">{tr(T.modeTitle, lang)}</legend>
+              <label className="flex items-start gap-2.5 text-sm">
+                <input
+                  type="radio"
+                  name="mode"
+                  value="approve"
+                  defaultChecked={s.mode !== "auto"}
+                  className="mt-1 size-4 accent-walnut"
+                />
+                <span>
+                  <strong>{tr(T.modeApprove, lang)}</strong>
+                  <span className="block text-ink-muted">{tr(T.modeApproveText, lang)}</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2.5 text-sm">
+                <input
+                  type="radio"
+                  name="mode"
+                  value="auto"
+                  defaultChecked={s.mode === "auto"}
+                  className="mt-1 size-4 accent-walnut"
+                />
+                <span>
+                  <strong>{tr(T.modeAuto, lang)}</strong>
+                  <span className="block text-ink-muted">{tr(T.modeAutoText, lang)}</span>
+                </span>
+              </label>
+            </fieldset>
+
+            <section className="space-y-2 border-t border-line pt-4">
+              <h2 className="font-display text-xl">{tr(T.toYouTitle, lang)}</h2>
+              <p className="text-sm">{tr(T.toYouText, lang)}</p>
+              <AdminCheckbox
+                name="approvalEmails"
+                defaultChecked={s.approvalEmails}
+                label={tr(T.approvalEmails, lang)}
+              />
+              <AdminCheckbox name="copyEmails" defaultChecked={s.copyEmails} label={tr(T.copyEmails, lang)} />
+            </section>
+
+            <section className="space-y-2 border-t border-line pt-4">
               <h2 className="font-display text-xl">{tr(T.repliesTitle, lang)}</h2>
               <p className="text-sm">{tr(T.repliesText, lang)}</p>
               <Needs items={o.needs.replies} lang={lang} />

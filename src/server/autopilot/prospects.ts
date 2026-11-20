@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { AUTOPILOT_NOTE, bahrainDayStarted } from "@/lib/autopilot";
 import { bahrainDay } from "@/lib/social";
 import { audit } from "@/server/audit";
@@ -6,7 +7,7 @@ import { env as readEnv, type Env } from "@/server/env";
 import { eligibleWhere, fillTemplate } from "@/server/marketing/campaigns";
 import { enqueue } from "@/server/outbox/events";
 import { emailReady } from "@/server/outreach/messages";
-import { notifyHolders, partActive, readAutopilot, writeAutopilotBySystem } from "./state";
+import { autoSends, notifyHolders, partActive, readAutopilot, writeAutopilotBySystem } from "./state";
 
 /**
  * Autopilot's introduction emails to prospects: every run, up to the day's limit, the highest-scored new
@@ -79,20 +80,75 @@ export async function runProspectAutopilot(db: Db, options: { now?: Date; env?: 
     return { queued: 0, paused: 1 };
   }
 
+  // Today's emails prepared by Autopilot, sent or waiting (its campaigns are named "Autopilot <day>").
   const today = await db.campaignMessage.count({
     where: {
-      campaign: { decisionNote: AUTOPILOT_NOTE },
+      campaign: { name: { startsWith: "Autopilot " } },
       createdAt: { gte: bahrainDayStarted(now), lt: new Date(bahrainDayStarted(now).getTime() + DAY) },
-      status: { in: ["queued", "sent"] },
+      status: { in: ["draft", "queued", "sent"] },
     },
   });
   const room = s.prospectEmailsPerDay - today;
   if (room <= 0) return { queued: 0, skipped: "limit" };
 
   const t = s.prospectTemplate;
+  const eligible: Prisma.ProspectWhereInput = {
+    AND: [
+      eligibleWhere({ status: "new" }, now),
+      // Not already in a batch waiting for approval.
+      { messages: { none: { status: "draft", campaign: { status: "pending_approval" } } } },
+    ],
+  };
+  if (!autoSends(s))
+    return db.$transaction(async (tx) => {
+      const prospects = await tx.prospect.findMany({
+        where: eligible,
+        orderBy: [{ score: "desc" }, { createdAt: "asc" }],
+        take: room,
+      });
+      if (!prospects.length) return { prepared: 0, skipped: "nobody" };
+      const campaign = await tx.campaign.create({
+        data: {
+          name: `Autopilot ${bahrainDay(now)}${today ? ` (${today + 1}+)` : ""}`,
+          brief:
+            "Introduction emails prepared by Autopilot from the approved template, waiting for approval.",
+          subjectTemplate: t.subject,
+          bodyTemplate: t.body,
+          language: t.language,
+          audience: { status: "new" },
+          status: "pending_approval",
+        },
+      });
+      await tx.campaignMessage.createMany({
+        data: prospects.map((p) => ({
+          campaignId: campaign.id,
+          prospectId: p.id,
+          subject: fillTemplate(t.subject, p, t.language),
+          body: fillTemplate(t.body, p, t.language),
+          createdAt: now,
+        })),
+      });
+      await notifyHolders(
+        tx,
+        "outreach.approve",
+        `Campaign to approve: ${campaign.name}`,
+        `/admin/marketing/campaigns/${campaign.id}`,
+        `${prospects.length} email(s)`,
+      );
+      await enqueue(tx, "approval.requested", { kind: "campaign", id: campaign.id });
+      await audit(tx, {
+        actorId: null,
+        action: "campaign.autopilot_prepared",
+        entityType: "campaign",
+        entityId: campaign.id,
+        changes: { emails: prospects.length },
+      });
+      return { prepared: prospects.length };
+    });
+
   return db.$transaction(async (tx) => {
     const prospects = await tx.prospect.findMany({
-      where: eligibleWhere({ status: "new" }, now),
+      where: eligible,
       orderBy: [{ score: "desc" }, { createdAt: "asc" }],
       take: room,
     });

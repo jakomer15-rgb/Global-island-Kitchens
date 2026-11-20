@@ -45,6 +45,9 @@ export async function saveAutopilotOptionsAction(_: ActionState, f: FormData): P
   const result = await runAction(
     () =>
       saveAutopilotOptions(db, actor, {
+        mode: f.get("mode") === "auto" ? "auto" : "approve",
+        approvalEmails: on(f, "approvalEmails"),
+        copyEmails: on(f, "copyEmails"),
         replies: on(f, "replies"),
         customerEmailsPerDay: num(f, "customerEmailsPerDay"),
         followUpsPerLead: num(f, "followUpsPerLead"),

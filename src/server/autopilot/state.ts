@@ -23,6 +23,9 @@ export function partActive(s: AutopilotSettings, part: AutopilotPart): boolean {
   return true;
 }
 
+/** Does Autopilot send without asking (mode "auto")? Otherwise everything it prepares waits for approval. */
+export const autoSends = (s: AutopilotSettings) => s.mode === "auto";
+
 export async function autopilotActive(db: Db | Tx, part: AutopilotPart): Promise<boolean> {
   return partActive(await readAutopilot(db), part);
 }

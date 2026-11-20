@@ -1,5 +1,17 @@
 # Test report
 
+## "Ask me first" and messages to the owner (2026-11-20)
+
+- New: Autopilot mode "approve" (default), approval-request emails, hidden copies of customer and prospect emails.
+  Approval emails carry the email text or captions and the lead reference only (no customer contact details), and
+  are skipped once the item was decided. No new permissions or routes; settings change only through the existing
+  Autopilot actions (`workflows.manage`).
+- Tests: 3 new database tests (a reply waits and is emailed to the owner, then copied when sent; a day's prospect
+  emails become one campaign for approval; a social post is prepared for approval without Meta). Four older tests
+  now read the whole approvals list and the campaign test clears its own leftovers, because the shared test
+  database keeps earlier runs' items (they had pushed new items out of the 100-item list).
+- Results: lint, format, typecheck and build pass; unit 187 passed; database 172 passed.
+
 ## Autopilot (2026-11-19)
 
 - **Review:** every new admin action calls `requireActor("workflows.manage")` and the services check again

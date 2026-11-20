@@ -147,6 +147,16 @@ describe("prospects", () => {
 
 describe("campaigns", () => {
   it("reach only eligible prospects, need approval, send with an unsubscribe link, and respect unsubscribes", async () => {
+    // Prospects left by an earlier run that stopped half-way would join this audience.
+    await db.prospect.updateMany({
+      where: {
+        type: "architect",
+        country: "OM",
+        status: { in: ["new", "contacted", "interested"] },
+        OR: [{ companyName: { startsWith: "Alpha " } }, { companyName: { startsWith: "Beta " } }],
+      },
+      data: { status: "not_interested" },
+    });
     const tag = uid();
     const make = (name: string, extra: object = {}) =>
       createProspect(db, sales, {
@@ -188,9 +198,9 @@ describe("campaigns", () => {
     expect(msgs.every((m) => m.prospectId !== noEmail.id && m.prospectId !== dnc.id)).toBe(true);
 
     await submitCampaign(db, sales, c.id);
-    expect((await approvalQueue(db, owner)).items.some((i) => i.kind === "campaign" && i.id === c.id)).toBe(
-      true,
-    );
+    expect(
+      (await approvalQueue(db, owner, 100_000)).items.some((i) => i.kind === "campaign" && i.id === c.id),
+    ).toBe(true);
     await expect(decideCampaign(db, sales, c.id, { approve: true }, mailEnv)).rejects.toBeInstanceOf(
       ForbiddenError,
     );

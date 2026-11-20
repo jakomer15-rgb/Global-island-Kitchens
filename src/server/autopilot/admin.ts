@@ -93,6 +93,9 @@ export async function autopilotOverview(db: Db, actor: Actor, e: Env = readEnv()
 }
 
 export const optionsInput = z.object({
+  mode: z.enum(["approve", "auto"]),
+  approvalEmails: z.boolean(),
+  copyEmails: z.boolean(),
   replies: z.boolean(),
   customerEmailsPerDay: z.number().int().min(1).max(100),
   followUpsPerLead: z.number().int().min(0).max(5),

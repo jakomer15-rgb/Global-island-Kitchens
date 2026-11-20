@@ -193,6 +193,9 @@ template (with who approved it and when) and a pause reason. What Autopilot appr
 prospect emails form one campaign "Autopilot YYYY-MM-DD" with the same note. `analytics_report_runs.kind` may
 be `autopilot` (one morning summary per day; outbox event `autopilot.summary`). Three timer workflows:
 `autopilot_prospect_emails`, `autopilot_social`, `autopilot_summary` (switched from the Autopilot page).
+The setting also has `mode` ("approve" by default, or "auto"), `approvalEmails` and `copyEmails` (2026-11-20). In
+"approve" mode each day's prospect emails form a campaign "Autopilot YYYY-MM-DD" waiting for approval. Outbox
+event `approval.requested` {kind, id} emails the owner when an email, campaign or post starts waiting.
 
 ### AI Business Analytics Agent (Stage 7, 2026-11-11, migration `20261111220000_analytics_agent`)
 

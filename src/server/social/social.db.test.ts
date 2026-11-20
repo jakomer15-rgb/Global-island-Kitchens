@@ -141,7 +141,7 @@ describe("social posts: drafting and approval", () => {
     const p = await createPost(db, sales, textPost());
     await submitPost(db, sales, p.id);
     expect(
-      (await approvalQueue(db, owner)).items.some((i) => i.kind === "social_post" && i.id === p.id),
+      (await approvalQueue(db, owner, 100_000)).items.some((i) => i.kind === "social_post" && i.id === p.id),
     ).toBe(true);
     expect((await approvalQueue(db, sales)).counts.social_post).toBeNull();
     await decidePost(db, owner, p.id, { approve: true }, metaEnv);

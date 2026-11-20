@@ -182,7 +182,9 @@ describe("messages to customers", () => {
     });
     expect(m.status).toBe("pending_approval");
     expect(
-      (await approvalQueue(db, owner)).items.some((i) => i.id === m.id && i.kind === "customer_message"),
+      (await approvalQueue(db, owner, 100_000)).items.some(
+        (i) => i.id === m.id && i.kind === "customer_message",
+      ),
     ).toBe(true);
     // The sales manager can't approve by default; nothing goes without email set up.
     await expect(decideMessage(db, sales, m.id, { approve: true }, mailEnv)).rejects.toBeInstanceOf(
